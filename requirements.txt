@@ -1,0 +1,5 @@
+# Testing
+pytest>=8.0.0
+
+# Linting/Formatting
+black>=24.0.0

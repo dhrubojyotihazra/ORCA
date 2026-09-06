@@ -1,0 +1,45 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_name": "Gujarat Marine National Park",
+        "restriction_level": "Strict",
+        "message": "Marine Protected Area. Fishing strictly prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [69.5, 22.5],
+            [70.0, 22.5],
+            [70.0, 22.0],
+            [69.5, 22.0],
+            [69.5, 22.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_name": "International Maritime Boundary Line (IMBL) Buffer",
+        "restriction_level": "Warning",
+        "message": "Approaching international boundary. Proceed with caution."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [68.0, 23.0],
+            [68.5, 23.0],
+            [68.5, 15.0],
+            [68.0, 15.0],
+            [68.0, 23.0]
+          ]
+        ]
+      }
+    }
+  ]
+}

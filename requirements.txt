@@ -1,0 +1,7 @@
+requests
+shapely
+fastapi
+uvicorn
+supabase
+langgraph
+pydantic

@@ -1,450 +1,466 @@
-"use client";
+﻿"use client";
 
 import { useRef, useEffect, useMemo, useState, CSSProperties } from "react";
+import { cn } from "@/lib/utils";
+import { WebGLErrorBoundary, WebGLFallback } from "./webgl-error-boundary";
 
 type PatternShape = "Checks" | "Stripes" | "Edge";
 
 const PatternShapes: Record<PatternShape, number> = {
-  Checks: 0,
-  Stripes: 1,
-  Edge: 2,
+    Checks: 0,
+    Stripes: 1,
+    Edge: 2,
 };
 
 interface PresetParams {
-  color1: string;
-  color2: string;
-  color3: string;
-  rotation: number;
-  proportion: number;
-  scale: number;
-  speed: number;
-  distortion: number;
-  swirl: number;
-  swirlIterations: number;
-  softness: number;
-  offset: number;
-  shape: PatternShape;
-  shapeSize: number;
+    color1: string;
+    color2: string;
+    color3: string;
+    rotation: number;
+    proportion: number;
+    scale: number;
+    speed: number;
+    distortion: number;
+    swirl: number;
+    swirlIterations: number;
+    softness: number;
+    offset: number;
+    shape: PatternShape;
+    shapeSize: number;
 }
 
 const presets: Record<PresetName, PresetParams> = {
-  Prism: {
-    color1: "#050505",
-    color2: "#66B3FF",
-    color3: "#FFFFFF",
-    rotation: -50,
-    proportion: 1,
-    scale: 0.01,
-    speed: 30,
-    distortion: 0,
-    swirl: 50,
-    swirlIterations: 16,
-    softness: 47,
-    offset: -299,
-    shape: "Checks",
-    shapeSize: 45,
-  },
-  Lava: {
-    color1: "#FF9F21",
-    color2: "#FF0303",
-    color3: "#000000",
-    rotation: 114,
-    proportion: 100,
-    scale: 0.52,
-    speed: 30,
-    distortion: 7,
-    swirl: 18,
-    swirlIterations: 20,
-    softness: 100,
-    offset: 717,
-    shape: "Edge",
-    shapeSize: 12,
-  },
-  Plasma: {
-    color1: "#B566FF",
-    color2: "#000000",
-    color3: "#000000",
-    rotation: 0,
-    proportion: 63,
-    scale: 0.75,
-    speed: 30,
-    distortion: 5,
-    swirl: 61,
-    swirlIterations: 5,
-    softness: 100,
-    offset: -168,
-    shape: "Checks",
-    shapeSize: 28,
-  },
-  Pulse: {
-    color1: "#66FF85",
-    color2: "#000000",
-    color3: "#000000",
-    rotation: -167,
-    proportion: 92,
-    scale: 0,
-    speed: 20,
-    distortion: 54,
-    swirl: 75,
-    swirlIterations: 3,
-    softness: 28,
-    offset: -813,
-    shape: "Checks",
-    shapeSize: 79,
-  },
-  Vortex: {
-    color1: "#000000",
-    color2: "#FFFFFF",
-    color3: "#000000",
-    rotation: 50,
-    proportion: 41,
-    scale: 0.4,
-    speed: 20,
-    distortion: 0,
-    swirl: 100,
-    swirlIterations: 3,
-    softness: 5,
-    offset: -744,
-    shape: "Stripes",
-    shapeSize: 80,
-  },
-  Mist: {
-    color1: "#050505",
-    color2: "#FF66B8",
-    color3: "#050505",
-    rotation: 0,
-    proportion: 33,
-    scale: 0.48,
-    speed: 39,
-    distortion: 4,
-    swirl: 65,
-    swirlIterations: 5,
-    softness: 100,
-    offset: -235,
-    shape: "Edge",
-    shapeSize: 48,
-  },
+    Aurora: {
+        color1: "#0a001a",
+        color2: "#1a0b2e",
+        color3: "#f20089",
+        rotation: -45,
+        proportion: 60,
+        scale: 0.6,
+        speed: 15,
+        distortion: 40,
+        swirl: 80,
+        swirlIterations: 10,
+        softness: 100,
+        offset: 200,
+        shape: "Edge",
+        shapeSize: 50,
+    },
+    Oceanic: {
+        color1: "#000814",
+        color2: "#001d3d",
+        color3: "#00b4d8",
+        rotation: 0,
+        proportion: 70,
+        scale: 0.4,
+        speed: 10,
+        distortion: 15,
+        swirl: 50,
+        swirlIterations: 12,
+        softness: 80,
+        offset: 150,
+        shape: "Checks",
+        shapeSize: 30,
+    },
+    Amber: {
+        color1: "#140c00",
+        color2: "#4a2500",
+        color3: "#f57c00",
+        rotation: 120,
+        proportion: 80,
+        scale: 0.8,
+        speed: 20,
+        distortion: 25,
+        swirl: 60,
+        swirlIterations: 8,
+        softness: 90,
+        offset: 500,
+        shape: "Stripes",
+        shapeSize: 40,
+    },
+    Toxic: {
+        color1: "#050d05",
+        color2: "#0a240a",
+        color3: "#39ff14",
+        rotation: -90,
+        proportion: 55,
+        scale: 0.5,
+        speed: 25,
+        distortion: 60,
+        swirl: 100,
+        swirlIterations: 15,
+        softness: 70,
+        offset: -100,
+        shape: "Edge",
+        shapeSize: 20,
+    },
+    Ghost: {
+        color1: "#0a0a0a",
+        color2: "#1c1c1c",
+        color3: "#a3a3a3",
+        rotation: 45,
+        proportion: 50,
+        scale: 0.3,
+        speed: 8,
+        distortion: 10,
+        swirl: 30,
+        swirlIterations: 5,
+        softness: 100,
+        offset: 0,
+        shape: "Checks",
+        shapeSize: 60,
+    },
 };
 
-type PresetName = "Prism" | "Lava" | "Plasma" | "Pulse" | "Vortex" | "Mist";
+type PresetName = "Aurora" | "Oceanic" | "Amber" | "Toxic" | "Ghost";
 
-interface CustomConfig {
-  preset: "custom";
-  color1: string;
-  color2: string;
-  color3: string;
-  rotation?: number;
-  proportion?: number;
-  scale?: number;
-  speed?: number;
-  distortion?: number;
-  swirl?: number;
-  swirlIterations?: number;
-  softness?: number;
-  offset?: number;
-  shape?: PatternShape;
-  shapeSize?: number;
+export interface CustomConfig {
+    preset: "custom";
+    color1: string;
+    color2: string;
+    color3: string;
+    rotation?: number;
+    proportion?: number;
+    scale?: number;
+    speed?: number;
+    distortion?: number;
+    swirl?: number;
+    swirlIterations?: number;
+    softness?: number;
+    offset?: number;
+    shape?: PatternShape;
+    shapeSize?: number;
 }
 
-interface PresetConfig {
-  preset: PresetName;
-  speed?: number;
+export interface PresetConfig {
+    preset: PresetName;
+    speed?: number;
 }
 
-type GradientConfig = CustomConfig | PresetConfig;
+export type GradientConfig = CustomConfig | PresetConfig;
 
-interface NoiseConfig {
-  opacity: number;
-  scale?: number;
+export interface NoiseConfig {
+    opacity: number;
+    scale?: number;
 }
 
-interface AnimatedGradientProps {
-  config?: GradientConfig;
-  noise?: NoiseConfig;
-  radius?: string;
-  style?: CSSProperties;
-  className?: string;
-  children?: React.ReactNode;
+export interface AnimatedGradientProps {
+    config?: GradientConfig;
+    noise?: NoiseConfig;
+    radius?: string;
+    style?: CSSProperties;
+    className?: string;
 }
 
-export default function AnimatedGradient({
-  config = { preset: "Prism" },
-  noise,
-  radius = "0px",
-  style,
-  className,
-  children,
+export function AnimatedGradient({
+    config = { preset: "Aurora" },
+    noise,
+    radius = "0px",
+    style,
+    className,
 }: AnimatedGradientProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const frameIdRef = useRef<number | undefined>(undefined);
-  const startTimeRef = useRef<number>(0);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const frameIdRef = useRef<number | undefined>(undefined);
+    const startTimeRef = useRef<number>(0);
 
-  const [isMounted, setIsMounted] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    const [hasWebGLError, setHasWebGLError] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
+    useEffect(() => {
+        setIsMounted(true);
+        return () => setIsMounted(false);
+    }, []);
 
-  const params = useMemo((): PresetParams => {
-    if (config.preset === "custom") {
-      return {
-        color1: config.color1,
-        color2: config.color2,
-        color3: config.color3,
-        rotation: config.rotation ?? 0,
-        proportion: config.proportion ?? 35,
-        scale: config.scale ?? 1,
-        speed: config.speed ?? 25,
-        distortion: config.distortion ?? 12,
-        swirl: config.swirl ?? 80,
-        swirlIterations: config.swirlIterations ?? 10,
-        softness: config.softness ?? 100,
-        offset: config.offset ?? 0,
-        shape: config.shape ?? "Checks",
-        shapeSize: config.shapeSize ?? 10,
-      };
-    }
-    const preset = presets[config.preset] || presets.Prism;
-    return {
-      ...preset,
-      speed: config.speed ?? preset.speed,
-    };
-  }, [config]);
+    const params = useMemo((): PresetParams => {
+        if (config.preset === "custom") {
+            return {
+                color1: config.color1,
+                color2: config.color2,
+                color3: config.color3,
+                rotation: config.rotation ?? 0,
+                proportion: config.proportion ?? 35,
+                scale: config.scale ?? 1,
+                speed: config.speed ?? 25,
+                distortion: config.distortion ?? 12,
+                swirl: config.swirl ?? 80,
+                swirlIterations: config.swirlIterations ?? 10,
+                softness: config.softness ?? 100,
+                offset: config.offset ?? 0,
+                shape: config.shape ?? "Checks",
+                shapeSize: config.shapeSize ?? 10,
+            };
+        }
+        const preset = presets[config.preset] || presets.Aurora;
+        return {
+            ...preset,
+            speed: config.speed ?? preset.speed,
+        };
+    }, [config]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container || !isMounted) return;
+    useEffect(() => {
+        if (hasWebGLError) return;
 
-    const gl = canvas.getContext("webgl2", {
-      premultipliedAlpha: true,
-      alpha: true,
-      antialias: true,
-    });
-    if (!gl) return;
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container || !isMounted) return;
 
-    const vertexShaderSource = `#version 300 es
+        try {
+            const gl = canvas.getContext("webgl2", {
+                premultipliedAlpha: true,
+                alpha: true,
+                antialias: true,
+            });
+            if (!gl) {
+                setHasWebGLError(true);
+                return;
+            }
+
+            const vertexShaderSource = `#version 300 es
     in vec4 a_position;
     void main() {
       gl_Position = a_position;
     }`;
 
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
-    gl.shaderSource(vertexShader, vertexShaderSource);
-    gl.compileShader(vertexShader);
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
+            gl.shaderSource(vertexShader, vertexShaderSource);
+            gl.compileShader(vertexShader);
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                gl.deleteShader(vertexShader);
+                setHasWebGLError(true);
+                return;
+            }
 
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
-    gl.shaderSource(fragmentShader, FRAGMENT_SHADER);
-    gl.compileShader(fragmentShader);
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
+            gl.shaderSource(fragmentShader, FRAGMENT_SHADER);
+            gl.compileShader(fragmentShader);
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                gl.deleteShader(vertexShader);
+                gl.deleteShader(fragmentShader);
+                setHasWebGLError(true);
+                return;
+            }
 
-    const program = gl.createProgram()!;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    gl.useProgram(program);
+            const program = gl.createProgram()!;
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                gl.deleteProgram(program);
+                gl.deleteShader(vertexShader);
+                gl.deleteShader(fragmentShader);
+                setHasWebGLError(true);
+                return;
+            }
+            gl.useProgram(program);
 
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
-      gl.STATIC_DRAW
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+                gl.STATIC_DRAW
+            );
+
+            const positionLocation = gl.getAttribLocation(program, "a_position");
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+            const uniforms = {
+                u_time: gl.getUniformLocation(program, "u_time"),
+                u_resolution: gl.getUniformLocation(program, "u_resolution"),
+                u_pixelRatio: gl.getUniformLocation(program, "u_pixelRatio"),
+                u_scale: gl.getUniformLocation(program, "u_scale"),
+                u_rotation: gl.getUniformLocation(program, "u_rotation"),
+                u_color1: gl.getUniformLocation(program, "u_color1"),
+                u_color2: gl.getUniformLocation(program, "u_color2"),
+                u_color3: gl.getUniformLocation(program, "u_color3"),
+                u_proportion: gl.getUniformLocation(program, "u_proportion"),
+                u_softness: gl.getUniformLocation(program, "u_softness"),
+                u_shape: gl.getUniformLocation(program, "u_shape"),
+                u_shapeScale: gl.getUniformLocation(program, "u_shapeScale"),
+                u_distortion: gl.getUniformLocation(program, "u_distortion"),
+                u_swirl: gl.getUniformLocation(program, "u_swirl"),
+                u_swirlIterations: gl.getUniformLocation(program, "u_swirlIterations"),
+            };
+
+            const resize = () => {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                const pixelRatio = window.devicePixelRatio || 1;
+                canvas.width = width * pixelRatio;
+                canvas.height = height * pixelRatio;
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            };
+
+            resize();
+            const resizeObserver = new ResizeObserver(resize);
+            resizeObserver.observe(container);
+
+            startTimeRef.current = performance.now();
+
+            const animate = (time: number) => {
+                const elapsed = (time - startTimeRef.current) / 1000;
+                const speed = (params.speed / 100) * 5;
+
+                gl.uniform1f(uniforms.u_time, elapsed * speed + params.offset * 0.01);
+                gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
+                gl.uniform1f(uniforms.u_pixelRatio, window.devicePixelRatio || 1);
+                gl.uniform1f(uniforms.u_scale, params.scale);
+                gl.uniform1f(uniforms.u_rotation, (params.rotation * Math.PI) / 180);
+
+                const c1 = hexToRgba(params.color1);
+                const c2 = hexToRgba(params.color2);
+                const c3 = hexToRgba(params.color3);
+                gl.uniform4f(uniforms.u_color1, c1[0], c1[1], c1[2], c1[3]);
+                gl.uniform4f(uniforms.u_color2, c2[0], c2[1], c2[2], c2[3]);
+                gl.uniform4f(uniforms.u_color3, c3[0], c3[1], c3[2], c3[3]);
+
+                gl.uniform1f(uniforms.u_proportion, params.proportion / 100);
+                gl.uniform1f(uniforms.u_softness, params.softness / 100);
+                gl.uniform1f(uniforms.u_shape, PatternShapes[params.shape]);
+                gl.uniform1f(uniforms.u_shapeScale, params.shapeSize / 100);
+                gl.uniform1f(uniforms.u_distortion, params.distortion / 50);
+                gl.uniform1f(uniforms.u_swirl, params.swirl / 100);
+                gl.uniform1f(
+                    uniforms.u_swirlIterations,
+                    params.swirl === 0 ? 0 : params.swirlIterations
+                );
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                frameIdRef.current = requestAnimationFrame(animate);
+            };
+
+            frameIdRef.current = requestAnimationFrame(animate);
+
+            return () => {
+                if (frameIdRef.current !== undefined) {
+                    cancelAnimationFrame(frameIdRef.current);
+                }
+                resizeObserver.disconnect();
+                gl.deleteProgram(program);
+                gl.deleteShader(vertexShader);
+                gl.deleteShader(fragmentShader);
+                gl.deleteBuffer(positionBuffer);
+            };
+        } catch {
+            setHasWebGLError(true);
+            return;
+        }
+    }, [hasWebGLError, isMounted, params]);
+
+    if (hasWebGLError) {
+        return <WebGLFallback className={cn("absolute inset-0 overflow-hidden", className)} />;
+    }
+
+    return (
+        <WebGLErrorBoundary
+            fallback={<WebGLFallback className={cn("absolute inset-0 overflow-hidden", className)} />}
+        >
+            <div
+                ref={containerRef}
+                className={cn("absolute inset-0 overflow-hidden", className)}
+                style={{
+                    borderRadius: radius,
+                    ...style,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any}
+            >
+                <canvas
+                    ref={canvasRef}
+                    style={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                    }}
+                />
+                {noise && noise.opacity > 0 && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            backgroundImage: `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAElBMVEUAAAAAAAAAAAAAAAAAAAAAAADgKxmiAAAABnRSTlMCCgkGBAVJOAVJAAAASklEQVQ4y2NgGAWjYBSMglEwCgY/YGRgZBQUYmJiZGQEkYwMjIyMgoKCjIyMIJKBgRFIMjIyAklGRkYGRkFBYEcwMDIyMjAOUQAA1I4HwVwZAkYAAAAASUVORK5CYII=")`,
+                            backgroundSize: (noise.scale ?? 1) * 200,
+                            backgroundRepeat: "repeat",
+                            opacity: noise.opacity / 2,
+                            pointerEvents: "none",
+                        }}
+                    />
+                )}
+            </div>
+        </WebGLErrorBoundary>
     );
-
-    const positionLocation = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    const uniforms = {
-      u_time: gl.getUniformLocation(program, "u_time"),
-      u_resolution: gl.getUniformLocation(program, "u_resolution"),
-      u_pixelRatio: gl.getUniformLocation(program, "u_pixelRatio"),
-      u_scale: gl.getUniformLocation(program, "u_scale"),
-      u_rotation: gl.getUniformLocation(program, "u_rotation"),
-      u_color1: gl.getUniformLocation(program, "u_color1"),
-      u_color2: gl.getUniformLocation(program, "u_color2"),
-      u_color3: gl.getUniformLocation(program, "u_color3"),
-      u_proportion: gl.getUniformLocation(program, "u_proportion"),
-      u_softness: gl.getUniformLocation(program, "u_softness"),
-      u_shape: gl.getUniformLocation(program, "u_shape"),
-      u_shapeScale: gl.getUniformLocation(program, "u_shapeScale"),
-      u_distortion: gl.getUniformLocation(program, "u_distortion"),
-      u_swirl: gl.getUniformLocation(program, "u_swirl"),
-      u_swirlIterations: gl.getUniformLocation(program, "u_swirlIterations"),
-    };
-
-    const resize = () => {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      const pixelRatio = window.devicePixelRatio || 1;
-      canvas.width = width * pixelRatio;
-      canvas.height = height * pixelRatio;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-
-    resize();
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(container);
-
-    startTimeRef.current = performance.now();
-
-    const animate = (time: number) => {
-      const elapsed = (time - startTimeRef.current) / 1000;
-      const speed = (params.speed / 100) * 5;
-
-      gl.uniform1f(uniforms.u_time, elapsed * speed + params.offset * 0.01);
-      gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
-      gl.uniform1f(uniforms.u_pixelRatio, window.devicePixelRatio || 1);
-      gl.uniform1f(uniforms.u_scale, params.scale);
-      gl.uniform1f(uniforms.u_rotation, (params.rotation * Math.PI) / 180);
-
-      const c1 = hexToRgba(params.color1);
-      const c2 = hexToRgba(params.color2);
-      const c3 = hexToRgba(params.color3);
-      gl.uniform4f(uniforms.u_color1, c1[0], c1[1], c1[2], c1[3]);
-      gl.uniform4f(uniforms.u_color2, c2[0], c2[1], c2[2], c2[3]);
-      gl.uniform4f(uniforms.u_color3, c3[0], c3[1], c3[2], c3[3]);
-
-      gl.uniform1f(uniforms.u_proportion, params.proportion / 100);
-      gl.uniform1f(uniforms.u_softness, params.softness / 100);
-      gl.uniform1f(uniforms.u_shape, PatternShapes[params.shape]);
-      gl.uniform1f(uniforms.u_shapeScale, params.shapeSize / 100);
-      gl.uniform1f(uniforms.u_distortion, params.distortion / 50);
-      gl.uniform1f(uniforms.u_swirl, params.swirl / 100);
-      gl.uniform1f(
-        uniforms.u_swirlIterations,
-        params.swirl === 0 ? 0 : params.swirlIterations
-      );
-
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      frameIdRef.current = requestAnimationFrame(animate);
-    };
-
-    frameIdRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (frameIdRef.current !== undefined) {
-        cancelAnimationFrame(frameIdRef.current);
-      }
-      resizeObserver.disconnect();
-      gl.deleteProgram(program);
-      gl.deleteShader(vertexShader);
-      gl.deleteShader(fragmentShader);
-      gl.deleteBuffer(positionBuffer);
-    };
-  }, [isMounted, params]);
-
-  return (
-    <div
-      suppressHydrationWarning
-      ref={containerRef}
-      className={className}
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: -1,
-        borderRadius: radius,
-        overflow: "hidden",
-        ...style,
-      }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-        }}
-      />
-      {noise && noise.opacity > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAElBMVEUAAAAAAAAAAAAAAAAAAAAAAADgKxmiAAAABnRSTlMCCgkGBAVJOAVJAAAASklEQVQ4y2NgGAWjYBSMglEwCgY/YGRgZBQUYmJiZGQEkYwMjIyMgoKCjIyMIJKBgRFIMjIyAklGRkYGRkFBYEcwMDIyMjAOUQAA1I4HwVwZAkYAAAAASUVORK5CYII=")`,
-            backgroundSize: (noise.scale ?? 1) * 200,
-            backgroundRepeat: "repeat",
-            opacity: noise.opacity / 2,
-            pointerEvents: "none",
-          }}
-        />
-      )}
-      {children}
-    </div>
-  );
 }
 
 function hexToRgba(hex: string): [number, number, number, number] {
-  let r = 0,
-    g = 0,
-    b = 0,
-    a = 1;
+    let r = 0,
+        g = 0,
+        b = 0,
+        a = 1;
 
-  if (hex.startsWith("rgba(")) {
-    const parts = hex.slice(5, -1).split(",");
-    r = parseInt(parts[0]) / 255;
-    g = parseInt(parts[1]) / 255;
-    b = parseInt(parts[2]) / 255;
-    a = parseFloat(parts[3]);
-  } else if (hex.startsWith("rgb(")) {
-    const parts = hex.slice(4, -1).split(",");
-    r = parseInt(parts[0]) / 255;
-    g = parseInt(parts[1]) / 255;
-    b = parseInt(parts[2]) / 255;
-  } else if (hex.startsWith("hsla(") || hex.startsWith("hsl(")) {
-    const isHsla = hex.startsWith("hsla(");
-    const parts = hex.slice(isHsla ? 5 : 4, -1).split(",");
-    const h = parseFloat(parts[0]) / 360;
-    const s = parseFloat(parts[1]) / 100;
-    const l = parseFloat(parts[2]) / 100;
-    a = isHsla ? parseFloat(parts[3]) : 1;
-    [r, g, b] = hslToRgb(h, s, l);
-  } else if (hex.startsWith("#")) {
-    const c = hex.slice(1);
-    if (c.length === 3) {
-      r = parseInt(c[0] + c[0], 16) / 255;
-      g = parseInt(c[1] + c[1], 16) / 255;
-      b = parseInt(c[2] + c[2], 16) / 255;
-    } else if (c.length >= 6) {
-      r = parseInt(c.slice(0, 2), 16) / 255;
-      g = parseInt(c.slice(2, 4), 16) / 255;
-      b = parseInt(c.slice(4, 6), 16) / 255;
-      if (c.length === 8) {
-        a = parseInt(c.slice(6, 8), 16) / 255;
-      }
+    if (hex.startsWith("rgba(")) {
+        const parts = hex.slice(5, -1).split(",");
+        r = parseInt(parts[0] ?? "0") / 255;
+        g = parseInt(parts[1] ?? "0") / 255;
+        b = parseInt(parts[2] ?? "0") / 255;
+        a = parseFloat(parts[3] ?? "1");
+    } else if (hex.startsWith("rgb(")) {
+        const parts = hex.slice(4, -1).split(",");
+        r = parseInt(parts[0] ?? "0") / 255;
+        g = parseInt(parts[1] ?? "0") / 255;
+        b = parseInt(parts[2] ?? "0") / 255;
+    } else if (hex.startsWith("hsla(") || hex.startsWith("hsl(")) {
+        const isHsla = hex.startsWith("hsla(");
+        const parts = hex.slice(isHsla ? 5 : 4, -1).split(",");
+        const h = parseFloat(parts[0] ?? "0") / 360;
+        const s = parseFloat(parts[1] ?? "0") / 100;
+        const l = parseFloat(parts[2] ?? "0") / 100;
+        a = isHsla ? parseFloat(parts[3] ?? "1") : 1;
+        [r, g, b] = hslToRgb(h, s, l);
+    } else if (hex.startsWith("#")) {
+        const c = hex.slice(1);
+        if (c.length === 3) {
+            r = parseInt(c.charAt(0) + c.charAt(0), 16) / 255;
+            g = parseInt(c.charAt(1) + c.charAt(1), 16) / 255;
+            b = parseInt(c.charAt(2) + c.charAt(2), 16) / 255;
+        } else if (c.length >= 6) {
+            r = parseInt(c.slice(0, 2), 16) / 255;
+            g = parseInt(c.slice(2, 4), 16) / 255;
+            b = parseInt(c.slice(4, 6), 16) / 255;
+            if (c.length === 8) {
+                a = parseInt(c.slice(6, 8), 16) / 255;
+            }
+        }
     }
-  }
 
-  return [r, g, b, a];
+    return [r, g, b, a];
 }
 
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  let r: number, g: number, b: number;
+    let r: number, g: number, b: number;
 
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    };
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
 
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
-  }
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
 
-  return [r, g, b];
+    return [r, g, b];
 }
 
 const FRAGMENT_SHADER = `#version 300 es
@@ -564,3 +580,5 @@ void main() {
     fragColor = vec4(color_mix.rgb, color_mix.a);
 }
 `;
+
+export default AnimatedGradient;

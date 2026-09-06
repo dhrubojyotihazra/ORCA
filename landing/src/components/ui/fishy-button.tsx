@@ -1,9 +1,10 @@
 "use client";
 import React from "react";
 
-interface FishyButtonProps {
+export interface FishyButtonProps {
   children: React.ReactNode;
   isDelete?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
   className?: string;
@@ -17,13 +18,14 @@ interface FishyButtonProps {
 export const FishyButton: React.FC<FishyButtonProps> = ({
   children,
   isDelete = false,
+  disabled = false,
   onClick,
   type = "button",
   className = "",
   fontFamily,
   borderRadius = "20px",
-  width = "220px",
-  height = "52px",
+  width = "140px",
+  height = "53px",
   fishSpeed = "2.3s",
 }) => {
   const buttonStyle: React.CSSProperties = {
@@ -39,6 +41,7 @@ export const FishyButton: React.FC<FishyButtonProps> = ({
     <button
       suppressHydrationWarning
       type={type}
+      disabled={disabled}
       className={`button ${isDelete ? "deleteButton" : ""} ${className}`}
       onClick={onClick}
       style={buttonStyle}
@@ -81,7 +84,21 @@ export const FishyButton: React.FC<FishyButtonProps> = ({
   --color_5: #005482;
   --color_6: #003654;
 }
+.button--orca {
+  --color_1: #0f6e56;
+  --color_2: #1d9e75;
+  --color_3: #5dcaa5;
+  --color_4: #9fe1cb;
+  --color_5: #14b8a6;
+  --color_6: #38bdf8;
+}
 .button {
+  --color_1: #0f6e56;
+  --color_2: #1d9e75;
+  --color_3: #5dcaa5;
+  --color_4: #9fe1cb;
+  --color_5: #14b8a6;
+  --color_6: #38bdf8;
   display: flex;
   z-index: 0;
   justify-content: center;
@@ -93,11 +110,16 @@ export const FishyButton: React.FC<FishyButtonProps> = ({
   text-decoration: none;
   overflow: hidden;
   background: var(--color_5);
-  box-shadow: 0 0 12px rgba(0,0,0,.45), 0 0 8px rgba(0,0,0,.25) inset;
+  box-shadow: 0 0 16px rgba(0,0,0,.45), 0 0 8px rgba(0,0,0,.25) inset;
   transition: all ease .7s;
-  border: 1px solid rgba(31, 182, 182, 0.4);
+  border: 1px solid rgba(45, 212, 191, 0.4);
   cursor: pointer;
   margin: 0;
+}
+.button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 .button::before {
   content: '';
@@ -312,3 +334,71 @@ export const FishyButton: React.FC<FishyButtonProps> = ({
     </button>
   );
 };
+
+export const DemoFishyButton = () => (
+  <div className="flex flex-col gap-8 w-full">
+    <div className="flex flex-wrap items-center justify-center gap-6 w-full">
+      <FishyButton
+        type="button"
+        className="button--1"
+        onClick={() => console.log("The first button has been clicked")}
+      >
+        Ekhad
+      </FishyButton>
+      <FishyButton
+        type="button"
+        className="button--2"
+        borderRadius="4px"
+        fishSpeed="1.9s"
+        onClick={() => console.log("The second button has been clicked")}
+      >
+        Two
+      </FishyButton>
+      <FishyButton
+        type="button"
+        className="button--3"
+        onClick={() => console.log("The third button has been clicked")}
+      >
+        שלוש
+      </FishyButton>
+    </div>
+
+    <div className="flex flex-wrap items-center justify-center gap-6 w-full">
+      <FishyButton
+        type="button"
+        className="button--1"
+        fontFamily="'Roboto Mono', monospace"
+        borderRadius="40px"
+        width="272px"
+        onClick={() => console.log("Roboto Mono button clicked")}
+      >
+        Roboto Mono
+      </FishyButton>
+      <FishyButton
+        type="button"
+        className="button--2"
+        fontFamily="'Impact', fantasy, sans-serif"
+        borderRadius="10px"
+        width="272px"
+        onClick={() => console.log("Impact Bold button clicked")}
+      >
+        Impact Bold
+      </FishyButton>
+    </div>
+
+    <div className="flex justify-center w-full">
+      <FishyButton
+        type="button"
+        className="button--3"
+        width="216px"
+        fishSpeed="6s"
+        fontFamily="'Griffy', cursive"
+        borderRadius="50px"
+        onClick={() => console.log("Slow fish clicked")}
+      >
+        Slow Fish
+      </FishyButton>
+    </div>
+  </div>
+);
+

@@ -20,18 +20,18 @@ const footerLinks: FooterSectionData[] = [
     label: 'Architecture',
     links: [
       { title: 'LangGraph Mesh', href: '#how-it-works' },
-      { title: 'Specialist Agents', href: '#how-it-works' },
-      { title: 'Multilingual NLP', href: '#how-it-works' },
-      { title: 'Evidence Provenance', href: '#how-it-works' },
+      { title: '7-Pipeline Carousel', href: '#how-it-works' },
+      { title: 'Multilingual Whisper', href: 'https://github.com/openai/whisper#available-models-and-languages' },
+      { title: 'LangGraph Framework', href: 'https://www.langchain.com/langgraph' },
     ],
   },
   {
     label: 'EO Data Feeds',
     links: [
-      { title: 'ISRO MOSDAC', href: 'https://mosdac.gov.in' },
-      { title: 'INCOIS ERDDAP', href: 'https://incois.gov.in' },
-      { title: 'Oceansat-3 OCM', href: '#problem' },
-      { title: 'NavIC Almanac', href: '#problem' },
+      { title: 'ISRO MOSDAC', href: 'https://www.mosdac.gov.in' },
+      { title: 'INCOIS ERDDAP', href: 'https://erddap.incois.gov.in/erddap/index.html' },
+      { title: 'Oceansat-3 EO Telemetry', href: 'https://www.mosdac.gov.in/oceansat-3' },
+      { title: 'ICAR-CMFRI Census', href: 'https://mfcensus-gis.cmfri.org.in/' },
     ],
   },
   {
@@ -39,22 +39,33 @@ const footerLinks: FooterSectionData[] = [
     links: [
       { title: 'Problem Statement', href: '#problem' },
       { title: 'Team DeTABIS', href: '#team' },
-      { title: 'Build Dossier', href: '#team' },
-      { title: 'Live Advisory', href: '#demo' },
+      { title: 'Smart India Hackathon', href: 'https://www.sih.gov.in' },
+      { title: 'NavIC Satellite Nav', href: 'https://www.isro.gov.in/SatelliteNavigationServices.html' },
     ],
   },
   {
     label: 'Connectivity',
     links: [
-      { title: 'Team ASTID / DeTABIS', href: '#team', icon: Waves },
-      { title: 'ISRO Portal', href: 'https://isro.gov.in', icon: Globe },
-      { title: 'Live Sensor Mesh', href: '#demo', icon: Radio },
-      { title: 'GitHub Repository', href: '#', icon: Code },
+      { title: 'Interactive Globe', href: '#hero', icon: Waves },
+      { title: 'ISRO Official Portal', href: 'https://www.isro.gov.in', icon: Globe },
+      { title: 'Team Profiles', href: '#team', icon: Radio },
+      { title: 'GitHub Repository', href: 'https://github.com/dhrubojyotihazra/ORCA', icon: Code },
     ],
   },
 ];
 
 export function Footer() {
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
   return (
     <footer suppressHydrationWarning className="relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t border-white/10 bg-[radial-gradient(40%_140px_at_50%_0%,rgba(31,182,182,0.12),transparent)] px-6 py-14 lg:py-20 z-20">
       <div className="bg-teal-400/30 absolute top-0 right-1/2 left-1/2 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur-sm" />
@@ -87,17 +98,28 @@ export function Footer() {
                   {section.label}
                 </h3>
                 <ul className="space-y-2.5 text-xs sm:text-sm text-white/60 font-light">
-                  {section.links.map((link) => (
-                    <li key={link.title}>
-                      <a
-                        href={link.href}
-                        className="hover:text-white hover:translate-x-1 inline-flex items-center gap-1.5 transition-all duration-200"
-                      >
-                        {link.icon && <link.icon className="size-3.5 text-teal-400/80 shrink-0" />}
-                        <span>{link.title}</span>
-                      </a>
-                    </li>
-                  ))}
+                  {section.links.map((link) => {
+                    const isExternal = link.href.startsWith('http');
+                    return (
+                      <li key={link.title}>
+                        <a
+                          href={link.href}
+                          target={isExternal ? '_blank' : undefined}
+                          rel={isExternal ? 'noopener noreferrer' : undefined}
+                          onClick={(e) => handleScroll(e, link.href)}
+                          className="hover:text-white hover:translate-x-1 inline-flex items-center gap-1.5 transition-all duration-200 group"
+                        >
+                          {link.icon && <link.icon className="size-3.5 text-teal-400/80 shrink-0" />}
+                          <span>{link.title}</span>
+                          {isExternal && (
+                            <span className="text-[10px] text-teal-400/60 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200">
+                              ↗
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </AnimatedContainer>

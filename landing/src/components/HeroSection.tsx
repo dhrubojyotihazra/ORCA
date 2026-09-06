@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { GlassFilterDefs } from '@/components/GlassFilterDefs';
 import { OceanGlobeCard } from '@/components/OceanGlobeCard';
@@ -47,6 +48,7 @@ function drawContain(
 }
 
 export function HeroSection() {
+  const router = useRouter();
   const stageRef = useRef<HTMLDivElement>(null);
   const orcaStackRef = useRef<HTMLDivElement>(null);
   const compositeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -301,11 +303,11 @@ export function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.04] tracking-tight text-white drop-shadow-xl"
+            className="font-heading text-[clamp(2rem,4.5vw,3.75rem)] font-extrabold leading-[1.05] tracking-tight text-white drop-shadow-xl"
             {...fadeUp(0.28)}
           >
             Where the{' '}
-            <span className="font-script text-teal-300 font-normal lowercase tracking-normal text-5xl sm:text-6xl lg:text-7xl inline-block px-1">
+            <span className="font-script text-teal-300 font-normal lowercase tracking-normal text-[clamp(2.5rem,5.5vw,4.5rem)] inline-block px-1">
               ocean
             </span>
             <br />
@@ -328,8 +330,7 @@ export function HeroSection() {
               borderRadius="16px"
               fishSpeed="2.0s"
               onClick={() => {
-                const el = document.getElementById('demo');
-                el?.scrollIntoView({ behavior: 'smooth' });
+                router.push('/login');
               }}
             >
               <span>TALK TO ORCA</span>

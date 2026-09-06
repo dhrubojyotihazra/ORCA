@@ -1,5 +1,5 @@
 import AuthSectionOne from "@/components/ui/auth-section-1";
 
 export default function SignupPage() {
-  return <AuthSectionOne />;
+  return <AuthSectionOne initialMode="register" />;
 }

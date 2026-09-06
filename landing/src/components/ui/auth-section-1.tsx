@@ -26,6 +26,8 @@ import {
   Building2,
   Waves,
   Image as ImageIcon,
+  KeyRound,
+  X,
 } from "lucide-react";
 import { AnimatedGradient } from "@/components/ui/animated-gradient";
 import { CloudeeAvatar, type TargetOverride } from "@/components/avatar/CloudeeAvatar";
@@ -125,12 +127,16 @@ const ROLES = [
   { id: "researcher", title: "Marine Scientist", icon: Compass },
 ];
 
-export default function AuthSectionOne() {
+export interface AuthSectionOneProps {
+  initialMode?: AuthMode;
+}
+
+export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOneProps) {
   // Theme state: defaults to light (matches user's reference image 1)
   const [theme, setTheme] = useState<ThemeMode>("light");
 
   // Form states
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [method, setMethod] = useState<LoginMethod>("phone");
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isOtpFocused, setIsOtpFocused] = useState(false);
@@ -139,6 +145,13 @@ export default function AuthSectionOne() {
   const [manualAvatarTarget, setManualAvatarTarget] = useState<TargetOverride>(null);
   // Right visual stage background mode: "waves" (Image 2 fluid wave), "underwater" (seascape photo), or "hybrid"
   const [rightStageBg, setRightStageBg] = useState<"waves" | "underwater" | "hybrid">("waves");
+
+  // Forgot Password / Passcode Modal states
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotContact, setForgotContact] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("fisher");
@@ -360,6 +373,27 @@ export default function AuthSectionOne() {
           : "Identity verified! Welcome aboard."
       );
     }, 1200);
+  };
+
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    if (!forgotContact.trim()) {
+      setForgotError("Please enter your registered mobile number or email.");
+      return;
+    }
+    setForgotLoading(true);
+    setTimeout(() => {
+      setForgotLoading(false);
+      setForgotSuccess(true);
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setForgotSuccess(false);
+        setMode("login");
+        setMethod("phone");
+        setSuccessMessage("Recovery instructions sent! You can now verify with your OTP.");
+      }, 1400);
+    }, 900);
   };
 
   const isLight = theme === "light";
@@ -927,6 +961,22 @@ export default function AuthSectionOne() {
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
+
+                  {/* Forgot Password Clickable Text */}
+                  <div className="flex justify-end mt-1.5 px-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotContact(phone || email || "");
+                        setForgotError(null);
+                        setForgotSuccess(false);
+                        setShowForgotModal(true);
+                      }}
+                      className="text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors cursor-pointer hover:underline touch-manipulation active:opacity-70"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1163,6 +1213,112 @@ export default function AuthSectionOne() {
           </div>
         </div>
       </div>
+
+      {/* ── Forgot Password / Passcode Recovery Modal ── */}
+      <AnimatePresence>
+        {showForgotModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowForgotModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-full max-w-md rounded-3xl p-6 relative ${
+                isLight
+                  ? "bg-[#eef3f8] border border-white/90 shadow-2xl text-[#1a2638]"
+                  : "bg-[#060c16] border border-cyan-500/30 shadow-[0_24px_70px_rgba(0,0,0,0.95),0_0_45px_rgba(6,182,212,0.2)] text-white"
+              }`}
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="size-4" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-3">
+                <div className="size-10 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                  <KeyRound className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold tracking-tight">Reset Passcode</h2>
+                  <p className="text-xs opacity-70">Maritime Operator Recovery Protocol</p>
+                </div>
+              </div>
+
+              <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 mb-4">
+                Enter your registered mobile number or official institutional email address. We will dispatch a secure one-time verification code to restore account access.
+              </p>
+
+              {forgotError && (
+                <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-500/15 border border-rose-500/30 p-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{forgotError}</span>
+                </div>
+              )}
+
+              {forgotSuccess ? (
+                <div className="flex items-center gap-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-3 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                  <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span>✓ Verification code dispatched! Switching to sign in...</span>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotSubmit} className="space-y-4">
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1 ${s.label}`}>
+                      Mobile Number or Official Email
+                    </label>
+                    <div className={`relative flex items-center rounded-xl px-3 py-2.5 min-h-[48px] ${s.inputWell}`}>
+                      <Mail className="size-4 shrink-0 mr-2.5 opacity-60" />
+                      <input
+                        type="text"
+                        autoFocus
+                        required
+                        value={forgotContact}
+                        onChange={(e) => {
+                          setForgotError(null);
+                          setForgotContact(e.target.value);
+                        }}
+                        placeholder="e.g. 9876543210 or officer@incois.gov.in"
+                        className="w-full bg-transparent text-sm outline-none font-medium placeholder-slate-400 dark:placeholder-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(false)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                        isLight ? "hover:bg-slate-200 text-slate-700" : "hover:bg-white/10 text-slate-300"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {forgotLoading ? "Sending..." : "Send Recovery Code"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

@@ -11,13 +11,14 @@ export interface ChatArtifact {
 
 export interface AgentTraceStep {
   id: string;
-  agentId: "planner" | "ocean_specialist" | "weather_specialist" | "risk_specialist" | "synthesizer";
+  agentId: "planner" | "ocean_specialist" | "weather_specialist" | "risk_specialist" | "synthesizer" | "ocean" | "weather" | "risk" | string;
   name: string;
   role: string;
   durationMs: number;
   status: "completed" | "warning" | "error";
   summary: string;
   telemetry?: Record<string, any>;
+  nodeOutput?: Record<string, any>;
   citations?: string[];
   isLive?: boolean;
 }

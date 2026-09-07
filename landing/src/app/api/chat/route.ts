@@ -51,6 +51,51 @@ export async function POST(req: NextRequest) {
         ? "Motorized Craft (8-15m)"
         : "Deep-Sea Trawler (>15m)";
 
+    // ──────────────────────────────────────────────
+    // PRIMARY PATH: REAL PYTHON LANGGRAPH MULTI-AGENT DAG VIA FASTAPI
+    // ──────────────────────────────────────────────
+    const FASTAPI_ENDPOINT = process.env.FASTAPI_AGENT_URL || "http://127.0.0.1:8000/api/agents/invoke";
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for full DAG
+
+      const fastApiResponse = await fetch(FASTAPI_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: userMessage,
+          location: {
+            lat: locLat,
+            lon: locLon,
+            name: locName,
+            sector: locSector,
+          },
+          vessel_type: vesselType,
+          language: detectLanguage(userMessage),
+          messages: messages.slice(-5),
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (fastApiResponse.ok) {
+        const data = await fastApiResponse.json();
+        return NextResponse.json({
+          content: data.content,
+          modelUsed: data.modelUsed, // "LangGraph Multi-Agent (5-Node StateGraph DAG)"
+          timestamp: data.timestamp,
+          agentTrace: data.agentTrace, // REAL LangGraph streaming trace
+          executedNodes: data.executedNodes,
+          oceanData: data.oceanData,
+          weatherData: data.weatherData,
+          riskData: data.riskData,
+          totalDurationMs: data.totalDurationMs,
+        });
+      }
+    } catch (fastApiErr) {
+      console.warn("FastAPI Multi-Agent service unavailable, engaging local fallback pipeline:", fastApiErr);
+    }
+
     const agentTrace: AgentTraceStep[] = [];
 
     // ──────────────────────────────────────────────

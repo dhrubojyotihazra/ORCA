@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { useApp } from "@/lib/app-context";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
@@ -11,7 +12,9 @@ import { WebGLLiquid } from "@/components/ui/webgl-liquid";
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const { theme } = useApp();
+  const pathname = usePathname();
   const isLight = theme === "light";
+  const isChatPage = pathname?.startsWith("/chat/");
 
   return (
     <div
@@ -74,7 +77,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           />
         </div>
 
-        <AppHeader />
+        {!isChatPage && <AppHeader />}
         <main className="flex-1 flex flex-col overflow-hidden relative z-10">
           {children}
         </main>

@@ -50,6 +50,7 @@ PORT_ENV_DEFAULTS = {
     "visakhapatnam": {"sst": 29.8, "chl": 0.95, "hs": 1.5, "wind": 13.5, "mpa_name": "Coringa Wildlife Sanctuary", "mpa": (16.85, 82.30), "imbl": (18.20, 87.50)},
     "chennai": {"sst": 30.1, "chl": 0.85, "hs": 1.6, "wind": 14.0, "mpa_name": "Gulf of Mannar Biosphere", "mpa": (9.20, 79.15), "imbl": (10.05, 79.85)},
     "mumbai": {"sst": 28.5, "chl": 1.65, "hs": 1.4, "wind": 12.0, "mpa_name": "Malvan Marine Sanctuary", "mpa": (16.05, 73.45), "imbl": (19.20, 68.00)},
+    "kochi": {"sst": 28.9, "chl": 1.45, "hs": 1.3, "wind": 11.5, "mpa_name": "Vembanad Marine Eco-Zone", "mpa": (9.60, 76.35), "imbl": (8.50, 75.00)},
 }
 
 

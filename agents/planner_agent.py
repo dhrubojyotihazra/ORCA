@@ -17,6 +17,7 @@ PORT_REGISTRY = {
     "visakhapatnam": {"lat": 17.68, "lon": 83.21, "name": "Visakhapatnam Port", "sector": "Zone 5 (Andhra)"},
     "chennai": {"lat": 13.08, "lon": 80.27, "name": "Chennai Harbour", "sector": "Zone 6 (Tamil Nadu)"},
     "mumbai": {"lat": 18.94, "lon": 72.84, "name": "Sassoon Docks", "sector": "Zone 1 (Maharashtra)"},
+    "kochi": {"lat": 9.93, "lon": 76.27, "name": "Kochi Harbour", "sector": "Zone 2 (Kerala)"},
 }
 
 # Language detector patterns

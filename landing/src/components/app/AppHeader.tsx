@@ -16,14 +16,19 @@ export function AppHeader() {
     isVoiceActive,
     setIsVoiceActive,
     setIsMapOpen,
+    isSidebarCollapsed,
   } = useApp();
 
   const isLight = theme === "light";
 
   return (
-    <header className="w-full flex items-center justify-end px-4 sm:px-6 py-3 z-20 select-none bg-transparent">
+    <header
+      className={`w-full h-11 sm:h-12 flex items-center justify-end px-4 sm:px-6 py-1.5 z-20 select-none bg-transparent shrink-0 ${
+        isSidebarCollapsed ? "pl-14 sm:pl-16" : ""
+      }`}
+    >
       {/* ── Right Area: Map + Voice + Theme — 3 quiet icons ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Marine Map */}
         <button
           onClick={() => setIsMapOpen(true)}

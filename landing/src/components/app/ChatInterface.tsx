@@ -19,6 +19,10 @@ import {
   ChevronDown,
   Layers,
   Sparkles,
+  Map,
+  Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { MarineMap } from "./MarineMap";
@@ -31,9 +35,13 @@ interface ChatInterfaceProps {
 export function ChatInterface({ chat }: ChatInterfaceProps) {
   const {
     theme,
+    toggleTheme,
     sendMessage,
     setActiveArtifact,
+    isVoiceActive,
     setIsVoiceActive,
+    setIsMapOpen,
+    isSidebarCollapsed,
   } = useApp();
 
   const isLight = theme === "light";
@@ -244,25 +252,29 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-      {/* ── Conversation Header ── */}
+      {/* ── Compact Unified Conversation Header ── */}
       <div
-        className={`px-6 py-3 border-b flex items-center justify-between z-10 select-none ${
+        className={`h-11 sm:h-12 px-4 sm:px-6 border-b flex items-center justify-between z-10 select-none shrink-0 transition-colors ${
+          isSidebarCollapsed ? "pl-14 sm:pl-16" : ""
+        } ${
           isLight
             ? "border-slate-200/80 bg-white/40 backdrop-blur-sm"
             : "border-white/5 bg-black/20 backdrop-blur-sm"
         }`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="size-2 rounded-full bg-cyan-400 shrink-0" />
+        {/* Left: Status Dot + Title + Model Badge */}
+        <div className="flex items-center gap-2.5 min-w-0 mr-2">
+          <span className="size-2 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
           <h2
-            className={`text-sm font-semibold truncate ${
+            className={`text-xs sm:text-sm font-semibold truncate ${
               isLight ? "text-slate-800" : "text-slate-100"
             }`}
+            title={chat.title}
           >
             {chat.title}
           </h2>
           <span
-            className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-medium ${
+            className={`hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full font-mono font-medium shrink-0 ${
               isLight
                 ? "bg-slate-200/70 text-slate-700"
                 : "bg-white/10 text-slate-300"
@@ -272,22 +284,72 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right: Share + Marine Map + Voice + Theme Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
-            onClick={() => alert("Share conversation link copied to clipboard!")}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href);
+              }
+              alert("Share conversation link copied to clipboard!");
+            }}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
               isLight
-                ? "neo-btn-light text-slate-700"
-                : "neo-btn-dark text-slate-300"
+                ? "neo-btn-light text-slate-700 hover:text-slate-900"
+                : "neo-btn-dark text-slate-300 hover:text-white"
             }`}
           >
             Share
+          </button>
+
+          {/* Marine Map */}
+          <button
+            onClick={() => setIsMapOpen(true)}
+            className={`size-7 sm:size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isLight
+                ? "neo-btn-light text-slate-500 hover:text-teal-700"
+                : "neo-btn-dark text-slate-400 hover:text-cyan-300"
+            }`}
+            title="Open Marine Map"
+            aria-label="Marine Map"
+          >
+            <Map className="size-3.5" />
+          </button>
+
+          {/* Voice Mode */}
+          <button
+            onClick={() => setIsVoiceActive(true)}
+            className={`size-7 sm:size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isVoiceActive
+                ? "bg-cyan-500 text-white shadow-[0_0_16px_rgba(6,182,212,0.6)] animate-pulse"
+                : isLight
+                ? "neo-btn-light text-slate-500 hover:text-cyan-600"
+                : "neo-btn-dark text-slate-400 hover:text-cyan-300"
+            }`}
+            title="Voice Assistant"
+            aria-label="Voice Mode"
+          >
+            <Zap className="size-3.5" />
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`size-7 sm:size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isLight
+                ? "neo-btn-light text-amber-500 hover:text-amber-600"
+                : "neo-btn-dark text-amber-400 hover:text-amber-300"
+            }`}
+            title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            aria-label="Toggle Theme"
+          >
+            {isLight ? <Moon className="size-3.5" /> : <Sun className="size-3.5 fill-amber-400/20" />}
           </button>
         </div>
       </div>
 
       {/* ── Messages Stream ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6 auth-form-scrollbar max-w-4xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 md:px-8 space-y-5 auth-form-scrollbar max-w-4xl w-full mx-auto">
         {chat.messages.map((message) => {
           const isUser = message.role === "user";
 

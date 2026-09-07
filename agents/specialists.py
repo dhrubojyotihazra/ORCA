@@ -104,13 +104,14 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
         ],
         "source": sst_source,
         "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+        "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
         "timestamp": obs_time,
     }
     
     return {
         "ocean_data": ocean_payload,
         "evidence_citations": [
-            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | HSI(Mackerel)={hsi_mackerel}"
+            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | PFZ Coordinates: Bathymetric Model (Illustrative) | HSI(Mackerel)={hsi_mackerel}"
         ],
     }
 
@@ -144,6 +145,7 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
 
     hs = defaults["hs"]
     squall_prob = 12.0
+    cyclone_level = "Amber (Advisory)"
     
     weather_payload: WeatherTelemetry = {
         "significant_wave_height_m": hs,
@@ -151,16 +153,18 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
         "wind_speed_knots": wind_speed,
         "wind_direction_deg": 195.0,
         "lightning_squall_prob_pct": squall_prob,
-        "cyclone_alert_level": "Amber (Advisory)",
+        "cyclone_alert_level": cyclone_level,
         "source": weather_source,
         "wave_source": "INCOIS High-Resolution Wave Model (OSF Baseline Registry)",
+        "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+        "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
         "timestamp": obs_time,
     }
     
     return {
         "weather_data": weather_payload,
         "evidence_citations": [
-            f"Weather Specialist: Hs={hs}m (INCOIS OSF Model Baseline) | Wind={wind_speed} kts ({weather_source}) | Squall Prob={squall_prob}%"
+            f"Weather Specialist: Hs={hs}m (INCOIS OSF Model Baseline) | Wind={wind_speed} kts ({weather_source}) | Squall={squall_prob}% (Climatology Baseline) | Cyclone Stage={cyclone_level} (Seasonal Baseline)"
         ],
     }
 

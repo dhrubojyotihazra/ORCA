@@ -17,6 +17,8 @@ CRITICAL GROUNDING RULES:
 4. Always conclude with the mandatory evidence footer:
 Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
 5. TIMESTAMP HONESTY: When citing satellite scatterometer wind (ascat) or ARGO float SST, explicitly state "Most recent INCOIS observation: <date>". NEVER call historical data "Live".
+6. PFZ WAYPOINT PROVENANCE: When citing PFZ coordinates, explicitly state they are derived from a bathymetric shelf-break model (illustrative waypoints), not a live INCOIS satellite PFZ advisory bulletin.
+7. SQUALL & CYCLONE PROVENANCE: State that squall probability and cyclone alert levels are regional climatological baseline averages, not live radar/IMD nowcasts.
 """
 
 REGIONAL_TEMPLATES = {
@@ -80,19 +82,19 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     if has_ocean:
         context_lines.extend([
             f"- Sea Surface Temp (SST): {ocean.get('sst_celsius')}°C ({ocean.get('source', 'INCOIS ARGO')})",
-            f"- Chlorophyll-a: {ocean.get('chlorophyll_a')} mg/m³ (Source: INCOIS Regional Climatology Baseline - seasonal composite)",
+            f"- Chlorophyll-a: {ocean.get('chlorophyll_a')} mg/m³ (Source: {ocean.get('chlorophyll_source', 'INCOIS Climatology Baseline')})",
             f"- Species HSI: Indian Mackerel={ocean.get('species_hsi', {}).get('Indian Mackerel', 'N/A')}, Yellowfin Tuna={ocean.get('species_hsi', {}).get('Yellowfin Tuna', 'N/A')}, Hilsa={ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 'N/A')}",
-            f"- PFZ Waypoint Coords: {ocean.get('pfz_coordinates', [])}",
+            f"- PFZ Waypoint Coords: {ocean.get('pfz_coordinates', [])} (Source: {ocean.get('pfz_source', 'Bathymetric Shelf-Break Model - illustrative')})",
         ])
     else:
         context_lines.append("- Ocean Telemetry / PFZ: Not queried. Do NOT report SST or fish zones.")
 
     if has_weather:
         context_lines.extend([
-            f"- Significant Wave Height (Hs): {weather.get('significant_wave_height_m')} m (Source: INCOIS OSF Model Baseline)",
+            f"- Significant Wave Height (Hs): {weather.get('significant_wave_height_m')} m (Source: {weather.get('wave_source', 'INCOIS OSF Model Baseline')})",
             f"- Wind Speed (W): {weather.get('wind_speed_knots')} knots ({weather.get('source', 'INCOIS')})",
-            f"- Cyclone Alert: {weather.get('cyclone_alert_level', 'Normal')}",
-            f"- Squall Probability: {weather.get('lightning_squall_prob_pct')}%",
+            f"- Cyclone Alert: {weather.get('cyclone_alert_level', 'Normal')} (Source: {weather.get('cyclone_source', 'State Disaster Management Baseline')})",
+            f"- Squall Probability: {weather.get('lightning_squall_prob_pct')}% (Source: {weather.get('squall_source', 'Regional Atmospheric Climatology')})",
         ])
     else:
         context_lines.append("- Weather Telemetry: Not queried for this question. Mathematically forbidden from assuming wave heights or wind speeds.")

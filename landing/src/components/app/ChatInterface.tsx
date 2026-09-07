@@ -42,6 +42,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     setIsVoiceActive,
     setIsMapOpen,
     isSidebarCollapsed,
+    userRole,
   } = useApp();
 
   const isLight = theme === "light";
@@ -274,13 +275,13 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
             {chat.title}
           </h2>
           <span
-            className={`hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full font-mono font-medium shrink-0 ${
+            className={`hidden sm:inline-flex text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold shrink-0 uppercase ${
               isLight
-                ? "bg-slate-200/70 text-slate-700"
-                : "bg-white/10 text-slate-300"
+                ? "bg-cyan-100 text-cyan-800"
+                : "bg-cyan-950/80 text-cyan-300 border border-cyan-800/40"
             }`}
           >
-            {chat.model}
+            {userRole.replace("_", " ")} · 5-Agent DAG
           </span>
         </div>
 

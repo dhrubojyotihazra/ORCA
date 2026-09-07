@@ -52,6 +52,8 @@ interface AppContextType {
   selectPort: (portId: string) => void;
   vesselType: "small" | "medium" | "large";
   setVesselType: (v: "small" | "medium" | "large") => void;
+  userRole: "fisher" | "coast_guard" | "port_operator" | "scientist";
+  setUserRole: (r: "fisher" | "coast_guard" | "port_operator" | "scientist") => void;
   
   // Geospatial Map Modal
   isMapOpen: boolean;
@@ -72,6 +74,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Maritime parameters
   const [userLocation, setUserLocation] = useState<CoastalLocation>(COASTAL_PORTS[0]);
   const [vesselType, setVesselType] = useState<"small" | "medium" | "large">("small");
+  const [userRole, setUserRole] = useState<"fisher" | "coast_guard" | "port_operator" | "scientist">("fisher");
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   // Initialize theme and chats from localStorage
@@ -213,6 +216,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           messages: [{ role: "user", content: initialPrompt }],
           location: userLocation,
           vesselType,
+          userRole,
         }),
       })
         .then(async (r) => {
@@ -340,6 +344,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         messages: history,
         location: userLocation,
         vesselType,
+        userRole,
       }),
     })
       .then(async (r) => {
@@ -424,6 +429,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         selectPort,
         vesselType,
         setVesselType,
+        userRole,
+        setUserRole,
         isMapOpen,
         setIsMapOpen,
       }}

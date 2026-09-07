@@ -31,6 +31,8 @@ export function AppSidebar() {
     requestLiveLocation,
     vesselType,
     setVesselType,
+    userRole,
+    setUserRole,
   } = useApp();
 
   const isLight = theme === "light";
@@ -268,6 +270,36 @@ export function AppSidebar() {
                   {v.label}
                 </button>
               ))}
+            </div>
+
+            {/* Stakeholder Role Selector (SIH26176) */}
+            <div className="pt-1.5 border-t border-black/5 dark:border-white/5">
+              <span className={`text-[9px] uppercase tracking-wider font-semibold block mb-1 px-1 ${
+                isLight ? "text-slate-400" : "text-slate-500"
+              }`}>
+                Operational Role
+              </span>
+              <div className="grid grid-cols-2 gap-1">
+                {([
+                  { id: "fisher", label: "Fisher", icon: "🎣" },
+                  { id: "coast_guard", label: "Coast Guard", icon: "🛡️" },
+                  { id: "port_operator", label: "Port Ops", icon: "⚓" },
+                  { id: "scientist", label: "Scientist", icon: "🔬" },
+                ] as const).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setUserRole(r.id)}
+                    className={`text-left px-2 py-1 rounded-lg text-[10px] font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      userRole === r.id
+                        ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-semibold"
+                        : isLight ? "text-slate-600 hover:bg-slate-100" : "text-slate-400 hover:bg-white/5"
+                    }`}
+                  >
+                    <span>{r.icon}</span>
+                    <span className="truncate">{r.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

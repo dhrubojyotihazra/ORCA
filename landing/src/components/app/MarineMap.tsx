@@ -332,6 +332,19 @@ export function MarineMap({
     }
   };
 
+  // Keyboard shortcut: Esc closes full modal
+  useEffect(() => {
+    if (mode !== "modal") return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (onClose) onClose();
+        else setIsMapOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mode, onClose, setIsMapOpen]);
+
   const handleCardClick = () => {
     if (mode === "inline") {
       if (onExpand) {
@@ -411,26 +424,49 @@ export function MarineMap({
   // ── FULL GIS MODAL MODE (Opened via Header or Mini-map) ──
   // ─────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6 transition-all select-none">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          if (onClose) onClose();
+          else setIsMapOpen(false);
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6 transition-all select-none"
+    >
       <div
         className={`relative w-full max-w-6xl h-[90dvh] rounded-[28px] overflow-hidden flex flex-col shadow-2xl transition-all ${
           isLight ? "neo-card-light" : "neo-card-dark"
         } ${className}`}
       >
         {/* ── Top Bar: Layer Toggles (Slim Horizontal Strip, Max 4-5 Toggles) ── */}
-        <div className="px-5 py-3 border-b border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 z-10 bg-black/10 backdrop-blur-md">
+        <div
+          className={`px-5 py-3 border-b flex flex-wrap items-center justify-between gap-3 z-10 backdrop-blur-md transition-colors ${
+            isLight
+              ? "bg-white/90 border-slate-200 shadow-sm"
+              : "bg-black/50 border-white/10"
+          }`}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 shrink-0">
-              <Compass className="size-4" />
-            </div>
+            <button
+              type="button"
+              onClick={handleRecenter}
+              title="Recenter Map on Vessel (Compass)"
+              className={`p-1.5 rounded-xl shrink-0 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                isLight
+                  ? "bg-cyan-100 text-cyan-800 border-2 border-cyan-400/80 hover:bg-cyan-200"
+                  : "bg-cyan-500/20 text-cyan-300 border-2 border-cyan-500/50 hover:bg-cyan-500/30"
+              }`}
+            >
+              <Compass className="size-4.5 stroke-[2.4]" />
+            </button>
             <div className="min-w-0">
               <h2 className={`text-sm font-bold truncate flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 <span>ORCA Live Marine GIS</span>
-                <span className="text-[10px] font-mono text-cyan-400 font-semibold hidden sm:inline">
+                <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold hidden sm:inline">
                   (ESRI Satellite · ISRO · INCOIS)
                 </span>
               </h2>
-              <p className="text-[10px] text-slate-400 truncate">
+              <p className={`text-[10px] truncate ${isLight ? "text-slate-600 font-medium" : "text-slate-400"}`}>
                 Anchor: {userLocation.name} ({userLocation.lat}°N, {userLocation.lon}°E) · Vessel: {vesselType === "small" ? "<8m Craft" : vesselType === "medium" ? "8-15m Motorized" : ">15m Trawler"}
               </p>
             </div>
@@ -523,24 +559,37 @@ export function MarineMap({
               <span>{isSatelliteMode ? "Satellite: ON" : "Marine Map"}</span>
             </button>
 
-            {/* Recenter button */}
+            {/* Divider */}
+            <div className="h-6 w-px bg-slate-300 dark:bg-white/20 mx-1 hidden sm:block" />
+
+            {/* Recenter / Compass Button */}
             <button
               type="button"
               onClick={handleRecenter}
-              className="p-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 hover:text-white border border-white/10 cursor-pointer ml-1"
-              title="Recenter on Vessel"
+              className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-md ${
+                isLight
+                  ? "bg-white hover:bg-cyan-50 text-cyan-800 hover:text-cyan-900 border-2 border-cyan-400 hover:border-cyan-500 shadow-sm"
+                  : "bg-slate-900/90 hover:bg-cyan-950/80 text-cyan-400 hover:text-cyan-300 border-2 border-cyan-500/60 hover:border-cyan-400 shadow-sm"
+              }`}
+              title="Recenter Map on Vessel (Compass)"
+              aria-label="Recenter on Vessel (Compass)"
             >
-              <Crosshair className="size-4" />
+              <Compass className="size-4.5 stroke-[2.4]" />
             </button>
 
-            {/* Close Modal Button */}
+            {/* Close Modal Button (X) */}
             <button
               type="button"
               onClick={() => (onClose ? onClose() : setIsMapOpen(false))}
-              className="p-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-slate-300 hover:text-white border border-white/10 cursor-pointer"
-              title="Close Map"
+              className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-md ${
+                isLight
+                  ? "bg-rose-500 hover:bg-rose-600 text-white border-2 border-rose-600 shadow-rose-500/25"
+                  : "bg-rose-500/90 hover:bg-rose-500 text-white border-2 border-rose-400/80 shadow-rose-500/40"
+              }`}
+              title="Close Map (Esc)"
+              aria-label="Close Map"
             >
-              <X className="size-4" />
+              <X className="size-4.5 stroke-[3]" />
             </button>
           </div>
         </div>

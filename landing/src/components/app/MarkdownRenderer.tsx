@@ -265,6 +265,41 @@ function CodeBlock({
   );
 }
 
+// ── LaTeX Normalizer for Remark-Math / KaTeX ──
+function normalizeMarkdownLatex(raw: string): string {
+  if (!raw) return "";
+  let processed = raw;
+
+  // 1. Convert standard \[ ... \] block math to $$ ... $$
+  processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => `\n\n$$\n${math.trim()}\n$$\n\n`);
+
+  // 2. Convert standard \( ... \) inline math to $ ... $
+  processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => `$${math.trim()}$`);
+
+  // 3. Catch bracketed display blocks that lost backslash from markdown escaping:
+  //    e.g. [ \text{Safety} = ... ] or [ \begin{aligned} ... \end{aligned} ]
+  processed = processed.replace(
+    /(?:^|\n)[ \t]*\[[ \t]*(\\?(?:text|begin|mathbf|frac|bigl|left|[a-zA-Z0-9_]+\s*=)[\s\S]*?\])(?=[ \t]*(?:\n|$))/g,
+    (match, inner) => {
+      let math = inner.trim();
+      if (math.endsWith("]")) {
+        math = math.slice(0, -1).trim();
+      }
+      // Fix broken single backslash row breaks before alignment ampersand: ' \ &=' -> ' \\ &='
+      math = math.replace(/([^\\])\\\s*&/g, "$1 \\\\ &");
+      return `\n\n$$\n${math}\n$$\n\n`;
+    }
+  );
+
+  // 4. Wrap standalone \begin{aligned} ... \end{aligned} blocks not already enclosed in $$
+  processed = processed.replace(
+    /(?<!\$\$[\s\S]*?)(\\begin\{(?:aligned|equation|gather|matrix|bmatrix|pmatrix)\}[\s\S]*?\\end\{(?:aligned|equation|gather|matrix|bmatrix|pmatrix)\})(?![\s\S]*?\$\$)/g,
+    "\n\n$$\n$1\n$$\n\n"
+  );
+
+  return processed;
+}
+
 // ── Master Markdown Renderer ──
 interface MarkdownRendererProps {
   content: string;
@@ -273,12 +308,13 @@ interface MarkdownRendererProps {
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { theme } = useApp();
   const isLight = theme === "light";
+  const normalizedContent = React.useMemo(() => normalizeMarkdownLatex(content), [content]);
 
   return (
     <div className="prose dark:prose-invert max-w-none text-inherit leading-relaxed">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[[rehypeKatex, { output: "html", throwOnError: false, strict: false }]]}
         components={{
           // Code & Syntax
           code({ node, inline, className, children, ...props }: any) {
@@ -428,7 +464,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           },
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );

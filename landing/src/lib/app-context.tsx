@@ -77,9 +77,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<"fisher" | "coast_guard" | "port_operator" | "scientist">("fisher");
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  // Initialize theme and chats from localStorage
+  // Initialize theme and chats from localStorage, and auto-collapse sidebar on mobile screens
   useEffect(() => {
     try {
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
+        setIsSidebarCollapsed(true);
+      }
       const savedTheme = localStorage.getItem("orca_theme") as ThemeMode | null;
       if (savedTheme === "dark" || savedTheme === "light") {
         setTheme(savedTheme);

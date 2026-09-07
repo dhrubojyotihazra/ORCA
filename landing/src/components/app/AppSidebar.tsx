@@ -66,11 +66,18 @@ export function AppSidebar() {
   }
 
   return (
-    <aside
-      className={`w-[260px] h-[calc(100dvh-24px)] m-3 flex flex-col rounded-[28px] shrink-0 transition-all duration-300 z-30 select-none ${
-        isLight ? "neo-card-light" : "neo-card-dark"
-      }`}
-    >
+    <>
+      {/* Mobile backdrop overlay */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden"
+        onClick={toggleSidebar}
+        aria-hidden="true"
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 md:static md:z-30 w-[280px] sm:w-[260px] h-[calc(100dvh-24px)] m-3 flex flex-col rounded-[28px] shrink-0 transition-all duration-300 select-none shadow-2xl md:shadow-none ${
+          isLight ? "neo-card-light" : "neo-card-dark"
+        }`}
+      >
       {/* ── Logo + Collapse ── */}
       <div className="p-5 pb-3 flex items-center justify-between">
         <Link href="/app" className="flex items-center gap-2.5 group">
@@ -323,5 +330,6 @@ export function AppSidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

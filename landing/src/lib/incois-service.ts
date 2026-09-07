@@ -497,7 +497,7 @@ export async function getCoastalTelemetry(
   if (liveSst) {
     sstCelsius = liveSst.sst;
     sstIsLive = true;
-    oceanSource = `INCOIS ERDDAP Live — dataset:${liveSst.dataset}, query:${liveSst.queryUrl}, fetched:${liveSst.obsTime}`;
+    oceanSource = `INCOIS ERDDAP (Most recent float observation: ${liveSst.obsTime}) — dataset:${liveSst.dataset}`;
     oceanDataset = `${liveSst.dataset} (erddap.incois.gov.in)`;
     oceanTimestamp = liveSst.obsTime;
   } else {
@@ -533,7 +533,7 @@ export async function getCoastalTelemetry(
     // ASCAT returns m/s, convert to knots (1 m/s = 1.94384 knots)
     windSpeedKnots = Math.round(liveWind.windSpeedMs * 1.94384 * 10) / 10;
     windIsLive = true;
-    weatherSource = `INCOIS ERDDAP Live — dataset:${liveWind.dataset}, query:${liveWind.queryUrl}, fetched:${liveWind.obsTime}`;
+    weatherSource = `INCOIS ERDDAP (Most recent satellite observation: ${liveWind.obsTime}) — dataset:${liveWind.dataset}`;
     weatherTimestamp = liveWind.obsTime;
   } else {
     // Fallback: baseline registry + diurnal fluctuation

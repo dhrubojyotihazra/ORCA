@@ -184,14 +184,16 @@ def invoke_agents(payload: AgentInvokeRequest):
                 elif node_name == "ocean_specialist":
                     odata = node_update.get("ocean_data", {})
                     sst = odata.get("sst_celsius", "N/A")
+                    obs_t = (odata.get("timestamp") or "")[:10]
                     hsi = odata.get("species_hsi", {}).get("Indian Mackerel", 0.8)
-                    summary = f"MOSDAC / ARGO SST: {sst}°C | Habitat Suitability Index (Mackerel): {hsi} | Thermal front verified"
+                    summary = f"INCOIS ARGO SST: {sst}°C (Observed: {obs_t}) | HSI Mackerel: {hsi} | Thermal front verified"
                 elif node_name == "weather_specialist":
                     wdata = node_update.get("weather_data", {})
                     hs = wdata.get("significant_wave_height_m", "N/A")
                     wind = wdata.get("wind_speed_knots", "N/A")
+                    obs_t = (wdata.get("timestamp") or "")[:10]
                     alert = wdata.get("cyclone_alert_level", "Normal")
-                    summary = f"INCOIS OSF: Hs={hs}m | Wind={wind} kts | Cyclone Advisory Stage: {alert}"
+                    summary = f"INCOIS OSF: Hs={hs}m | Wind={wind} kts (Observed: {obs_t}) | Cyclone Advisory: {alert}"
                 elif node_name == "risk_specialist":
                     rdata = node_update.get("risk_data", {})
                     s_idx = rdata.get("safety_index", "N/A")

@@ -16,6 +16,7 @@ CRITICAL GROUNDING RULES:
 3. Use clean Markdown tables, bullet points, and LaTeX notation ($Hs$, $W$) where appropriate.
 4. Always conclude with the mandatory evidence footer:
 Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
+5. TIMESTAMP HONESTY: When citing satellite scatterometer wind (ascat) or ARGO float SST, explicitly state "Most recent INCOIS observation: <date>". NEVER call historical data "Live".
 """
 
 REGIONAL_TEMPLATES = {

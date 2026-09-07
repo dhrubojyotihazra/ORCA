@@ -144,7 +144,7 @@ export function AgentTraceInspector({ trace, isLight }: AgentTraceInspectorProps
           {/* Live indicator badge */}
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
             <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{hasLiveFeed ? "INCOIS ERDDAP Live" : "Calibrated Baseline"}</span>
+            <span>{hasLiveFeed ? "INCOIS ERDDAP Verified" : "Calibrated Baseline"}</span>
           </div>
         </div>
 

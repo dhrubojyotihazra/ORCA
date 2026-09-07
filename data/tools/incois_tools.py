@@ -107,7 +107,7 @@ def get_live_argo_sst(lat: float, lon: float) -> dict:
                         "obs_lon": obs_lon,
                         "obs_time": obs_time,
                         "dataset": "Indian_ARGO_Floats",
-                        "source": f"INCOIS ERDDAP Live — dataset:Indian_ARGO_Floats, fetched:{obs_time}",
+                        "source": f"INCOIS ERDDAP (Most recent float observation: {obs_time}) — dataset:Indian_ARGO_Floats",
                     }
     except Exception:
         pass
@@ -150,7 +150,7 @@ def get_live_ascat_wind(lat: float, lon: float) -> dict:
                     "wind_speed_knots": knots,
                     "obs_time": rows[0][0],
                     "dataset": "ascat_daily_datasets",
-                    "source": f"INCOIS ERDDAP Live — dataset:ascat_daily_datasets, fetched:{rows[0][0]}",
+                    "source": f"INCOIS ERDDAP (Most recent satellite observation: {rows[0][0]}) — dataset:ascat_daily_datasets",
                 }
     except Exception:
         pass

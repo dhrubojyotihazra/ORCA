@@ -33,6 +33,7 @@ export function AppSidebar() {
     setVesselType,
     userRole,
     setUserRole,
+    setIsSettingsOpen,
   } = useApp();
 
   const isLight = theme === "light";
@@ -311,10 +312,19 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* User profile row */}
-        <div className="flex items-center justify-between px-1 py-0.5">
+        {/* User profile & Settings trigger row */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-2xl transition-all cursor-pointer group text-left ${
+            isLight
+              ? "hover:bg-slate-200/60 active:scale-[0.99]"
+              : "hover:bg-white/[0.06] active:scale-[0.99]"
+          }`}
+          title="Open Settings & Operator Profile"
+          aria-label="Open Settings & Operator Profile"
+        >
           <div className="flex items-center gap-2 min-w-0">
-            <div className="relative size-7 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
+            <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all">
               D
               <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
             </div>
@@ -323,11 +333,12 @@ export function AppSidebar() {
                 Dhrubojyoti
               </span>
               <span className="text-[10px] text-cyan-500 block truncate font-mono">
-                Team Lead
+                Team Lead · Settings
               </span>
             </div>
           </div>
-        </div>
+          <Settings className={`size-3.5 shrink-0 transition-transform group-hover:rotate-45 ${isLight ? "text-slate-400 group-hover:text-slate-700" : "text-slate-500 group-hover:text-cyan-300"}`} />
+        </button>
       </div>
     </aside>
     </>

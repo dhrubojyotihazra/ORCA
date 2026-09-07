@@ -15,8 +15,10 @@ export function AppHeader() {
     toggleTheme,
     isVoiceActive,
     setIsVoiceActive,
+    isMapOpen,
     setIsMapOpen,
     isSidebarCollapsed,
+    setIsSettingsOpen,
   } = useApp();
 
   const isLight = theme === "light";
@@ -71,6 +73,16 @@ export function AppHeader() {
           aria-label="Toggle Theme"
         >
           {isLight ? <Moon className="size-3.5" /> : <Sun className="size-3.5 fill-amber-400/20" />}
+        </button>
+
+        {/* User Profile / Settings Menu Trigger */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-2 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0"
+          title="Operator Settings & Profile"
+          aria-label="Operator Settings & Profile"
+        >
+          D
         </button>
       </div>
     </header>

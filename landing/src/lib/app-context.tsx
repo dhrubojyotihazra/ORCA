@@ -59,6 +59,16 @@ interface AppContextType {
   isMapOpen: boolean;
   setIsMapOpen: (open: boolean) => void;
 
+  // Profile & Settings Sheet / Modal
+  isSettingsOpen: boolean;
+  setIsSettingsOpen: (open: boolean) => void;
+
+  // System settings
+  hapticFeedback: boolean;
+  setHapticFeedback: (enabled: boolean) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
+
   // Global Toast Notifications
   showToast: (message: string, type?: "info" | "success" | "warning" | "error") => void;
 }
@@ -79,6 +89,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [vesselType, setVesselType] = useState<"small" | "medium" | "large">("small");
   const [userRole, setUserRole] = useState<"fisher" | "coast_guard" | "port_operator" | "scientist">("fisher");
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [hapticFeedback, setHapticFeedbackState] = useState(true);
+  const [language, setLanguageState] = useState("en");
+
+  const setHapticFeedback = (enabled: boolean) => {
+    setHapticFeedbackState(enabled);
+    try {
+      localStorage.setItem("orca_haptic", enabled ? "1" : "0");
+      if (enabled && typeof window !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(15);
+      }
+    } catch {}
+  };
+
+  const setLanguage = (lang: string) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem("orca_lang", lang);
+    } catch {}
+  };
 
   // Global Toast Notifications
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: "info" | "success" | "warning" | "error" }>>([]);
@@ -91,7 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 3500);
   };
 
-  // Initialize theme and chats from localStorage, and auto-collapse sidebar on mobile screens
+  // Initialize theme, settings, and chats from localStorage, and auto-collapse sidebar on mobile screens
   useEffect(() => {
     try {
       if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -100,6 +130,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedTheme = localStorage.getItem("orca_theme") as ThemeMode | null;
       if (savedTheme === "dark" || savedTheme === "light") {
         setTheme(savedTheme);
+      }
+      const savedHaptic = localStorage.getItem("orca_haptic");
+      if (savedHaptic !== null) {
+        setHapticFeedbackState(savedHaptic === "1");
+      }
+      const savedLang = localStorage.getItem("orca_lang");
+      if (savedLang) {
+        setLanguageState(savedLang);
       }
       const savedChats = localStorage.getItem("orca_chats_sessions_v4");
       if (savedChats) {
@@ -450,6 +488,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setUserRole,
         isMapOpen,
         setIsMapOpen,
+        isSettingsOpen,
+        setIsSettingsOpen,
+        hapticFeedback,
+        setHapticFeedback,
+        language,
+        setLanguage,
         showToast,
       }}
     >

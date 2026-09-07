@@ -8,6 +8,7 @@ import { AppHeader } from "./AppHeader";
 import { ArtifactsDrawer } from "./ArtifactsDrawer";
 import { VoiceOverlay } from "./VoiceOverlay";
 import { MarineMapModal } from "./MarineMapModal";
+import { SettingsMenuModal } from "./SettingsMenuModal";
 import { WebGLLiquid } from "@/components/ui/webgl-liquid";
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
@@ -91,6 +92,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {/* ── Interactive Geospatial Marine Map ── */}
       <MarineMapModal />
+
+      {/* ── Context-Aware Profile & Settings Sheet ── */}
+      <SettingsMenuModal />
     </div>
   );
 }

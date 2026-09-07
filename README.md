@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <br />
 
@@ -159,37 +159,47 @@ Team member cards featuring:
 ## 📁 Project Structure
 
 ```
-orca-landing/
-├── public/
-│   ├── images/              # ORCA morph poster assets (front.png, reveal.png)
-│   ├── team/                # Team member avatars (dhrubojyoti.jpg, etc.)
-│   └── icon.png             # ORCA favicon
+ORCA/
+├── agents/                           # LangGraph Multi-Agent Architecture
+│   ├── graph.py                      # Compiled 5-node StateGraph DAG
+│   ├── planner_agent.py              # Intent router, spatial geocoder & language detector
+│   ├── specialists.py                # Ocean (MOSDAC/HSI), Weather (INCOIS), Risk (Sea-Venture)
+│   ├── synthesizer_agent.py          # Zero-hallucination grounded regional synthesis
+│   └── state.py                      # Canonical TypedDict state schema
 │
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx       # Root layout — Inter + Space Mono fonts, metadata
-│   │   ├── page.tsx         # Entry point — composes HeroSection + BelowFoldSections
-│   │   └── globals.css      # CSS variables, scroll behaviour, native cursor
-│   │
-│   ├── components/
-│   │   ├── HeroSection.tsx          # GPU-composited ORCA morph canvas + OceanGlobeCard
-│   │   ├── BelowFoldSections.tsx    # Problem · Solution · Team · Footer sections
-│   │   ├── OceanGlobeCard.tsx       # Liquid glass wrapper for the 3D globe
-│   │   ├── GlassFilterDefs.tsx      # Shared SVG <defs> for SVG glass distortion
-│   │   └── Navbar.tsx               # Adaptive notch navigation bar
-│   │
-│   └── components/ui/
-│       ├── cobe-globe.tsx                    # WebGL globe with zoom & drag physics
-│       ├── morphing-cursor.tsx               # MagneticText expanding lens effect
-│       ├── spotlight-card.tsx                # Cursor-tracking borderless glass card
-│       ├── animated-gradient-border.tsx      # Rotating conic glow border (team cards)
-│       ├── animated-gradient.tsx             # WebGL background gradient mesh
-│       ├── fishy-button.tsx                  # Animated CTA button with particle trail
-│       ├── liquid-glass.tsx                  # SVG feTurbulence refraction filter
-│       ├── footer-section.tsx                # Site footer with nav links
-│       └── adaptive-notch-navigation-bar.tsx # Dynamic island-style navbar
+├── backend/                          # FastAPI / Python Service Layer
+│   └── app/
+│       └── services/                 # Groq LPU manager & experiential services
 │
-└── tailwind.config.ts
+├── data/                             # Marine Geofences & Telemetry Tools
+│   ├── geofence_boundaries.geojson   # PostGIS sanctuary & buffer polygons
+│   ├── demo_fallback_cache.json      # Grounded port baseline cache
+│   └── tools/                        # INCOIS, MOSDAC, PostGIS tool bridges
+│
+├── docs/                             # Technical Documentation & Dossiers
+│   ├── architecture.md               # 5-Node Multi-Agent DAG & Telemetry Spec
+│   ├── design-system.md              # Neomorphic & liquid design token specification
+│   ├── data-sources.md               # INCOIS ERDDAP & MOSDAC sensor catalogs
+│   ├── eval-queries.md               # Multi-language regional test query suite
+│   └── ORCA_Build_Dossier.pdf        # SIH26176 official architecture dossier
+│
+├── landing/                          # Next.js 16 Full-Stack Application
+│   ├── public/                       # Assets, logos, audio models
+│   ├── src/
+│   │   ├── app/                      # App router: /, /app, /new, /chat/[id], /api
+│   │   ├── components/               # UI components, MarineMap, ChatInterface, Multi-Agent DAG
+│   │   └── lib/                      # INCOIS ERDDAP service, chat-store, app-context
+│   ├── package.json
+│   └── next.config.ts
+│
+├── tests/                            # Verification Test Suite
+│   ├── test_agent_pipeline.py        # LangGraph 5-node multilingual pipeline tests
+│   ├── test_data_tools.py            # MOSDAC & INCOIS tool tests
+│   └── test_groq_voice.py            # Groq Whisper LPU ASR latency tests
+│
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
 
 ---

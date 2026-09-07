@@ -23,6 +23,10 @@ import {
   Zap,
   Sun,
   Moon,
+  Share2,
+  FileDown,
+  Printer,
+  FileText,
 } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { MarineMap } from "./MarineMap";
@@ -43,6 +47,9 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     setIsMapOpen,
     isSidebarCollapsed,
     userRole,
+    userLocation,
+    vesselType,
+    showToast,
   } = useApp();
 
   const isLight = theme === "light";
@@ -50,8 +57,24 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
   const [isDictating, setIsDictating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dictationRef = useRef<any>(null);
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setIsShareOpen(false);
+      }
+    }
+    if (isShareOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isShareOpen]);
 
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -85,7 +108,42 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    showToast("Response text copied to clipboard", "info");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleCopyShareLink = () => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+    }
+    showToast("Share conversation link copied to clipboard!", "success");
+    setIsShareOpen(false);
+  };
+
+  const handleExportPdf = () => {
+    setIsShareOpen(false);
+    showToast("Formatting LaTeX-aware PDF export...", "info");
+    const prevTitle = document.title;
+    const safePort = (userLocation?.name || "Coastal").replace(/[^a-zA-Z0-9]/g, "_");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    document.title = `ORCA_Advisory_Report_${safePort}_${userRole}_${dateStr}`;
+    setTimeout(() => {
+      window.print();
+      document.title = prevTitle;
+    }, 450);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const sizeKb = (file.size / 1024).toFixed(1);
+    showToast(`Attached dataset: ${file.name} (${sizeKb} KB) - Ready for multi-agent reasoning`, "success");
+    setInputText((prev) =>
+      prev
+        ? `${prev} [Attached dataset: ${file.name}]`
+        : `Analyze uploaded marine telemetry "${file.name}" for navigation and fish habitats: `
+    );
+    e.target.value = "";
   };
 
   const handleReadAloud = (id: string, text: string) => {
@@ -104,7 +162,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
       window.speechSynthesis.speak(utterance);
       setSpeakingId(id);
     } else {
-      alert("Speech synthesis is not supported on this browser.");
+      showToast("Speech synthesis is not supported on this browser.", "warning");
     }
   };
 
@@ -127,7 +185,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     if (typeof window === "undefined") return;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Microphone access is not supported by your browser.");
+      showToast("Microphone access is not supported by your browser.", "warning");
       return;
     }
 
@@ -224,9 +282,9 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     } catch (err: any) {
       console.warn("Microphone access error:", err);
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        alert("Microphone permission was denied. Please allow microphone access in your browser address bar.");
+        showToast("Microphone permission was denied. Please allow microphone access in your browser address bar.", "error");
       } else {
-        alert("Microphone could not be accessed: " + (err.message || "Unknown error"));
+        showToast("Microphone could not be accessed: " + (err.message || "Unknown error"), "error");
       }
       setIsDictating(false);
     }
@@ -287,21 +345,66 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
 
         {/* Right: Share + Marine Map + Voice + Theme Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={() => {
-              if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href);
-              }
-              alert("Share conversation link copied to clipboard!");
-            }}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
-              isLight
-                ? "neo-btn-light text-slate-700 hover:text-slate-900"
-                : "neo-btn-dark text-slate-300 hover:text-white"
-            }`}
-          >
-            Share
-          </button>
+          {/* Share & LaTeX PDF Export Menu */}
+          <div className="relative" ref={shareMenuRef}>
+            <button
+              onClick={() => setIsShareOpen((prev) => !prev)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                isLight
+                  ? "neo-btn-light text-slate-700 hover:text-slate-900"
+                  : "neo-btn-dark text-slate-300 hover:text-white"
+              }`}
+              title="Share or Export Conversation"
+            >
+              <Share2 className="size-3 text-cyan-400" />
+              <span>Share</span>
+            </button>
+
+            {isShareOpen && (
+              <div
+                className={`absolute right-0 top-full mt-2 w-64 rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl border z-50 animate-in fade-in slide-in-from-top-2 select-none ${
+                  isLight
+                    ? "bg-white/95 border-slate-200 text-slate-800 shadow-slate-300/60"
+                    : "bg-[#081220]/95 border-cyan-500/20 text-slate-100 shadow-black/80"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={handleCopyShareLink}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                    isLight
+                      ? "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
+                      : "hover:bg-cyan-950/60 text-slate-200 hover:text-cyan-200"
+                  }`}
+                >
+                  <Copy className="size-3.5 text-cyan-500 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Copy Share Link</div>
+                    <div className="text-[10px] opacity-70">Direct link to current conversation</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                    isLight
+                      ? "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
+                      : "hover:bg-cyan-950/60 text-slate-200 hover:text-cyan-200"
+                  }`}
+                >
+                  <FileDown className="size-3.5 text-emerald-400 shrink-0" />
+                  <div>
+                    <div className="font-semibold flex items-center gap-1.5">
+                      <span>Export PDF Report</span>
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">LaTeX</span>
+                    </div>
+                    <div className="text-[10px] opacity-70">Publication vector math report (Print/PDF)</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Marine Map */}
           <button
@@ -350,15 +453,63 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
       </div>
 
       {/* ── Messages Stream ── */}
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 md:px-8 space-y-5 auth-form-scrollbar max-w-4xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 md:px-8 space-y-5 auth-form-scrollbar max-w-4xl w-full mx-auto chat-scroll-container">
+        {/* ── LaTeX-Aware PDF Report Header (Visible only when exporting to PDF / Printing) ── */}
+        <div className="hidden print:block mb-8 p-6 rounded-2xl border-2 border-slate-900 bg-white text-slate-950 font-sans shadow-none">
+          <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-2 py-0.5 font-bold font-mono tracking-wider bg-slate-900 text-white rounded">
+                  ISRO SIH26176
+                </span>
+                <h1 className="text-lg font-black tracking-tight uppercase">
+                  ORCA Marine Decision Advisory Report
+                </h1>
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                Autonomous Multi-Agent System · Grounded Ocean, Weather & Risk Telemetry
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="inline-block px-3 py-1 text-xs font-bold font-mono uppercase border border-slate-900 rounded-md">
+                {userRole.replace("_", " ")} REGISTER
+              </span>
+              <p className="text-[10px] text-slate-500 font-mono mt-1">
+                Generated: {new Date().toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 text-xs font-mono bg-slate-100/70 p-3 rounded-xl border border-slate-300">
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Anchor Station</span>
+              <span className="font-semibold text-slate-900">{userLocation.name}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Coordinates</span>
+              <span className="font-semibold text-slate-900">{userLocation.lat}°N, {userLocation.lon}°E</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">Vessel Class</span>
+              <span className="font-semibold text-slate-900">
+                {vesselType === "small" ? "Small (<8m)" : vesselType === "medium" ? "Motorized (8-15m)" : "Deep-Sea (>15m)"}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[10px] uppercase font-bold">DAG Execution</span>
+              <span className="font-semibold text-slate-900">5-Node LangGraph</span>
+            </div>
+          </div>
+        </div>
+
         {chat.messages.map((message) => {
           const isUser = message.role === "user";
 
           if (isUser) {
             return (
-              <div key={message.id} className="flex justify-end gap-3 group">
+              <div key={message.id} className="flex justify-end gap-3 group chat-msg-row">
                 <div
-                  className={`max-w-[80%] rounded-[22px] px-5 py-3.5 text-sm sm:text-base leading-relaxed ${
+                  className={`max-w-[80%] rounded-[22px] px-5 py-3.5 text-sm sm:text-base leading-relaxed chat-bubble-card ${
                     isLight
                       ? "bg-[#e2ebf5] text-slate-900 shadow-[-2px_-2px_6px_rgba(255,255,255,0.9),2px_2px_6px_rgba(180,195,215,0.4)] border border-white/70"
                       : "bg-[#142233] text-slate-100 border border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
@@ -380,9 +531,9 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
 
           // Assistant Message Turn
           return (
-            <div key={message.id} className="flex items-start gap-3.5 group">
+            <div key={message.id} className="flex items-start gap-3.5 group chat-msg-row">
               {/* Orca Assistant Avatar */}
-              <div className="size-8 rounded-full flex items-center justify-center shrink-0 mt-1 p-1">
+              <div className="size-8 rounded-full flex items-center justify-center shrink-0 mt-1 p-1 no-print">
                 {isLight ? (
                   <img
                     src="/images/orca-logo-light.png"
@@ -399,7 +550,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
               </div>
 
               {/* Message Content Container */}
-              <div className="flex-1 min-w-0 space-y-3">
+              <div className="flex-1 min-w-0 space-y-3 chat-bubble-card">
                 <div className="flex items-center gap-2">
                   <span
                     className={`text-xs font-bold tracking-tight font-serif ${
@@ -538,7 +689,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
                   </button>
 
                   <button
-                    onClick={() => alert("Feedback logged: Helpful response")}
+                    onClick={() => showToast("Feedback logged: Helpful response", "success")}
                     className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                       isLight
                         ? "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
@@ -550,7 +701,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
                   </button>
 
                   <button
-                    onClick={() => alert("Feedback logged")}
+                    onClick={() => showToast("Feedback logged. Thank you for refining ORCA!", "info")}
                     className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                       isLight
                         ? "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
@@ -608,15 +759,22 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
 
           <div className="flex items-center justify-between pt-1 select-none">
             <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".csv,.json,.txt,.nc,.tiff,.geotiff,.pdf"
+                onChange={handleFileUpload}
+              />
               <button
                 type="button"
-                onClick={() => alert("Upload datasets or files to ORCA")}
+                onClick={() => fileInputRef.current?.click()}
                 className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                   isLight
                     ? "bg-[#eaf1f8] text-slate-700 hover:text-slate-900 shadow-sm"
                     : "bg-slate-900/80 text-slate-300 hover:text-white"
                 }`}
-                title="Add attachment"
+                title="Attach datasets or voyage logs"
               >
                 <Plus className="size-4" />
               </button>

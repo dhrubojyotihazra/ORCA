@@ -302,11 +302,11 @@ function ProblemSection() {
 
           <RevealBlock delay={0.1}>
             <h2
-              className="text-4xl sm:text-5xl lg:text-7xl leading-[1.08] text-white font-heading font-extrabold tracking-tight"
+              className="text-3xl sm:text-5xl lg:text-7xl leading-[1.08] text-white font-heading font-extrabold tracking-tight"
               style={{ textShadow: '0 2px 24px rgba(0,0,0,0.65)' }}
             >
               The ocean is{' '}
-              <span className="font-script text-teal-300 font-normal lowercase tracking-normal text-4xl sm:text-6xl lg:text-8xl inline-block px-1">
+              <span className="font-script text-teal-300 font-normal lowercase tracking-normal text-3xl sm:text-6xl lg:text-8xl inline-block px-1">
                 talking
               </span>
               .<br />
@@ -316,8 +316,8 @@ function ProblemSection() {
                 circleSize={210}
                 circleBgColor="bg-teal-300"
                 hoverTextColor="text-[#050B14]"
-                textClassName="text-4xl sm:text-5xl lg:text-7xl text-white font-heading font-extrabold tracking-tight"
-                className="mr-3"
+                textClassName="text-3xl sm:text-5xl lg:text-7xl text-white font-heading font-extrabold tracking-tight"
+                className="mr-2"
               />{' '}
               delivers the{' '}
               <span className="font-display font-extrabold uppercase text-white tracking-tight underline decoration-teal-400/40 decoration-4 underline-offset-8">

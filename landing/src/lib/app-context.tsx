@@ -58,6 +58,9 @@ interface AppContextType {
   // Geospatial Map Modal
   isMapOpen: boolean;
   setIsMapOpen: (open: boolean) => void;
+
+  // Global Toast Notifications
+  showToast: (message: string, type?: "info" | "success" | "warning" | "error") => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -76,6 +79,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [vesselType, setVesselType] = useState<"small" | "medium" | "large">("small");
   const [userRole, setUserRole] = useState<"fisher" | "coast_guard" | "port_operator" | "scientist">("fisher");
   const [isMapOpen, setIsMapOpen] = useState(false);
+
+  // Global Toast Notifications
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: "info" | "success" | "warning" | "error" }>>([]);
+
+  const showToast = (message: string, type: "info" | "success" | "warning" | "error" = "info") => {
+    const id = String(Date.now()) + Math.random().toString(36).slice(2, 6);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
 
   // Initialize theme and chats from localStorage, and auto-collapse sidebar on mobile screens
   useEffect(() => {
@@ -151,12 +165,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
         (error) => {
           console.warn("Geolocation access denied or unavailable, maintaining default port.", error);
-          alert("Location access was denied. Defaulting to registered port: " + userLocation.name);
+          showToast(`Location access denied. Defaulting to registered port: ${userLocation.name}`, "warning");
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      showToast("Geolocation is not supported by your browser.", "warning");
     }
   };
 
@@ -436,9 +450,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setUserRole,
         isMapOpen,
         setIsMapOpen,
+        showToast,
       }}
     >
       {children}
+      {/* ── Global Cyber-Ocean Toast Notification Container ── */}
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none max-w-md w-full px-4">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xl border text-xs font-medium transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${
+              toast.type === "success"
+                ? "bg-emerald-950/90 text-emerald-200 border-emerald-500/40 shadow-emerald-950/50"
+                : toast.type === "warning"
+                ? "bg-amber-950/90 text-amber-200 border-amber-500/40 shadow-amber-950/50"
+                : toast.type === "error"
+                ? "bg-rose-950/90 text-rose-200 border-rose-500/40 shadow-rose-950/50"
+                : "bg-slate-900/95 text-cyan-200 border-cyan-500/30 shadow-cyan-950/50"
+            }`}
+          >
+            {toast.type === "success" && <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />}
+            {toast.type === "warning" && <span className="size-2 rounded-full bg-amber-400 animate-pulse" />}
+            {toast.type === "error" && <span className="size-2 rounded-full bg-rose-400 animate-pulse" />}
+            {toast.type === "info" && <span className="size-2 rounded-full bg-cyan-400 animate-pulse" />}
+            <span>{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </AppContext.Provider>
   );
 }

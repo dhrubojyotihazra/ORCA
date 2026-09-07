@@ -21,6 +21,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     theme,
     createNewChat,
     setIsVoiceActive,
+    showToast,
   } = useApp();
 
   const isLight = theme === "light";
@@ -28,6 +29,20 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
   const [isDictating, setIsDictating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dictationRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const sizeKb = (file.size / 1024).toFixed(1);
+    showToast(`Attached dataset: ${file.name} (${sizeKb} KB) - Ready for multi-agent reasoning`, "success");
+    setPrompt((prev) =>
+      prev
+        ? `${prev} [Attached file: ${file.name}]`
+        : `Analyze uploaded ocean dataset "${file.name}" for navigational hazards: `
+    );
+    e.target.value = "";
+  };
 
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -90,7 +105,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     if (typeof window === "undefined") return;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Microphone access is not supported by your browser.");
+      showToast("Microphone access is not supported by your browser.", "warning");
       return;
     }
 
@@ -188,9 +203,9 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     } catch (err: any) {
       console.warn("Microphone access error:", err);
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        alert("Microphone permission was denied. Please allow microphone access in your browser address bar.");
+        showToast("Microphone permission was denied. Please allow microphone access in your browser address bar.", "error");
       } else {
-        alert("Microphone could not be accessed: " + (err.message || "Unknown error"));
+        showToast("Microphone could not be accessed: " + (err.message || "Unknown error"), "error");
       }
       setIsDictating(false);
     }
@@ -282,15 +297,22 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
         <div className="flex items-center justify-between gap-2 pt-2 select-none">
           {/* Left: Attachment */}
           <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".csv,.json,.txt,.nc,.tiff,.geotiff,.pdf"
+              onChange={handleFileUpload}
+            />
             <button
               type="button"
-              onClick={() => alert("Upload satellite GeoTIFF files, voyage logs, or vessel telemetry.")}
+              onClick={() => fileInputRef.current?.click()}
               className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 isLight
                   ? "bg-[#eaf1f8] text-slate-500 hover:text-slate-700 shadow-[-2px_-2px_5px_rgba(255,255,255,0.9),2px_2px_5px_rgba(180,195,215,0.4)] border border-white/60 active:scale-95"
                   : "bg-slate-900/80 text-slate-400 hover:text-white border border-white/10 shadow-[0_2px_6px_rgba(0,0,0,0.5)] active:scale-95"
               }`}
-              title="Attach data or coordinates"
+              title="Attach marine data or voyage logs"
             >
               <Plus className="size-4 stroke-[2.5]" />
             </button>

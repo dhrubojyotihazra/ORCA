@@ -5,7 +5,7 @@ import { useApp } from "@/lib/app-context";
 import { X, Copy, Check, Terminal, ExternalLink, Download } from "lucide-react";
 
 export function ArtifactsDrawer() {
-  const { activeArtifact, setActiveArtifact, theme } = useApp();
+  const { activeArtifact, setActiveArtifact, theme, showToast } = useApp();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "meta">("content");
   const isLight = theme === "light";
@@ -81,7 +81,16 @@ export function ArtifactsDrawer() {
             {activeArtifact.language || activeArtifact.type} · Artifact
           </span>
           <button
-            onClick={() => alert("Downloading artifact as file...")}
+            onClick={() => {
+              const blob = new Blob([activeArtifact.content || ""], { type: "text/plain;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${(activeArtifact.title || "orca_artifact").replace(/\s+/g, "_")}.${activeArtifact.language || "txt"}`;
+              a.click();
+              URL.revokeObjectURL(url);
+              showToast("Artifact downloaded successfully", "success");
+            }}
             className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors cursor-pointer"
           >
             <Download className="size-3.5" />

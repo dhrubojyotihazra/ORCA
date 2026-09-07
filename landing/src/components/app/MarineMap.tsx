@@ -242,34 +242,32 @@ export function MarineMap({
       mapInstanceRef.current = map;
 
       // 2. Base Tile Layers
-      // Fallback Base Layer: Plain OpenStreetMap (genuinely free, no key, no account, no watermarks)
-      const baseOsm = L.tileLayer(
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      // 2. Base Tile Layers
+      // Seamless High-Resolution Satellite Layer: ESRI World Imagery (zero orbital swath gaps)
+      const esriSatellite = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
-        }
-      ).addTo(map);
-
-      // Primary Satellite Tile Layer: NASA GIBS MODIS Terra True-Color WMTS
-      // 100% keyless official NASA EOSDIS GIBS service
-      // Date dynamically set to 2 days ago to guarantee composite availability across all timezones
-      const gibsDate = new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0];
-      const gibsSatellite = L.tileLayer(
-        `https://gibs-{s}.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${gibsDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
-        {
-          subdomains: "abc",
-          maxNativeZoom: 9,
-          maxZoom: 19,
-          opacity: 1.0,
-          attribution: 'Satellite Imagery &copy; <a href="https://earthdata.nasa.gov" target="_blank" rel="noreferrer">NASA GIBS</a> / EOSDIS',
+          attribution: 'Satellite Imagery &copy; <a href="https://www.esri.com" target="_blank" rel="noreferrer">Esri</a>, Maxar, Earthstar Geographics',
         }
       );
 
+      // Cyber-Ocean Marine Nautical Base Layer (Dark Matter / OSM)
+      const baseOsm = L.tileLayer(
+        isLight
+          ? "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        {
+          subdomains: "abcd",
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; CARTO',
+        }
+      ).addTo(map);
+
       if (isSatelliteMode) {
-        gibsSatellite.addTo(map);
+        esriSatellite.addTo(map);
       }
-      satelliteLayerRef.current = gibsSatellite;
+      satelliteLayerRef.current = esriSatellite;
 
       // Layer group for dynamic overlays
       const layersGroup = L.layerGroup().addTo(map);
@@ -428,8 +426,8 @@ export function MarineMap({
             <div className="min-w-0">
               <h2 className={`text-sm font-bold truncate flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 <span>ORCA Live Marine GIS</span>
-                <span className="text-[10px] font-mono text-cyan-500 font-semibold hidden sm:inline">
-                  (NASA GIBS × ISRO × INCOIS)
+                <span className="text-[10px] font-mono text-cyan-400 font-semibold hidden sm:inline">
+                  (ESRI Satellite · ISRO · INCOIS)
                 </span>
               </h2>
               <p className="text-[10px] text-slate-400 truncate">
@@ -519,10 +517,10 @@ export function MarineMap({
                   ? "bg-sky-600 text-white shadow-md shadow-sky-600/30 ring-1 ring-sky-400/50"
                   : "bg-slate-800/70 text-slate-300 border border-white/10"
               }`}
-              title={isSatelliteMode ? "NASA Satellite active · Click to switch to OSM Basemap" : "OpenStreetMap active · Click to switch to NASA Satellite"}
+              title={isSatelliteMode ? "ESRI Satellite active · Click to switch to Marine Basemap" : "Marine Basemap active · Click to switch to ESRI Satellite"}
             >
               <Satellite className="size-3.5" />
-              <span>{isSatelliteMode ? "Satellite: ON" : "OSM Map"}</span>
+              <span>{isSatelliteMode ? "Satellite: ON" : "Marine Map"}</span>
             </button>
 
             {/* Recenter button */}
@@ -559,7 +557,7 @@ export function MarineMap({
                 Map Legend
               </span>
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-slate-300 font-mono">
-                {isSatelliteMode ? "NASA Satellite" : "OSM Nautical"}
+                {isSatelliteMode ? "ESRI Satellite" : "Marine GIS"}
               </span>
             </div>
 

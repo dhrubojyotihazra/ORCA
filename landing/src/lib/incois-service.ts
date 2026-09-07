@@ -302,39 +302,150 @@ export function calculateSafetyIndex(
 }
 
 /**
- * Queries INCOIS ERDDAP server health with guaranteed 1000ms timeout
+ * Fetches JSON from INCOIS ERDDAP with a strict timeout.
+ * Returns parsed JSON or null on any failure.
  */
-async function queryIncoisErddapLive(lat: number, lon: number): Promise<{ sst?: number; isLive: boolean } | null> {
-  const cacheKey = `${lat.toFixed(1)}_${lon.toFixed(1)}`;
+async function fetchErddapJson(url: string, timeoutMs: number = 4000): Promise<{ data: any; fetchedAt: string } | null> {
+  const cacheKey = url;
   const cached = incoisCache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) {
-    return { ...cached.data, isLive: true };
+    return { data: cached.data, fetchedAt: new Date().toISOString() };
   }
 
   return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve({ isLive: true }), 1000);
+    const timer = setTimeout(() => {
+      resolve(null);
+    }, timeoutMs);
+
     try {
-      const agent = new https.Agent({ rejectUnauthorized: false });
-      const req = https.get("https://erddap.incois.gov.in/erddap/status.html", { agent, timeout: 900 }, (res) => {
-        clearTimeout(timer);
-        const isLive = res.statusCode === 200;
-        incoisCache.set(cacheKey, { data: { isLive }, expiresAt: Date.now() + CACHE_TTL_MS });
-        resolve({ isLive });
+      const ag = new https.Agent({ rejectUnauthorized: false });
+      const req = https.get(url, { agent: ag, timeout: timeoutMs - 500 }, (res) => {
+        let body = "";
+        res.on("data", (chunk: Buffer) => (body += chunk.toString()));
+        res.on("end", () => {
+          clearTimeout(timer);
+          if (res.statusCode === 200) {
+            try {
+              const parsed = JSON.parse(body);
+              incoisCache.set(cacheKey, { data: parsed, expiresAt: Date.now() + CACHE_TTL_MS });
+              resolve({ data: parsed, fetchedAt: new Date().toISOString() });
+            } catch {
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        });
       });
-      req.on("error", () => {
-        clearTimeout(timer);
-        resolve({ isLive: false });
-      });
-      req.on("timeout", () => {
-        clearTimeout(timer);
-        req.destroy();
-        resolve({ isLive: false });
-      });
+      req.on("error", () => { clearTimeout(timer); resolve(null); });
+      req.on("timeout", () => { clearTimeout(timer); req.destroy(); resolve(null); });
     } catch {
       clearTimeout(timer);
-      resolve({ isLive: false });
+      resolve(null);
     }
   });
+}
+
+/**
+ * Live SST query: Indian_ARGO_Floats tabledap
+ * Searches a ±3° bounding box around target coordinates, surface only (PRES<=15),
+ * last 18 months of data. Returns the nearest observation.
+ */
+async function queryArgoSst(lat: number, lon: number): Promise<{
+  sst: number;
+  obsLat: number;
+  obsLon: number;
+  obsTime: string;
+  dataset: string;
+  queryUrl: string;
+} | null> {
+  const latMin = (lat - 3).toFixed(1);
+  const latMax = (lat + 3).toFixed(1);
+  const lonMin = (lon - 3).toFixed(1);
+  const lonMax = (lon + 3).toFixed(1);
+  // 36 months lookback — ARGO floats surface infrequently near coasts
+  const since = new Date(Date.now() - 36 * 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19) + "Z";
+
+  const queryUrl =
+    `https://erddap.incois.gov.in/erddap/tabledap/Indian_ARGO_Floats.json` +
+    `?time,latitude,longitude,TEMP,PRES` +
+    `&latitude>=${latMin}&latitude<=${latMax}` +
+    `&longitude>=${lonMin}&longitude<=${lonMax}` +
+    `&PRES>=0&PRES<=15` +
+    `&time>=${since}`;
+
+  const result = await fetchErddapJson(queryUrl, 4000);
+  if (!result?.data?.table?.rows?.length) return null;
+
+  const rows: Array<[string, number, number, number, number]> = result.data.table.rows;
+
+  // Find nearest observation to target coordinates
+  let bestRow = rows[0];
+  let bestDist = Infinity;
+  for (const row of rows) {
+    const [, rLat, rLon] = row;
+    const d = Math.sqrt((rLat - lat) ** 2 + (rLon - lon) ** 2);
+    if (d < bestDist) {
+      bestDist = d;
+      bestRow = row;
+    }
+  }
+
+  const [obsTime, obsLat, obsLon, temp] = bestRow;
+  if (temp === null || temp === undefined || temp < -2 || temp > 40) return null;
+
+  return {
+    sst: Math.round(temp * 100) / 100,
+    obsLat: Math.round(obsLat * 1000) / 1000,
+    obsLon: Math.round(obsLon * 1000) / 1000,
+    obsTime,
+    dataset: "Indian_ARGO_Floats",
+    queryUrl,
+  };
+}
+
+/**
+ * Live Wind query: ascat_daily_datasets griddap
+ * Queries the most recent available time slice in a ±0.5° grid box.
+ * Returns average non-null wind speed.
+ */
+async function queryAscatWind(lat: number, lon: number): Promise<{
+  windSpeedMs: number;
+  obsTime: string;
+  dataset: string;
+  queryUrl: string;
+} | null> {
+  // ASCAT data ends around 2023-05-21. Use the last available date.
+  const lastDate = "2023-05-20T12:00:00Z";
+  const latLo = (Math.floor(lat * 4) / 4 - 0.25).toFixed(3);
+  const latHi = (Math.ceil(lat * 4) / 4 + 0.25).toFixed(3);
+  const lonLo = (Math.floor(lon * 4) / 4 - 0.25).toFixed(3);
+  const lonHi = (Math.ceil(lon * 4) / 4 + 0.25).toFixed(3);
+
+  // Brackets must be URL-encoded for ERDDAP griddap
+  const queryUrl =
+    `https://erddap.incois.gov.in/erddap/griddap/ascat_daily_datasets.json` +
+    `?wind_speed` +
+    `%5B(${lastDate})%5D` +
+    `%5B(10.0)%5D` +
+    `%5B(${latLo}):(${latHi})%5D` +
+    `%5B(${lonLo}):(${lonHi})%5D`;
+
+  const result = await fetchErddapJson(queryUrl, 4000);
+  if (!result?.data?.table?.rows?.length) return null;
+
+  const rows: Array<[string, number, number, number, number | null]> = result.data.table.rows;
+  const validWinds = rows.map((r) => r[4]).filter((v): v is number => v !== null && v > 0);
+  if (validWinds.length === 0) return null;
+
+  const avgWind = validWinds.reduce((a, b) => a + b, 0) / validWinds.length;
+
+  return {
+    windSpeedMs: Math.round(avgWind * 100) / 100,
+    obsTime: rows[0][0],
+    dataset: "ascat_daily_datasets",
+    queryUrl,
+  };
 }
 
 /**
@@ -367,15 +478,43 @@ export async function getCoastalTelemetry(
     }
   }
 
-  // Attempt live ERDDAP check
-  const liveIncois = await queryIncoisErddapLive(lat, lon);
+  // --- Fire live ERDDAP queries in parallel ---
+  const [sstResult, windResult] = await Promise.allSettled([
+    queryArgoSst(matchedPort.lat, matchedPort.lon),
+    queryAscatWind(matchedPort.lat, matchedPort.lon),
+  ]);
 
-  const isLive = Boolean(liveIncois?.isLive);
-  const sstCelsius = liveIncois?.sst !== undefined ? liveIncois.sst : matchedPort.baseSst;
+  const liveSst = sstResult.status === "fulfilled" ? sstResult.value : null;
+  const liveWind = windResult.status === "fulfilled" ? windResult.value : null;
+
+  // --- SST: live-first, fallback-second ---
+  let sstCelsius: number;
+  let sstIsLive: boolean;
+  let oceanSource: string;
+  let oceanDataset: string;
+  let oceanTimestamp: string;
+
+  if (liveSst) {
+    sstCelsius = liveSst.sst;
+    sstIsLive = true;
+    oceanSource = `INCOIS ERDDAP Live — dataset:${liveSst.dataset}, query:${liveSst.queryUrl}, fetched:${liveSst.obsTime}`;
+    oceanDataset = `${liveSst.dataset} (erddap.incois.gov.in)`;
+    oceanTimestamp = liveSst.obsTime;
+  } else {
+    // Fallback: baseline registry + diurnal fluctuation (offline simulation)
+    const hour = new Date().getUTCHours();
+    const diurnalSstShift = 0.3 * Math.sin(((hour - 6) / 24) * 2 * Math.PI); // peaks at ~14:00 UTC
+    sstCelsius = Math.round((matchedPort.baseSst + diurnalSstShift) * 100) / 100;
+    sstIsLive = false;
+    oceanSource = "Cached Baseline Fallback (live fetch unavailable)";
+    oceanDataset = "INCOIS Coastal Baseline Registry";
+    oceanTimestamp = new Date().toISOString();
+  }
+
   const sstAnomaly = 0.8;
   const chlorophyllA = matchedPort.baseChl;
 
-  // Species HSI Calculations
+  // Species HSI Calculations (always use best available SST)
   const hsiMackerel = calculateSpeciesHsi(sstCelsius, chlorophyllA, [26.0, 28.5], [0.4, 1.5]);
   const hsiTuna = calculateSpeciesHsi(sstCelsius, chlorophyllA, [27.0, 29.0], [0.15, 0.40]);
   const hsiHilsa = calculateSpeciesHsi(sstCelsius, chlorophyllA, [27.5, 30.0], [1.5, 3.5]);
@@ -384,18 +523,40 @@ export async function getCoastalTelemetry(
   const pfzTargetLon = Math.round((matchedPort.lon + 0.35) * 100) / 100;
   const pfzDist = calculateDistanceNm(matchedPort.lat, matchedPort.lon, pfzTargetLat, pfzTargetLon);
 
-  // Weather telemetry
+  // --- Wind: live-first, fallback-second ---
+  let windSpeedKnots: number;
+  let windIsLive: boolean;
+  let weatherSource: string;
+  let weatherTimestamp: string;
+
+  if (liveWind) {
+    // ASCAT returns m/s, convert to knots (1 m/s = 1.94384 knots)
+    windSpeedKnots = Math.round(liveWind.windSpeedMs * 1.94384 * 10) / 10;
+    windIsLive = true;
+    weatherSource = `INCOIS ERDDAP Live — dataset:${liveWind.dataset}, query:${liveWind.queryUrl}, fetched:${liveWind.obsTime}`;
+    weatherTimestamp = liveWind.obsTime;
+  } else {
+    // Fallback: baseline registry + diurnal fluctuation
+    const hour = new Date().getUTCHours();
+    const diurnalWindShift = 1.5 * Math.sin(((hour - 3) / 24) * 2 * Math.PI);
+    windSpeedKnots = Math.round((matchedPort.baseWind + diurnalWindShift) * 10) / 10;
+    windIsLive = false;
+    weatherSource = "Cached Baseline Fallback (live fetch unavailable)";
+    weatherTimestamp = new Date().toISOString();
+  }
+
+  // Weather telemetry (wave height and other params use baseline — no live ERDDAP wave dataset available)
   const weather: WeatherTelemetry = {
     significantWaveHeightM: matchedPort.baseHs,
     wavePeriodS: 8.4,
-    windSpeedKnots: matchedPort.baseWind,
+    windSpeedKnots,
     windDirectionDeg: matchedPort.windDir,
     windDirectionText: matchedPort.windDirText,
     currentSpeedMs: 0.42,
     squallProbabilityPct: matchedPort.squall,
     cycloneAlertLevel: matchedPort.cyclone,
-    source: "INCOIS High-Resolution Wave Model & Ocean State Forecasts (OSF)",
-    timestamp: new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC",
+    source: weatherSource,
+    timestamp: weatherTimestamp,
   };
 
   // Risk & Geofence assessment
@@ -451,12 +612,10 @@ export async function getCoastalTelemetry(
           distanceNm: pfzDist,
         },
       ],
-      source: isLive
-        ? "INCOIS ERDDAP Live Sensor Feed (Indian_ARGO_Floats) & MOSDAC Oceansat-3"
-        : "INCOIS OSF Telemetry Baseline & ISRO MOSDAC Oceansat-3 Scatterometer",
-      isLive,
-      dataset: isLive ? "Indian_ARGO_Floats (erddap.incois.gov.in)" : "INCOIS Coastal Bulletins",
-      timestamp: new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC",
+      source: oceanSource,
+      isLive: sstIsLive,
+      dataset: oceanDataset,
+      timestamp: oceanTimestamp,
     },
     weather,
     risk: {

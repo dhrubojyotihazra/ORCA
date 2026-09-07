@@ -64,15 +64,55 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     
     template = REGIONAL_TEMPLATES.get(lang, REGIONAL_TEMPLATES["en"])
     
-    # Format mathematical breakdown
-    hs = weather.get("significant_wave_height_m", 2.1)
-    wind = weather.get("wind_speed_knots", 18.5)
-    squall = weather.get("lightning_squall_prob_pct", 12.0)
-    safety_idx = risk.get("safety_index", 38.54)
-    risk_cat = risk.get("risk_category", "Caution")
-    sst = ocean.get("sst_celsius", 29.4)
-    chl = ocean.get("chlorophyll_a", 1.82)
-    
+    has_ocean = bool(ocean and "sst_celsius" in ocean)
+    has_weather = bool(weather and "wind_speed_knots" in weather)
+    has_risk = bool(risk and risk.get("safety_index") is not None)
+    has_geofence = bool(risk and "mpa_distance_nm" in risk)
+
+    # Dynamic grounded context construction - zero fabrication of unqueried domains
+    context_lines = [
+        "VERIFIED SPECIALIST TELEMETRY (STRICT GROUND TRUTH - DO NOT INVENT UNQUERIED DATA):",
+        f"- Location Anchor: {port_name} ({sector})",
+        f"- Target Vessel: {vessel} craft (<8m)",
+        f"- Target Language: {lang.upper()} (Respond in {lang} if regional, or English with regional header)",
+    ]
+
+    if has_ocean:
+        context_lines.extend([
+            f"- Sea Surface Temp (SST): {ocean.get('sst_celsius')}°C ({ocean.get('source', 'INCOIS ARGO')})",
+            f"- Chlorophyll-a: {ocean.get('chlorophyll_a')} mg/m³ (Source: INCOIS Regional Climatology Baseline - seasonal composite)",
+            f"- Species HSI: Indian Mackerel={ocean.get('species_hsi', {}).get('Indian Mackerel', 'N/A')}, Yellowfin Tuna={ocean.get('species_hsi', {}).get('Yellowfin Tuna', 'N/A')}, Hilsa={ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 'N/A')}",
+            f"- PFZ Waypoint Coords: {ocean.get('pfz_coordinates', [])}",
+        ])
+    else:
+        context_lines.append("- Ocean Telemetry / PFZ: Not queried. Do NOT report SST or fish zones.")
+
+    if has_weather:
+        context_lines.extend([
+            f"- Significant Wave Height (Hs): {weather.get('significant_wave_height_m')} m (Source: INCOIS OSF Model Baseline)",
+            f"- Wind Speed (W): {weather.get('wind_speed_knots')} knots ({weather.get('source', 'INCOIS')})",
+            f"- Cyclone Alert: {weather.get('cyclone_alert_level', 'Normal')}",
+            f"- Squall Probability: {weather.get('lightning_squall_prob_pct')}%",
+        ])
+    else:
+        context_lines.append("- Weather Telemetry: Not queried for this question. Mathematically forbidden from assuming wave heights or wind speeds.")
+
+    if has_risk:
+        context_lines.extend([
+            f"- Hydrodynamic Safety Index: {risk.get('safety_index')} / 100 ({risk.get('risk_category')})",
+            f"- Formula: Safety = 100 - (18.5 · Hs + 1.2 · W + 0.8 · L) - Penalty",
+        ])
+    else:
+        context_lines.append("- Hydrodynamic Safety Index: Not evaluated for this query. Do NOT issue safety index numbers.")
+
+    if has_geofence:
+        context_lines.extend([
+            f"- Marine Protected Area: Distance {risk.get('mpa_distance_nm')} NM ({'ALERT: In 12 NM Buffer' if risk.get('mpa_alert') else 'Clear'})",
+            f"- International Border (IMBL): Distance {risk.get('imbl_distance_nm')} NM ({'ALERT' if risk.get('imbl_alert') else 'Clear'})",
+        ])
+
+    grounded_context = "\n".join(context_lines)
+
     # Check if Groq client can synthesize
     llm_response = None
     keys = [
@@ -87,23 +127,6 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             from groq import Groq
             client = Groq(api_key=groq_key)
             models = ["qwen/qwen3.8-27b", "groq/compound-mini", "openai/gpt-oss-120b"]
-            
-            grounded_context = f"""
-VERIFIED TELEMETRY (STRICT GROUND TRUTH - DO NOT INVENT NUMBERS):
-- Location: {port_name} ({sector})
-- Target Vessel: {vessel} craft (<8m)
-- Hydrodynamic Safety Index: {safety_idx} / 100 ({risk_cat})
-- Sea-Venture Formula: Safety = 100 - (18.5 · {hs}m + 1.2 · {wind}kts + 0.8 · {squall}%)
-- Wave Height (Hs): {hs} m (Source: {weather.get('source', 'INCOIS OSF')})
-- Wind Speed (W): {wind} knots (Source: {weather.get('source', 'INCOIS')})
-- Cyclone Alert: {weather.get('cyclone_alert_level', 'Normal')}
-- Sea Surface Temp (SST): {sst}°C (Source: {ocean.get('source', 'INCOIS ARGO')})
-- Chlorophyll-a: {chl} mg/m³
-- Species HSI: Indian Mackerel={ocean.get('species_hsi', {}).get('Indian Mackerel', 0.82)}, Yellowfin Tuna={ocean.get('species_hsi', {}).get('Yellowfin Tuna', 0.65)}, Hilsa={ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 0.88)}
-- Marine Protected Area: Gahirmatha / Sundarbans buffer distance {risk.get('mpa_distance_nm', 9.2)} NM ({'ALERT: In 12 NM Buffer' if risk.get('mpa_alert') else 'Clear'})
-- International Border (IMBL): Distance {risk.get('imbl_distance_nm', 18.4)} NM ({'ALERT' if risk.get('imbl_alert') else 'Clear'})
-- Target Language: {lang.upper()} (Respond in {lang} if regional, or English with regional header)
-"""
             sys_msg = f"{SYNTHESIZER_SYSTEM_PROMPT}\n{grounded_context}"
             for m in models:
                 try:
@@ -128,34 +151,67 @@ VERIFIED TELEMETRY (STRICT GROUND TRUTH - DO NOT INVENT NUMBERS):
     if llm_response:
         final_text = llm_response
     else:
-        # Grounded deterministic fallback template
+        # Grounded deterministic fallback template - dynamically populated
         lines = [
             f"### {template['title']}",
             f"**Corridor / Station**: {port_name} ({sector})  ",
-            f"**Vessel Profile**: {vessel.capitalize()} Craft (<8m) | **Alert Stage**: {weather.get('cyclone_alert_level', 'Amber')}",
+            f"**Vessel Profile**: {vessel.capitalize()} Craft (<8m)",
             "",
-            "#### 1. Hydrodynamic Safety & Sea-Venture Index",
-            f"- **Calculated Safety Index**: **{safety_idx} / 100** ({risk_cat})",
-            f"- **Formulation**: $$\\text{{Safety Index}} = 100 - (18.5 \\cdot H_s + 1.2 \\cdot W + 0.8 \\cdot L)$$",
-            f"- **Observed Wave Height ($H_s$)**: {hs} m",
-            f"- **Observed Wind Velocity ($W$)**: {wind} knots",
-            f"- **Squall / Lightning Probability ($L$)**: {squall}%",
-            "",
-            "#### 2. Species-Specific Habitat Suitability (PFZ Telemetry)",
-            "| Target Species | Suitability Index (HSI) | Optimal Condition | Observed Status |",
-            "| :--- | :---: | :--- | :--- |",
-            f"| **Indian Mackerel** | **{ocean.get('species_hsi', {}).get('Indian Mackerel', 0.82)} / 1.0** | SST 26–28.5°C, Chl >0.4 mg/m³ | Active feeding zone |",
-            f"| **Yellowfin Tuna** | **{ocean.get('species_hsi', {}).get('Yellowfin Tuna', 0.65)} / 1.0** | SST 27–29°C, Chl 0.15–0.35 mg/m³ | Marginal shelf front |",
-            f"| **Hilsa / Coastal Pelagics** | **{ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 0.88)} / 1.0** | Estuarine nutrient plumes | High probability |",
-            "",
-            "#### 3. Maritime Boundaries & Sanctuary Buffers",
-            f"- **Marine Protected Area (MPA)**: Distance {risk.get('mpa_distance_nm', 9.2)} NM ({'⚠️ BUFFER ZONE ALERT (<12 NM)' if risk.get('mpa_alert') else 'Clear'})",
-            f"- **International Maritime Boundary (IMBL)**: Distance {risk.get('imbl_distance_nm', 18.4)} NM (Clear)",
-            "",
-            "---",
-            f"**Source:** {weather.get('source', 'INCOIS OSF')} & {ocean.get('source', 'INCOIS ARGO Floats')}  ",
-            f"**Observed:** {weather.get('timestamp', 'Live UTC')} | **Grounded Advisory Verified**"
         ]
+
+        if has_risk and has_weather:
+            hs = weather.get("significant_wave_height_m", 2.1)
+            wind = weather.get("wind_speed_knots", 18.5)
+            squall = weather.get("lightning_squall_prob_pct", 12.0)
+            safety_idx = risk.get("safety_index", "N/A")
+            risk_cat = risk.get("risk_category", "Caution")
+            lines.extend([
+                "#### 1. Hydrodynamic Safety & Sea-Venture Index",
+                f"- **Calculated Safety Index**: **{safety_idx} / 100** ({risk_cat})",
+                f"- **Formulation**: $$\\text{{Safety Index}} = 100 - (18.5 \\cdot H_s + 1.2 \\cdot W + 0.8 \\cdot L)$$",
+                f"- **Wave Height ($H_s$)**: {hs} m (INCOIS OSF Model Baseline)",
+                f"- **Wind Velocity ($W$)**: {wind} knots ({weather.get('source', 'INCOIS')})",
+                f"- **Squall / Lightning Probability ($L$)**: {squall}%",
+                "",
+            ])
+
+        if has_ocean:
+            sst = ocean.get("sst_celsius", 29.4)
+            chl = ocean.get("chlorophyll_a", 1.82)
+            lines.extend([
+                "#### 2. Species-Specific Habitat Suitability (PFZ Telemetry)",
+                f"- **Sea Surface Temperature (SST)**: **{sst}°C** ({ocean.get('source', 'INCOIS ARGO')})",
+                f"- **Chlorophyll-a Plume**: **{chl} mg/m³** (INCOIS Regional Climatology Baseline)",
+                "",
+                "| Target Species | Suitability Index (HSI) | Optimal Condition | Observed Status |",
+                "| :--- | :---: | :--- | :--- |",
+                f"| **Indian Mackerel** | **{ocean.get('species_hsi', {}).get('Indian Mackerel', 0.82)} / 1.0** | SST 26–28.5°C, Chl >0.4 mg/m³ | Active feeding zone |",
+                f"| **Yellowfin Tuna** | **{ocean.get('species_hsi', {}).get('Yellowfin Tuna', 0.65)} / 1.0** | SST 27–29°C, Chl 0.15–0.35 mg/m³ | Marginal shelf front |",
+                f"| **Hilsa / Coastal Pelagics** | **{ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 0.88)} / 1.0** | Estuarine nutrient plumes | High probability |",
+                "",
+            ])
+
+        if has_geofence:
+            lines.extend([
+                "#### 3. Maritime Boundaries & Sanctuary Buffers",
+                f"- **Marine Protected Area (MPA)**: Distance {risk.get('mpa_distance_nm')} NM ({'⚠️ BUFFER ZONE ALERT (<12 NM)' if risk.get('mpa_alert') else 'Clear'})",
+                f"- **International Maritime Boundary (IMBL)**: Distance {risk.get('imbl_distance_nm')} NM (Clear)",
+                "",
+            ])
+
+        sources = []
+        if has_weather:
+            sources.append(weather.get("source", "INCOIS OSF"))
+        if has_ocean:
+            sources.append(ocean.get("source", "INCOIS ARGO Floats"))
+        if not sources:
+            sources.append("INCOIS Geofence Matrix")
+
+        lines.extend([
+            "---",
+            f"**Source:** {' & '.join(sources)}  ",
+            f"**Observed:** {(ocean.get('timestamp') if has_ocean else weather.get('timestamp')) if (has_ocean or has_weather) else 'Current Session'} | **Grounded Advisory Verified**"
+        ])
         final_text = "\n".join(lines)
     
     return {

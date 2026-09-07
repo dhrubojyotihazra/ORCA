@@ -103,13 +103,14 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
             {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
         ],
         "source": sst_source,
+        "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
         "timestamp": obs_time,
     }
     
     return {
         "ocean_data": ocean_payload,
         "evidence_citations": [
-            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ | HSI(Mackerel)={hsi_mackerel}"
+            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | HSI(Mackerel)={hsi_mackerel}"
         ],
     }
 
@@ -152,13 +153,14 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
         "lightning_squall_prob_pct": squall_prob,
         "cyclone_alert_level": "Amber (Advisory)",
         "source": weather_source,
+        "wave_source": "INCOIS High-Resolution Wave Model (OSF Baseline Registry)",
         "timestamp": obs_time,
     }
     
     return {
         "weather_data": weather_payload,
         "evidence_citations": [
-            f"Weather Specialist: Hs={hs}m, Wind={wind_speed} kts ({weather_source}), Squall Prob={squall_prob}%"
+            f"Weather Specialist: Hs={hs}m (INCOIS OSF Model Baseline) | Wind={wind_speed} kts ({weather_source}) | Squall Prob={squall_prob}%"
         ],
     }
 
@@ -166,49 +168,21 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
 def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     """
     Risk Specialist Node:
-    Computes Sea-Venture Safety Index (0-100) using:
-    Safety Index = 100 - (w1 * Hs + w2 * W + w3 * L) - Penalty
-    Also evaluates MPA and IMBL geofence proximities.
+    Computes Sea-Venture Safety Index (0-100) ONLY when weather_data is present in state.
+    If weather_data is absent, omits the safety index and reports only geofence boundaries.
     """
     loc = state.get("location") or {"lat": 20.26, "lon": 86.67, "name": "Paradip"}
     lat = loc.get("lat", 20.26)
     lon = loc.get("lon", 86.67)
     vessel = state.get("vessel_type") or "small"
-    weather = state.get("weather_data") or {}
+    weather = state.get("weather_data")
     
     defaults = PORT_ENV_DEFAULTS.get("paradip")
     for k, v in PORT_ENV_DEFAULTS.items():
         if k in loc.get("name", "paradip").lower():
             defaults = v
             break
-            
-    hs = weather.get("significant_wave_height_m", defaults["hs"])
-    w = weather.get("wind_speed_knots", defaults["wind"])
-    l = weather.get("lightning_squall_prob_pct", 12.0)
-    
-    # Weight selection based on vessel displacement
-    if vessel == "large":
-        w1, w2, w3 = 7.0, 0.6, 0.5
-        penalty = 15.0 if hs > 4.0 else 0.0
-    elif vessel == "medium":
-        w1, w2, w3 = 12.0, 0.9, 0.7
-        penalty = 10.0 if hs > 2.8 else 0.0
-    else:  # Small craft (<8m)
-        w1, w2, w3 = 18.5, 1.2, 0.8
-        penalty = 25.0 if hs > 2.5 else 0.0
-        
-    raw_deduction = (w1 * hs) + (w2 * w) + (w3 * l) + penalty
-    safety_index = max(0.0, min(100.0, round(100.0 - raw_deduction, 2)))
-    
-    if safety_index >= 70.0:
-        category = "Safe"
-    elif safety_index >= 45.0:
-        category = "Caution"
-    elif safety_index >= 25.0:
-        category = "Hazardous"
-    else:
-        category = "Extreme Danger"
-        
+
     # Real Haversine geofence calculations
     mpa_coord = defaults["mpa"]
     imbl_coord = defaults["imbl"]
@@ -217,7 +191,44 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     
     # Check Shapely polygon zone
     zone_check = check_zone(lat, lon)
-    
+
+    has_weather = bool(weather and "wind_speed_knots" in weather)
+
+    if has_weather:
+        hs = weather.get("significant_wave_height_m", defaults["hs"])
+        w = weather["wind_speed_knots"]
+        l = weather.get("lightning_squall_prob_pct", 12.0)
+        
+        # Weight selection based on vessel displacement
+        if vessel == "large":
+            w1, w2, w3 = 7.0, 0.6, 0.5
+            penalty = 15.0 if hs > 4.0 else 0.0
+        elif vessel == "medium":
+            w1, w2, w3 = 12.0, 0.9, 0.7
+            penalty = 10.0 if hs > 2.8 else 0.0
+        else:  # Small craft (<8m)
+            w1, w2, w3 = 18.5, 1.2, 0.8
+            penalty = 25.0 if hs > 2.5 else 0.0
+            
+        raw_deduction = (w1 * hs) + (w2 * w) + (w3 * l) + penalty
+        safety_index = max(0.0, min(100.0, round(100.0 - raw_deduction, 2)))
+        
+        if safety_index >= 70.0:
+            category = "Safe"
+        elif safety_index >= 45.0:
+            category = "Caution"
+        elif safety_index >= 25.0:
+            category = "Hazardous"
+        else:
+            category = "Extreme Danger"
+
+        citation = f"Risk Specialist: Safety Index={safety_index}/100 ({category}) for {vessel} vessel | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM"
+    else:
+        # Do NOT fabricate wave/wind values or compute a safety verdict without weather telemetry
+        safety_index = None
+        category = "Not Evaluated (Weather specialist omitted for this query)"
+        citation = f"Risk Specialist: Geofence Only | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM (Hydrodynamic safety omitted: weather data absent)"
+
     risk_payload: RiskAssessment = {
         "safety_index": safety_index,
         "risk_category": category,
@@ -230,8 +241,6 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     
     return {
         "risk_data": risk_payload,
-        "evidence_citations": [
-            f"Risk Specialist: Safety Index={safety_index}/100 ({category}) for {vessel} vessel | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM"
-        ],
+        "evidence_citations": [citation],
     }
 

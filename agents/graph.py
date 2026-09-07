@@ -13,7 +13,8 @@ from .synthesizer_agent import synthesizer_node
 
 def route_to_specialists(state: AgentState) -> List[str]:
     """
-    Conditional edge function routing from planner to required specialists.
+    Conditional edge routing from planner to required initial specialists.
+    If safety is needed, routes to weather_specialist first (which chains into risk_specialist).
     """
     intents = state.get("intent", [])
     targets = []
@@ -22,14 +23,25 @@ def route_to_specialists(state: AgentState) -> List[str]:
         targets.append("ocean_specialist")
     if "weather" in intents or "safety" in intents or not intents:
         targets.append("weather_specialist")
-    if "safety" in intents or "geofence" in intents or not intents:
+    elif "geofence" in intents:
+        # Pure geofence query without weather/safety requested
         targets.append("risk_specialist")
         
-    # Fallback to at least one specialist
     if not targets:
-        targets = ["ocean_specialist", "weather_specialist", "risk_specialist"]
+        targets = ["ocean_specialist", "weather_specialist"]
         
     return targets
+
+
+def route_from_weather(state: AgentState) -> str:
+    """
+    Chains from weather_specialist to risk_specialist if safety was requested,
+    ensuring risk_specialist evaluates hydrodynamic formulas on actual weather data.
+    """
+    intents = state.get("intent", [])
+    if "safety" in intents or "geofence" in intents or not intents:
+        return "risk_specialist"
+    return "synthesizer"
 
 
 def build_orca_graph() -> Any:
@@ -46,7 +58,7 @@ def build_orca_graph() -> Any:
     # 2. Graph Wiring
     builder.add_edge(START, "planner")
     
-    # Conditional fan-out from planner to specialists
+    # Conditional fan-out from planner
     builder.add_conditional_edges(
         "planner",
         route_to_specialists,
@@ -57,15 +69,25 @@ def build_orca_graph() -> Any:
         },
     )
     
-    # Fan-in from specialists to synthesizer
+    # Ocean specialist feeds directly into synthesizer
     builder.add_edge("ocean_specialist", "synthesizer")
-    builder.add_edge("weather_specialist", "synthesizer")
+
+    # Weather specialist routes conditionally to risk_specialist (if safety/geofence) or synthesizer
+    builder.add_conditional_edges(
+        "weather_specialist",
+        route_from_weather,
+        {
+            "risk_specialist": "risk_specialist",
+            "synthesizer": "synthesizer",
+        },
+    )
+    
+    # Risk specialist feeds into synthesizer
     builder.add_edge("risk_specialist", "synthesizer")
     
     # Exit from synthesizer
     builder.add_edge("synthesizer", END)
     
-    # Compile graph
     return builder.compile()
 
 

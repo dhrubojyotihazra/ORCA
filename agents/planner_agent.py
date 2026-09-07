@@ -63,8 +63,8 @@ def planner_node(state: AgentState) -> Dict[str, Any]:
     if any(k in query for k in ["safe", "safety", "danger", "index", "boat", "suraksha", "सुरक्षित", "নিরাপদ", "பாதுகாப்பு"]):
         intents.append("safety")
         
-    # Geofence / IMBL border
-    if any(k in query for k in ["imbl", "border", "boundary", "mpa", "protected", "zone", "সীমান্ত", "எல்லை"]):
+    # Geofence / IMBL border / Marine Protected Area
+    if any(k in query for k in ["imbl", "border", "boundary", "mpa", "protected", "sanctuary", "restricted", "buffer zone", "সীমান্ত", "எல்லை"]):
         intents.append("geofence")
         
     # If no specific intent matched, default to general situational advisory (PFZ + Weather + Safety)

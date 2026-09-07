@@ -11,8 +11,10 @@ import datetime
 import logging
 from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import edge_tts
 
 # Ensure project root is on sys.path
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -248,6 +250,45 @@ def invoke_agents(payload: AgentInvokeRequest):
     except Exception as e:
         logger.error(f"Error in LangGraph execution: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"LangGraph execution error: {str(e)}")
+
+
+class VoiceTTSRequest(BaseModel):
+    text: str
+    language: Optional[str] = "en-IN"
+    voice: Optional[str] = None
+
+
+VOICE_MAP = {
+    "en-IN": "en-IN-NeerjaExpressiveNeural",
+    "en": "en-IN-NeerjaExpressiveNeural",
+    "hi-IN": "hi-IN-SwaraNeural",
+    "hi": "hi-IN-SwaraNeural",
+    "bn-IN": "bn-IN-TanishaaNeural",
+    "bn": "bn-IN-TanishaaNeural",
+    "ta-IN": "ta-IN-PallaviNeural",
+    "ta": "ta-IN-PallaviNeural",
+    "mr-IN": "mr-IN-AarohiNeural",
+    "mr": "mr-IN-AarohiNeural",
+}
+
+
+@app.post("/api/voice/tts")
+async def generate_voice_tts(req: VoiceTTSRequest):
+    try:
+        lang_key = req.language or "en-IN"
+        voice = req.voice or VOICE_MAP.get(lang_key) or VOICE_MAP.get(lang_key[:2]) or "en-IN-NeerjaExpressiveNeural"
+        logger.info(f"Generating Neural TTS via edge-tts with voice={voice} (lang={lang_key}): {req.text[:60]}...")
+        
+        communicate = edge_tts.Communicate(req.text, voice)
+        audio_buffer = bytearray()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_buffer.extend(chunk["data"])
+                
+        return Response(content=bytes(audio_buffer), media_type="audio/mpeg")
+    except Exception as e:
+        logger.error(f"Error generating neural voice: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"TTS generation error: {str(e)}")
 
 
 if __name__ == "__main__":

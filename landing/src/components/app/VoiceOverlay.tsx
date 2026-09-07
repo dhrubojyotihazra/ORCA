@@ -13,14 +13,15 @@ import {
   Compass,
   AlertCircle,
   Volume2,
+  Sparkles,
 } from "lucide-react";
 
 const REGIONAL_LANGUAGES = [
-  { code: "en-IN", label: "English", tag: "en", greeting: "ORCA Live connected. How can I assist your voyage today?" },
-  { code: "hi-IN", label: "हिंदी", tag: "hi", greeting: "ORCA लाइव कनेक्टेड। आपकी समुद्री यात्रा में मैं कैसे मदद कर सकता हूँ?" },
-  { code: "bn-IN", label: "বাংলা", tag: "bn", greeting: "ORCA লাইভ সংযুক্ত। আপনার সমুদ্রযাত্রায় আমি কীভাবে সহায়তা করতে পারি?" },
-  { code: "ta-IN", label: "தமிழ்", tag: "ta", greeting: "ORCA லைவ் இணைக்கப்பட்டது. உங்கள் பயணத்திற்கு நான் எவ்வாறு உதவ முடியும்?" },
-  { code: "mr-IN", label: "मराठी", tag: "mr", greeting: "ORCA लाइव्ह जोडले गेले आहे. आपल्या सागरी सफरीसाठी मी काय मदत करू?" },
+  { code: "en-IN", label: "English", tag: "en", voiceName: "Neerja Neural", greeting: "ORCA Live connected. How can I assist your voyage today?" },
+  { code: "hi-IN", label: "हिंदी", tag: "hi", voiceName: "Swara Neural", greeting: "ORCA लाइव कनेक्टेड। आपकी समुद्री यात्रा में मैं कैसे मदद कर सकता हूँ?" },
+  { code: "bn-IN", label: "বাংলা", tag: "bn", voiceName: "Tanishaa Neural", greeting: "ORCA লাইভ সংযুক্ত। আপনার সমুদ্রযাত্রায় আমি কীভাবে সহায়তা করতে পারি?" },
+  { code: "ta-IN", label: "தமிழ்", tag: "ta", voiceName: "Pallavi Neural", greeting: "ORCA லைவ் இணைக்கப்பட்டது. உங்கள் பயணத்திற்கு நான் எவ்வாறு உதவ முடியும்?" },
+  { code: "mr-IN", label: "मराठी", tag: "mr", voiceName: "Aarohi Neural", greeting: "ORCA लाइव्ह जोडले गेले आहे. आपल्या सागरी सफरीसाठी मी काय मदत करू?" },
 ];
 
 // Synthesize pleasant acoustic feedback chimes via Web Audio API (zero external assets needed)
@@ -32,7 +33,6 @@ function playAcousticChime(type: "connected" | "thinking" | "response" | "interr
     const now = ctx.currentTime;
 
     if (type === "connected") {
-      // Ascending two-tone chime (440Hz -> 660Hz)
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -54,7 +54,6 @@ function playAcousticChime(type: "connected" | "thinking" | "response" | "interr
       osc2.start(now + 0.1);
       osc2.stop(now + 0.35);
     } else if (type === "response") {
-      // Soft gentle chime (523Hz -> 659Hz)
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
@@ -97,25 +96,20 @@ function cleanMarkdownForSpokenAudio(rawText: string): string {
   if (!rawText) return "";
 
   let text = rawText;
-  // Strip LaTeX blocks
   text = text.replace(/\$\$[\s\S]*?\$\$/g, " ");
   text = text.replace(/\\\(|\\\)/g, " ");
   text = text.replace(/\$[^\$]*\$/g, " ");
 
-  // Strip Markdown tables
   text = text.replace(/\|.*?\|/g, " ");
   text = text.replace(/^[\|-]+$/gm, " ");
 
-  // Strip provenance footers
   text = text.replace(/Source:.*$/im, " ");
   text = text.replace(/Observed:.*$/im, " ");
   text = text.replace(/Model Used:.*$/im, " ");
 
-  // Strip Markdown emphasis, links, headers
   text = text.replace(/[*#_~`>]/g, "");
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 
-  // Filter into substantive sentences
   const rawLines = text
     .split(/\n+/)
     .map((l) => l.trim())
@@ -125,7 +119,7 @@ function cleanMarkdownForSpokenAudio(rawText: string): string {
   let totalLength = 0;
 
   for (const line of rawLines) {
-    if (totalLength > 280) break;
+    if (totalLength > 240) break;
     spokenSentences.push(line);
     totalLength += line.length;
   }
@@ -165,21 +159,11 @@ export function VoiceOverlay() {
   const hasSpokenInTurnRef = useRef<boolean>(false);
   const isSpeakingTtsRef = useRef<boolean>(false);
   const statusRef = useRef<string>("requesting_mic");
-  const availableVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      const updateVoices = () => {
-        availableVoicesRef.current = window.speechSynthesis.getVoices();
-      };
-      updateVoices();
-      window.speechSynthesis.onvoiceschanged = updateVoices;
-    }
-  }, []);
 
   const cleanupAudioPipeline = useCallback(() => {
     if (animFrameRef.current) {
@@ -189,6 +173,13 @@ export function VoiceOverlay() {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
+    }
+    if (activeAudioRef.current) {
+      try {
+        activeAudioRef.current.pause();
+        activeAudioRef.current.currentTime = 0;
+      } catch {}
+      activeAudioRef.current = null;
     }
     if (mediaRecorderRef.current) {
       try {
@@ -220,6 +211,94 @@ export function VoiceOverlay() {
     isSpeakingTtsRef.current = false;
     hasSpokenInTurnRef.current = false;
     setAudioLevel(0);
+  }, []);
+
+  // ── High-Fidelity Neural TTS Speech Player ──
+  const playNeuralAudio = useCallback(async (text: string, langCode: string) => {
+    if (!text || !text.trim()) {
+      setStatus("listening");
+      return;
+    }
+
+    try {
+      setStatus("speaking");
+      isSpeakingTtsRef.current = true;
+
+      // Stop any existing playback
+      if (activeAudioRef.current) {
+        try {
+          activeAudioRef.current.pause();
+          activeAudioRef.current.currentTime = 0;
+        } catch {}
+        activeAudioRef.current = null;
+      }
+
+      // Fetch neural audio from /api/voice/tts
+      const ttsRes = await fetch("/api/voice/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, language: langCode }),
+      });
+
+      if (!ttsRes.ok) {
+        throw new Error(`TTS HTTP status: ${ttsRes.status}`);
+      }
+
+      const audioBlob = await ttsRes.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      activeAudioRef.current = audio;
+
+      audio.onplay = () => {
+        setStatus("speaking");
+        isSpeakingTtsRef.current = true;
+      };
+
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        activeAudioRef.current = null;
+        isSpeakingTtsRef.current = false;
+        setStatus("listening");
+        audioChunksRef.current = [];
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch {}
+        }
+      };
+
+      audio.onerror = (e) => {
+        console.warn("Neural audio element playback error, falling back:", e);
+        activeAudioRef.current = null;
+        isSpeakingTtsRef.current = false;
+        setStatus("listening");
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.warn("Neural TTS streaming error, falling back to browser voice:", err);
+      // Fallback to browser SpeechSynthesis if API fails
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = langCode;
+          utterance.onend = () => {
+            isSpeakingTtsRef.current = false;
+            setStatus("listening");
+          };
+          utterance.onerror = () => {
+            isSpeakingTtsRef.current = false;
+            setStatus("listening");
+          };
+          window.speechSynthesis.speak(utterance);
+        } catch {}
+      } else {
+        isSpeakingTtsRef.current = false;
+        setStatus("listening");
+      }
+    }
   }, []);
 
   const startMicrophonePipeline = useCallback(async () => {
@@ -337,7 +416,7 @@ export function VoiceOverlay() {
           };
 
           recognition.onerror = (event: any) => {
-            console.warn("WebSpeech recognition notice (MediaRecorder active):", event?.error);
+            console.warn("WebSpeech notice:", event?.error);
           };
 
           recognition.onend = () => {
@@ -351,23 +430,24 @@ export function VoiceOverlay() {
           recognition.start();
           recognitionRef.current = recognition;
         } catch (recognitionErr) {
-          console.warn("WebSpeech initialization fallback:", recognitionErr);
+          console.warn("WebSpeech init notice:", recognitionErr);
         }
       }
 
       playAcousticChime("connected");
       setStatus("listening");
 
+      // Greet the user audibly with Neural Voice
       const currentLangConfig = REGIONAL_LANGUAGES.find((l) => l.code === selectedLang) || REGIONAL_LANGUAGES[0];
       setAiSpokenResponse(currentLangConfig.greeting);
-      speakAudioUtterance(currentLangConfig.greeting, selectedLang);
+      playNeuralAudio(currentLangConfig.greeting, selectedLang);
     } catch (err: any) {
       console.error("Microphone access failed:", err);
       setMicPermission("denied");
       setStatus("mic_blocked");
       playAcousticChime("error");
     }
-  }, [cleanupAudioPipeline, selectedLang]);
+  }, [cleanupAudioPipeline, selectedLang, playNeuralAudio]);
 
   useEffect(() => {
     if (isVoiceActive) {
@@ -399,7 +479,7 @@ export function VoiceOverlay() {
         const recorderMime = mediaRecorderRef.current.mimeType || "audio/webm";
         const audioBlob = new Blob(audioChunksRef.current, { type: recorderMime });
 
-        if (audioBlob.size > 1500) {
+        if (audioBlob.size > 1200) {
           setStatus("thinking");
           const formData = new FormData();
           formData.append("file", audioBlob, "speech.webm");
@@ -417,7 +497,7 @@ export function VoiceOverlay() {
           }
         }
       } catch (whisperErr) {
-        console.warn("Groq Whisper fallback error:", whisperErr);
+        console.warn("Whisper fallback error:", whisperErr);
       }
     }
 
@@ -463,85 +543,29 @@ export function VoiceOverlay() {
 
       const data = await response.json();
       const rawAgentReply = data.content || "";
-      const spokenSummary = cleanMarkdownForSpokenAudio(rawAgentReply) || "Advisory confirmed. Telemetry parameters are normal for your operating sector.";
+      const spokenSummary = cleanMarkdownForSpokenAudio(rawAgentReply) || "Advisory confirmed. Conditions are verified for your operating sector.";
 
       setAiSpokenResponse(spokenSummary);
       playAcousticChime("response");
-      speakAudioUtterance(spokenSummary, selectedLang);
+      playNeuralAudio(spokenSummary, selectedLang);
     } catch (apiErr) {
       console.warn("API Chat voice error fallback:", apiErr);
       const fallbackAdvisory = `Captain, telemetry near ${userLocation.name} is normal. Wave height is 2.1 meters. Exercise vigilance.`;
       setAiSpokenResponse(fallbackAdvisory);
-      speakAudioUtterance(fallbackAdvisory, selectedLang);
-    }
-  };
-
-  const speakAudioUtterance = (text: string, langCode: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setStatus("listening");
-      return;
-    }
-
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.02;
-      utterance.lang = langCode;
-
-      const baseLang = langCode.split("-")[0].toLowerCase();
-      const voices = availableVoicesRef.current.length > 0 ? availableVoicesRef.current : window.speechSynthesis.getVoices();
-      const matchedVoice = voices.find(
-        (v) =>
-          v.lang.toLowerCase() === langCode.toLowerCase() ||
-          v.lang.toLowerCase().startsWith(baseLang)
-      );
-
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      }
-
-      utterance.onstart = () => {
-        isSpeakingTtsRef.current = true;
-        setStatus("speaking");
-      };
-
-      utterance.onend = () => {
-        isSpeakingTtsRef.current = false;
-        setStatus("listening");
-        audioChunksRef.current = [];
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch {}
-        }
-      };
-
-      utterance.onerror = (e) => {
-        console.warn("Speech synthesis notice:", e);
-        isSpeakingTtsRef.current = false;
-        setStatus("listening");
-        audioChunksRef.current = [];
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch {}
-        }
-      };
-
-      window.speechSynthesis.speak(utterance);
-    } catch (ttsErr) {
-      console.warn("TTS invocation error:", ttsErr);
-      isSpeakingTtsRef.current = false;
-      setStatus("listening");
+      playNeuralAudio(fallbackAdvisory, selectedLang);
     }
   };
 
   const handleInterruptOrSend = () => {
     if (status === "speaking" || isSpeakingTtsRef.current) {
       playAcousticChime("interrupt");
+      if (activeAudioRef.current) {
+        try {
+          activeAudioRef.current.pause();
+          activeAudioRef.current.currentTime = 0;
+        } catch {}
+        activeAudioRef.current = null;
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -582,10 +606,12 @@ export function VoiceOverlay() {
     status === "listening"
       ? 1 + audioLevel * 0.38
       : status === "speaking"
-      ? 1.12
+      ? 1.14
       : status === "thinking"
       ? 1.05
       : 1.0;
+
+  const currentLangConfig = REGIONAL_LANGUAGES.find((l) => l.code === selectedLang) || REGIONAL_LANGUAGES[0];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-[#040810]/95 backdrop-blur-2xl p-6 select-none transition-all duration-500 font-sans text-white">
@@ -655,7 +681,7 @@ export function VoiceOverlay() {
           )}
         </div>
 
-        {/* Dialect Switcher */}
+        {/* Dialect Switcher with Neural Voice Badge */}
         <div className="flex items-center gap-1 bg-white/[0.06] p-1 rounded-full border border-white/10 shadow-inner">
           <Globe className="size-3.5 text-cyan-400 ml-2 mr-1" />
           {REGIONAL_LANGUAGES.map((lang) => (
@@ -779,14 +805,19 @@ export function VoiceOverlay() {
           </div>
         )}
 
-        {/* Coastal Corridor Anchor Info */}
-        <div className="flex items-center gap-2 mt-4 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 text-xs shadow-sm">
+        {/* Coastal Corridor & Neural Voice Badge */}
+        <div className="flex items-center gap-2 mt-4 px-3.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 text-xs shadow-sm">
           <Compass className="size-3 text-cyan-400" />
           <span className="font-semibold text-white">{userLocation.name}</span>
           <span className="opacity-40">·</span>
           <span>{vesselType === "small" ? "Craft <8m" : vesselType === "medium" ? "Motorized 8-15m" : "Deep Sea >15m"}</span>
           <span className="opacity-40">·</span>
           <span className="capitalize text-cyan-300">{userRole.replace("_", " ")}</span>
+          <span className="opacity-40">·</span>
+          <span className="text-emerald-400 font-mono text-[10px] flex items-center gap-1">
+            <Sparkles className="size-2.5" />
+            <span>{currentLangConfig.voiceName}</span>
+          </span>
         </div>
       </div>
 
@@ -807,7 +838,7 @@ export function VoiceOverlay() {
             <div className="animate-fade-in space-y-1">
               <p className="text-[11px] font-mono text-emerald-400 font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5">
                 <Volume2 className="size-3.5 animate-pulse" />
-                <span>ORCA Spoken Advisory</span>
+                <span>ORCA Neural Spoken Advisory ({currentLangConfig.voiceName})</span>
               </p>
               <p className="text-sm font-medium text-slate-100 leading-relaxed">
                 {aiSpokenResponse}

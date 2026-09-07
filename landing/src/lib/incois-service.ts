@@ -30,6 +30,7 @@ export interface WeatherTelemetry {
   squallProbabilityPct: number; // L
   cycloneAlertLevel: "Green (Normal)" | "Yellow (Watch)" | "Amber (Advisory)" | "Red (Warning)";
   source: string;
+  waveSource?: string;
   timestamp: string;
 }
 
@@ -449,6 +450,39 @@ async function queryAscatWind(lat: number, lon: number): Promise<{
 }
 
 /**
+ * Live Wave query: Open-Meteo Marine API
+ * Queries current significant wave height, wave direction, and wave period.
+ */
+async function queryOpenMeteoWave(lat: number, lon: number): Promise<{
+  waveHeightM: number;
+  wavePeriodS: number;
+  waveDirectionDeg: number;
+  obsTime: string;
+  source: string;
+} | null> {
+  try {
+    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(2)}&longitude=${lon.toFixed(2)}&current=wave_height,wave_direction,wave_period`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const current = json?.current;
+    if (current && typeof current.wave_height === "number" && current.wave_height >= 0) {
+      const obsTime = current.time || new Date().toISOString();
+      return {
+        waveHeightM: Math.round(current.wave_height * 100) / 100,
+        wavePeriodS: Math.round((current.wave_period ?? 8.4) * 10) / 10,
+        waveDirectionDeg: Math.round(current.wave_direction ?? 195),
+        obsTime,
+        source: `Open-Meteo Live (${obsTime})`,
+      };
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
  * Resolves comprehensive telemetry for any Indian coastal coordinate or port
  */
 export async function getCoastalTelemetry(
@@ -478,14 +512,16 @@ export async function getCoastalTelemetry(
     }
   }
 
-  // --- Fire live ERDDAP queries in parallel ---
-  const [sstResult, windResult] = await Promise.allSettled([
+  // --- Fire live queries in parallel ---
+  const [sstResult, windResult, waveResult] = await Promise.allSettled([
     queryArgoSst(matchedPort.lat, matchedPort.lon),
     queryAscatWind(matchedPort.lat, matchedPort.lon),
+    queryOpenMeteoWave(matchedPort.lat, matchedPort.lon),
   ]);
 
   const liveSst = sstResult.status === "fulfilled" ? sstResult.value : null;
   const liveWind = windResult.status === "fulfilled" ? windResult.value : null;
+  const liveWave = waveResult.status === "fulfilled" ? waveResult.value : null;
 
   // --- SST: live-first, fallback-second ---
   let sstCelsius: number;
@@ -545,22 +581,41 @@ export async function getCoastalTelemetry(
     weatherTimestamp = new Date().toISOString();
   }
 
-  // Weather telemetry (wave height and other params use baseline — no live ERDDAP wave dataset available)
+  // --- Wave: live-first (Open-Meteo), fallback-second (INCOIS OSF Model Baseline) ---
+  let waveHeightM: number;
+  let wavePeriodS: number;
+  let waveDir: number;
+  let waveSource: string;
+
+  if (liveWave) {
+    waveHeightM = liveWave.waveHeightM;
+    wavePeriodS = liveWave.wavePeriodS;
+    waveDir = liveWave.waveDirectionDeg;
+    waveSource = liveWave.source;
+  } else {
+    waveHeightM = matchedPort.baseHs;
+    wavePeriodS = 8.4;
+    waveDir = matchedPort.windDir;
+    waveSource = "INCOIS High-Resolution Wave Model (OSF Baseline Registry)";
+  }
+
+  // Weather telemetry
   const weather: WeatherTelemetry = {
-    significantWaveHeightM: matchedPort.baseHs,
-    wavePeriodS: 8.4,
+    significantWaveHeightM: waveHeightM,
+    wavePeriodS,
     windSpeedKnots,
-    windDirectionDeg: matchedPort.windDir,
+    windDirectionDeg: waveDir,
     windDirectionText: matchedPort.windDirText,
     currentSpeedMs: 0.42,
     squallProbabilityPct: matchedPort.squall,
     cycloneAlertLevel: matchedPort.cyclone,
     source: weatherSource,
+    waveSource,
     timestamp: weatherTimestamp,
   };
 
   // Risk & Geofence assessment
-  const { safetyIndex, category } = calculateSafetyIndex(
+  const { safetyIndex, category, penalty } = calculateSafetyIndex(
     weather.significantWaveHeightM,
     weather.windSpeedKnots,
     weather.squallProbabilityPct,
@@ -589,6 +644,11 @@ export async function getCoastalTelemetry(
   } else if (mpaAlert) {
     recommendation = `CAUTION: Approaching ${matchedPort.mpaName} buffer zone (${mpaDistanceNm} NM). Trawling strictly prohibited.`;
   }
+
+  const w1Exp = vesselType === "large" ? 7.0 : vesselType === "medium" ? 12.0 : 18.5;
+  const w2Exp = vesselType === "large" ? 0.6 : vesselType === "medium" ? 0.9 : 1.2;
+  const w3Exp = vesselType === "large" ? 0.5 : vesselType === "medium" ? 0.7 : 0.8;
+  const penaltyStr = penalty > 0 ? ` - ${penalty} (penalty)` : "";
 
   return {
     station: matchedPort.name,
@@ -621,7 +681,7 @@ export async function getCoastalTelemetry(
     risk: {
       safetyIndex,
       riskCategory: category,
-      formulaExplanation: `Safety = 100 - (18.5 · ${weather.significantWaveHeightM}m + 1.2 · ${weather.windSpeedKnots}kts + 0.8 · ${weather.squallProbabilityPct}%)`,
+      formulaExplanation: `Safety = 100 - (${w1Exp} · ${weather.significantWaveHeightM}m + ${w2Exp} · ${weather.windSpeedKnots}kts + ${w3Exp} · ${weather.squallProbabilityPct}%)${penaltyStr}`,
       imblDistanceNm,
       imblAlert,
       mpaName: matchedPort.mpaName,

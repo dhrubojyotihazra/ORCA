@@ -19,7 +19,36 @@ Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
 5. TIMESTAMP HONESTY: When citing satellite scatterometer wind (ascat) or ARGO float SST, explicitly state "Most recent INCOIS observation: <date>". NEVER call historical data "Live".
 6. PFZ WAYPOINT PROVENANCE: When citing PFZ coordinates, explicitly state they are derived from a bathymetric shelf-break model (illustrative waypoints), not a live INCOIS satellite PFZ advisory bulletin.
 7. SQUALL & CYCLONE PROVENANCE: State that squall probability and cyclone alert levels are regional climatological baseline averages, not live radar/IMD nowcasts.
+8. VESSEL CLASSIFICATION ACCURACY: Always specify the correct size bracket corresponding to the target vessel: Small Artisanal Craft (<8m), Motorized Craft (8-15m), or Deep-Sea Trawler (>15m). NEVER label a medium craft as (<8m) or small craft as (8-15m). Cite the exact formula weights matching that vessel class.
+9. WAVE PROVENANCE: When significant wave height (Hs) is from Open-Meteo, cite it as "Open-Meteo Live (<timestamp>)". If from INCOIS model baseline, cite as "INCOIS OSF Model Baseline".
 """
+
+VESSEL_SPECS = {
+    "small": {
+        "name": "Small Artisanal Craft",
+        "bracket": "<8m",
+        "w1": 18.5,
+        "w2": 1.2,
+        "w3": 0.8,
+        "penalty": "25.0 if Hs > 2.5m",
+    },
+    "medium": {
+        "name": "Motorized Craft",
+        "bracket": "8-15m",
+        "w1": 12.0,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": "10.0 if Hs > 2.8m",
+    },
+    "large": {
+        "name": "Deep-Sea Trawler",
+        "bracket": ">15m",
+        "w1": 7.0,
+        "w2": 0.6,
+        "w3": 0.5,
+        "penalty": "15.0 if Hs > 4.0m",
+    },
+}
 
 REGIONAL_TEMPLATES = {
     "hi": {
@@ -56,7 +85,9 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     loc = state.get("location", {})
     port_name = loc.get("name", "Paradip Harbour")
     sector = loc.get("sector", "Zone 4")
-    vessel = state.get("vessel_type", "small")
+    vessel_raw = (state.get("vessel_type") or "small").lower().strip()
+    vspec = VESSEL_SPECS.get(vessel_raw, VESSEL_SPECS["small"])
+    vessel_display = f"{vspec['name']} ({vspec['bracket']})"
     query = state.get("query", "")
     
     ocean = state.get("ocean_data") or {}
@@ -75,7 +106,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     context_lines = [
         "VERIFIED SPECIALIST TELEMETRY (STRICT GROUND TRUTH - DO NOT INVENT UNQUERIED DATA):",
         f"- Location Anchor: {port_name} ({sector})",
-        f"- Target Vessel: {vessel} craft (<8m)",
+        f"- Target Vessel: {vessel_display}",
         f"- Target Language: {lang.upper()} (Respond in {lang} if regional, or English with regional header)",
     ]
 
@@ -94,7 +125,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             f"- Significant Wave Height (Hs): {weather.get('significant_wave_height_m')} m (Source: {weather.get('wave_source', 'INCOIS OSF Model Baseline')})",
             f"- Wind Speed (W): {weather.get('wind_speed_knots')} knots ({weather.get('source', 'INCOIS')})",
             f"- Cyclone Alert: {weather.get('cyclone_alert_level', 'Normal')} (Source: {weather.get('cyclone_source', 'State Disaster Management Baseline')})",
-            f"- Squall Probability: {weather.get('lightning_squall_prob_pct')}% (Source: {weather.get('squall_source', 'Regional Atmospheric Climatology')})",
+            f"- Squall / Lightning Probability (L): {weather.get('lightning_squall_prob_pct')}% (Source: {weather.get('squall_source', 'Regional Atmospheric Climatology')})",
         ])
     else:
         context_lines.append("- Weather Telemetry: Not queried for this question. Mathematically forbidden from assuming wave heights or wind speeds.")
@@ -102,7 +133,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     if has_risk:
         context_lines.extend([
             f"- Hydrodynamic Safety Index: {risk.get('safety_index')} / 100 ({risk.get('risk_category')})",
-            f"- Formula: Safety = 100 - (18.5 · Hs + 1.2 · W + 0.8 · L) - Penalty",
+            f"- Formula: Safety = 100 - ({vspec['w1']} · Hs + {vspec['w2']} · W + {vspec['w3']} · L) - Penalty ({vspec['penalty']})",
         ])
     else:
         context_lines.append("- Hydrodynamic Safety Index: Not evaluated for this query. Do NOT issue safety index numbers.")
@@ -157,7 +188,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
         lines = [
             f"### {template['title']}",
             f"**Corridor / Station**: {port_name} ({sector})  ",
-            f"**Vessel Profile**: {vessel.capitalize()} Craft (<8m)",
+            f"**Vessel Profile**: {vessel_display}",
             "",
         ]
 
@@ -167,11 +198,12 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             squall = weather.get("lightning_squall_prob_pct", 12.0)
             safety_idx = risk.get("safety_index", "N/A")
             risk_cat = risk.get("risk_category", "Caution")
+            wave_source = weather.get("wave_source", "INCOIS OSF Model Baseline")
             lines.extend([
                 "#### 1. Hydrodynamic Safety & Sea-Venture Index",
                 f"- **Calculated Safety Index**: **{safety_idx} / 100** ({risk_cat})",
-                f"- **Formulation**: $$\\text{{Safety Index}} = 100 - (18.5 \\cdot H_s + 1.2 \\cdot W + 0.8 \\cdot L)$$",
-                f"- **Wave Height ($H_s$)**: {hs} m (INCOIS OSF Model Baseline)",
+                f"- **Formulation**: $$\\text{{Safety Index}} = 100 - ({vspec['w1']} \\cdot H_s + {vspec['w2']} \\cdot W + {vspec['w3']} \\cdot L) - \\text{{Penalty}}$$",
+                f"- **Wave Height ($H_s$)**: {hs} m ({wave_source})",
                 f"- **Wind Velocity ($W$)**: {wind} knots ({weather.get('source', 'INCOIS')})",
                 f"- **Squall / Lightning Probability ($L$)**: {squall}%",
                 "",

@@ -2,7 +2,7 @@ import math
 import datetime
 from typing import Dict, Any, List
 from .state import AgentState, OceanTelemetry, WeatherTelemetry, RiskAssessment
-from data.tools.incois_tools import get_live_argo_sst, get_live_ascat_wind
+from data.tools.incois_tools import get_live_argo_sst, get_live_ascat_wind, get_live_openmeteo_wave
 from data.tools.geofence_tools import check_zone
 
 
@@ -143,19 +143,31 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
         weather_source = "Cached Baseline Fallback (live fetch unavailable)"
         obs_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    hs = defaults["hs"]
+    # Attempt live Open-Meteo wave query (live-first, baseline-second)
+    live_wave = get_live_openmeteo_wave(lat, lon)
+    if live_wave.get("is_live"):
+        hs = live_wave["wave_height_m"]
+        wave_period = live_wave["wave_period_s"]
+        wave_dir = live_wave["wave_direction_deg"]
+        wave_source = live_wave["source"]
+    else:
+        hs = defaults["hs"]
+        wave_period = 8.4
+        wave_dir = 195.0
+        wave_source = "INCOIS High-Resolution Wave Model (OSF Baseline Registry)"
+
     squall_prob = 12.0
     cyclone_level = "Amber (Advisory)"
     
     weather_payload: WeatherTelemetry = {
         "significant_wave_height_m": hs,
-        "wave_period_s": 8.4,
+        "wave_period_s": wave_period,
         "wind_speed_knots": wind_speed,
-        "wind_direction_deg": 195.0,
+        "wind_direction_deg": wave_dir,
         "lightning_squall_prob_pct": squall_prob,
         "cyclone_alert_level": cyclone_level,
         "source": weather_source,
-        "wave_source": "INCOIS High-Resolution Wave Model (OSF Baseline Registry)",
+        "wave_source": wave_source,
         "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
         "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
         "timestamp": obs_time,
@@ -164,7 +176,7 @@ def weather_specialist_node(state: AgentState) -> Dict[str, Any]:
     return {
         "weather_data": weather_payload,
         "evidence_citations": [
-            f"Weather Specialist: Hs={hs}m (INCOIS OSF Model Baseline) | Wind={wind_speed} kts ({weather_source}) | Squall={squall_prob}% (Climatology Baseline) | Cyclone Stage={cyclone_level} (Seasonal Baseline)"
+            f"Weather Specialist: Hs={hs}m ({wave_source}) | Wind={wind_speed} kts ({weather_source}) | Squall={squall_prob}% (Climatology Baseline) | Cyclone Stage={cyclone_level} (Seasonal Baseline)"
         ],
     }
 
@@ -178,8 +190,21 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     loc = state.get("location") or {"lat": 20.26, "lon": 86.67, "name": "Paradip"}
     lat = loc.get("lat", 20.26)
     lon = loc.get("lon", 86.67)
-    vessel = state.get("vessel_type") or "small"
+    vessel = (state.get("vessel_type") or "small").lower().strip()
     weather = state.get("weather_data")
+
+    vessel_brackets = {
+        "small": "<8m",
+        "medium": "8-15m",
+        "large": ">15m",
+    }
+    vessel_bracket = vessel_brackets.get(vessel, "<8m")
+    vessel_names = {
+        "small": "Small Artisanal Craft",
+        "medium": "Motorized Craft",
+        "large": "Deep-Sea Trawler",
+    }
+    vessel_name = vessel_names.get(vessel, "Small Artisanal Craft")
     
     defaults = PORT_ENV_DEFAULTS.get("paradip")
     for k, v in PORT_ENV_DEFAULTS.items():
@@ -207,12 +232,15 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
         if vessel == "large":
             w1, w2, w3 = 7.0, 0.6, 0.5
             penalty = 15.0 if hs > 4.0 else 0.0
+            penalty_rule = "15.0 if Hs > 4.0m"
         elif vessel == "medium":
             w1, w2, w3 = 12.0, 0.9, 0.7
             penalty = 10.0 if hs > 2.8 else 0.0
+            penalty_rule = "10.0 if Hs > 2.8m"
         else:  # Small craft (<8m)
             w1, w2, w3 = 18.5, 1.2, 0.8
             penalty = 25.0 if hs > 2.5 else 0.0
+            penalty_rule = "25.0 if Hs > 2.5m"
             
         raw_deduction = (w1 * hs) + (w2 * w) + (w3 * l) + penalty
         safety_index = max(0.0, min(100.0, round(100.0 - raw_deduction, 2)))
@@ -226,7 +254,7 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
         else:
             category = "Extreme Danger"
 
-        citation = f"Risk Specialist: Safety Index={safety_index}/100 ({category}) for {vessel} vessel | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM"
+        citation = f"Risk Specialist: Safety Index={safety_index}/100 ({category}) for {vessel_name} ({vessel_bracket}) | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM"
     else:
         # Do NOT fabricate wave/wind values or compute a safety verdict without weather telemetry
         safety_index = None
@@ -236,6 +264,9 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     risk_payload: RiskAssessment = {
         "safety_index": safety_index,
         "risk_category": category,
+        "vessel_class": vessel,
+        "vessel_bracket": vessel_bracket,
+        "applied_weights": {"w1": w1, "w2": w2, "w3": w3, "penalty": penalty, "penalty_rule": penalty_rule} if has_weather else None,
         "imbl_distance_nm": imbl_distance,
         "imbl_alert": imbl_distance < 15.0,
         "mpa_distance_nm": mpa_distance,

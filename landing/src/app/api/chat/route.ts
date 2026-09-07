@@ -446,6 +446,12 @@ graph TD
 **Observed:** ${t.ocean.timestamp} | **Grounded Advisory Verified**`;
   }
 
+  const isLarge = vesselText.includes(">15m");
+  const isMed = vesselText.includes("8-15m");
+  const w1 = isLarge ? "7.0" : isMed ? "12.0" : "18.5";
+  const w2 = isLarge ? "0.6" : isMed ? "0.9" : "1.2";
+  const w3 = isLarge ? "0.5" : isMed ? "0.7" : "0.8";
+
   return `### 🌊 ORCA Marine Advisory & Telemetry Synthesis · ${t.sector}
 **Station Anchor**: ${t.station} (${t.coordinates.lat}°N, ${t.coordinates.lon}°E)  
 **Vessel Classification**: ${vesselText}  
@@ -466,8 +472,8 @@ graph TD
 #### 1. Hydrodynamic Safety & Sea-Venture Index
 - **Calculated Safety Index**: **${t.risk.safetyIndex} / 100** (${t.risk.riskCategory})
 - **Formulation**:
-  $$\\text{Safety Index} = 100 - (18.5 \\cdot H_s + 1.2 \\cdot W + 0.8 \\cdot L) - \\text{Penalty}$$
-- **Significant Wave Height ($H_s$)**: ${t.weather.significantWaveHeightM} m
+  $$\\text{Safety Index} = 100 - (${w1} \\cdot H_s + ${w2} \\cdot W + ${w3} \\cdot L) - \\text{Penalty}$$
+- **Significant Wave Height ($H_s$)**: ${t.weather.significantWaveHeightM} m (${t.weather.waveSource || "INCOIS Model Baseline"})
 - **Wind Velocity ($W$)**: ${t.weather.windSpeedKnots} knots (${t.weather.windDirectionText})
 - **Squall / Lightning Probability ($L$)**: ${t.weather.squallProbabilityPct}%
 

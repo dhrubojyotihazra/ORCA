@@ -162,3 +162,46 @@ def get_live_ascat_wind(lat: float, lon: float) -> dict:
         "source": "Cached Baseline Fallback (live fetch unavailable)",
     }
 
+
+@lru_cache(maxsize=128)
+def get_live_openmeteo_wave(lat: float, lon: float) -> dict:
+    """
+    Queries live Open-Meteo Marine API for current significant wave height,
+    wave direction, and wave period.
+    """
+    url = (
+        f"https://marine-api.open-meteo.com/v1/marine"
+        f"?latitude={lat:.2f}&longitude={lon:.2f}"
+        f"&current=wave_height,wave_direction,wave_period"
+    )
+    try:
+        r = requests.get(url, timeout=3.5)
+        if r.status_code == 200:
+            data = r.json()
+            curr = data.get("current", {})
+            wave_h = curr.get("wave_height")
+            if wave_h is not None and wave_h >= 0:
+                obs_time = curr.get("time") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                return {
+                    "status": "success",
+                    "is_live": True,
+                    "wave_height_m": round(float(wave_h), 2),
+                    "wave_period_s": round(float(curr.get("wave_period") or 8.4), 1),
+                    "wave_direction_deg": round(float(curr.get("wave_direction") or 195.0), 1),
+                    "obs_time": obs_time,
+                    "dataset": "open_meteo_marine",
+                    "source": f"Open-Meteo Live ({obs_time})",
+                }
+    except Exception:
+        pass
+
+    return {
+        "status": "fallback",
+        "is_live": False,
+        "wave_height_m": 2.1,
+        "wave_period_s": 8.4,
+        "wave_direction_deg": 195.0,
+        "source": "INCOIS High-Resolution Wave Model (OSF Baseline Registry)",
+    }
+
+

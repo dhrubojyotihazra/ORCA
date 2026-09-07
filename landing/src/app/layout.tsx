@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Syne, Plus_Jakarta_Sans, Inter, JetBrains_Mono, Pinyon_Script } from "next/font/google";
+import "katex/dist/katex.min.css";
 import "./globals.css";
+import { Providers } from "@/components/app/Providers";
 
 // Ultra-bold, avant-garde display typeface for giant wordmarks & bold straight headers
 const syne = Syne({
@@ -64,14 +66,35 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${syne.variable} ${plusJakarta.variable} ${pinyonScript.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Filter out external browser extension rejections from polluting Next.js dev overlay
+              if (typeof window !== 'undefined') {
+                window.addEventListener('unhandledrejection', function(e) {
+                  var reason = e && e.reason;
+                  var stack = (reason && reason.stack) || '';
+                  var msg = (reason && reason.message) || String(reason || '');
+                  if (stack.indexOf('chrome-extension://') !== -1 || msg.indexOf('M_ID') !== -1 || stack.indexOf('moz-extension://') !== -1) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                  }
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className="font-[var(--font-body)] antialiased bg-[#050B14] text-white selection:bg-teal-400/30 selection:text-white"
         style={{ fontFamily: "var(--font-body), system-ui, sans-serif" }}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

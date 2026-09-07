@@ -23,6 +23,22 @@ html {
   width: 100%;
 }
 
+/* ── Suppress Stray Mermaid Error Bombs ── */
+body > [id^="dmermaid"],
+body > [id^="mermaid-"],
+body > .error-icon,
+svg[aria-roledescription="error"],
+.error-icon,
+.mermaid-error {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+}
+
 body {
   background: #050B14;
   color: #ffffff;
@@ -171,4 +187,177 @@ body {
   color: #ffffff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   ORCA Neomorphic Design System Tokens (Light & Abyss Dark Physics)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Light Neomorphic Cards & Surfaces */
+.neo-card-light {
+  background: #f1f5f9;
+  box-shadow: -10px -10px 24px rgba(255, 255, 255, 0.95),
+              10px 10px 28px rgba(180, 195, 215, 0.45),
+              inset 1px 1px 1px rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.neo-card-light-soft {
+  background: #f6f9fc;
+  box-shadow: -6px -6px 16px rgba(255, 255, 255, 0.9),
+              6px 6px 18px rgba(180, 195, 215, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.neo-btn-light {
+  background: #eef3f8;
+  box-shadow: -3px -3px 8px rgba(255, 255, 255, 0.95),
+              3px 3px 8px rgba(175, 192, 212, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neo-btn-light:hover {
+  box-shadow: -5px -5px 12px rgba(255, 255, 255, 1),
+              5px 5px 12px rgba(175, 192, 212, 0.6);
+  transform: translateY(-1px);
+}
+.neo-btn-light:active {
+  box-shadow: inset 2.5px 2.5px 6px rgba(175, 192, 212, 0.6),
+              inset -2.5px -2.5px 6px rgba(255, 255, 255, 0.95);
+  transform: translateY(0);
+}
+
+.neo-inset-light {
+  background: #e8f0f7;
+  box-shadow: inset 3px 3px 7px rgba(175, 192, 212, 0.6),
+              inset -3px -3px 7px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Dark Neomorphic Cards & Surfaces (Abyss Oceanic) */
+.neo-card-dark {
+  background: linear-gradient(165deg, rgba(16, 26, 38, 0.85) 0%, rgba(9, 15, 23, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75),
+              0 0 40px rgba(6, 182, 212, 0.08),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.14),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.neo-card-dark-soft {
+  background: linear-gradient(160deg, rgba(15, 24, 36, 0.6) 0%, rgba(8, 14, 21, 0.75) 100%);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5),
+              inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.neo-btn-dark {
+  background: linear-gradient(145deg, #131d2a, #0a111a);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+              inset 0 1px 1px rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neo-btn-dark:hover {
+  background: linear-gradient(145deg, #182637, #0d1622);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7),
+              0 0 16px rgba(6, 182, 212, 0.2),
+              inset 0 1px 1px rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+.neo-btn-dark:active {
+  background: #080e16;
+  box-shadow: inset 2.5px 2.5px 6px rgba(0, 0, 0, 0.9),
+              inset -1px -1px 3px rgba(255, 255, 255, 0.06);
+  transform: translateY(0);
+}
+
+.neo-inset-dark {
+  background: #060b12;
+  box-shadow: inset 3.5px 3.5px 9px rgba(0, 0, 0, 0.95),
+              inset -1.5px -1.5px 4px rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+/* Prompt Card Centerpiece Shadows */
+.neo-prompt-light {
+  background: #ffffff;
+  box-shadow: -14px -14px 34px rgba(255, 255, 255, 1),
+              14px 14px 36px rgba(185, 200, 220, 0.45),
+              inset 0 1px 1.5px rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+}
+
+.neo-prompt-dark {
+  background: linear-gradient(160deg, #0e1824 0%, #080f18 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8),
+              0 0 35px rgba(6, 182, 212, 0.12),
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.16),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+/* Dark Mode Glowing Background Waves */
+.abyss-ambient-wave {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+/* Gemini Live / Advanced Voice Mode Fluid Chromatic Orb Animations */
+@keyframes gemini-orb-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    border-radius: 48% 52% 54% 46% / 45% 55% 45% 55%;
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.09) rotate(180deg);
+    border-radius: 54% 46% 42% 58% / 58% 42% 58% 42%;
+    filter: hue-rotate(25deg);
+  }
+}
+
+@keyframes gemini-orb-thinking {
+  0% {
+    transform: rotate(0deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.96);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.02);
+  }
+}
+
+@keyframes gemini-ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.gemini-live-orb {
+  animation: gemini-orb-pulse 5s ease-in-out infinite;
+}
+
+.gemini-live-orb-thinking {
+  animation: gemini-orb-thinking 2.5s linear infinite;
+}
+
+.gemini-live-ripple {
+  animation: gemini-ripple 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
 

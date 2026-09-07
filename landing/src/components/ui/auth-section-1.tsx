@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ShieldCheck,
@@ -132,6 +133,7 @@ export interface AuthSectionOneProps {
 }
 
 export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOneProps) {
+  const router = useRouter();
   // Theme state: defaults to light (matches user's reference image 1)
   const [theme, setTheme] = useState<ThemeMode>("light");
 
@@ -372,6 +374,9 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           ? "Account registered! Initializing dashboard..."
           : "Identity verified! Welcome aboard."
       );
+      setTimeout(() => {
+        router.push("/app");
+      }, 900);
     }, 1200);
   };
 

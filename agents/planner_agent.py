@@ -91,10 +91,16 @@ def planner_node(state: AgentState) -> Dict[str, Any]:
     elif "motorized" in query or "medium" in query or "fibre" in query:
         vessel = "medium"
 
+    # 5. User Role Register (defaults to 'fisher')
+    valid_roles = ["fisher", "coast_guard", "port_operator", "scientist"]
+    raw_role = (state.get("user_role") or "fisher").lower().strip()
+    user_role = raw_role if raw_role in valid_roles else "fisher"
+
     return {
         "language": lang,
         "intent": intents,
         "location": location,
         "vessel_type": vessel,
+        "user_role": user_role,
         "evidence_citations": ["Planner: Decomposed into intents: " + ", ".join(intents)],
     }

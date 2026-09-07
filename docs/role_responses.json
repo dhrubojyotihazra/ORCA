@@ -1,0 +1,307 @@
+{
+  "fisher": {
+    "label": "fisher",
+    "content": "🟡 **Caution: Consider delaying sea departure**\n\nThe waters around Paradip are showing mixed signals today. While the waves are manageable, the wind data is quite old, which makes it risky to rely on current conditions without a fresh check.\n\n**Here is what you need to know:**\n\n*   **Waves:** The sea is relatively calm with waves around **1 metre** (1.04 m). This is generally safe for your boat size.\n*   **Wind:** The last recorded wind speed was around **15 knots** (14.9 knots). However, this data is from a satellite pass in **May 2023**, so it is not a live reading. You must verify current wind conditions locally before heading out.\n*   **Safety Score:** The overall safety index is **65.71 out of 100**, which puts you in the \"Caution\" zone.\n*   **Weather Risk:** There is a **12%** chance of squalls or lightning. While not high, it is enough to warrant caution.\n*   **Cyclone Status:** The current alert level is **Amber (Advisory)**. This is a seasonal baseline advisory, not a live cyclone warning, but you should stay alert for any updates from IMD.\n\n**Fishing Guidance:**\n*   **Best Spot:** Look for fishing grounds near the shelf break. Illustrative waypoints are around **19.98°N, 87.02°E** and **20.11°N, 87.22°E**. *Note: These are model-based offsets, not live INCOIS PFZ bulletins.*\n*   **Target Fish:**\n    *   **Hilsa:** Very high suitability (0.96). Good chance of catching Hilsa.\n    *   **Indian Mackerel:** Moderate suitability (0.49).\n    *   **Yellowfin Tuna:** Low suitability (0.36).\n*   **Water Temp:** The sea surface temperature is **30.22°C** (based on the most recent float observation from June 2024).\n\n**Recommendation:**\nGiven the outdated wind data and the \"Caution\" safety index, it is safer to **delay departure** until you can confirm current wind speeds are below 15 knots and no immediate squalls are forecast. If you must go out, stay close to shore and monitor the sky for lightning.\n\nSource: INCOIS ERDDAP (SST, Wind), Open-Meteo (Waves), IMD Regional Climatology (Squall), Bathymetric Shelf-Break Model (PFZ) | Observed: 2026-09-07T08:00 (Waves), 2023-05-20T12:00:00Z (Wind), 2024-06-13T17:14:43Z (SST) | Grounded Advisory",
+    "weather": {
+      "significant_wave_height_m": 1.04,
+      "wave_period_s": 10.3,
+      "wind_speed_knots": 14.9,
+      "wind_direction_deg": 178,
+      "lightning_squall_prob_pct": 12,
+      "cyclone_alert_level": "Amber (Advisory)",
+      "source": "INCOIS ERDDAP (Most recent satellite observation: 2023-05-20T12:00:00Z) — dataset:ascat_daily_datasets",
+      "wave_source": "Open-Meteo Live (2026-09-07T08:00)",
+      "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+      "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
+      "timestamp": "2023-05-20T12:00:00Z"
+    },
+    "ocean": {
+      "sst_celsius": 30.22,
+      "sst_anomaly": 0.8,
+      "chlorophyll_a": 1.82,
+      "thermal_front": true,
+      "species_hsi": {
+        "Yellowfin Tuna": 0.36,
+        "Indian Mackerel": 0.49,
+        "Hilsa / Pelagics": 0.96
+      },
+      "pfz_coordinates": [
+        {
+          "lat": 19.98,
+          "lon": 87.02
+        },
+        {
+          "lat": 20.11,
+          "lon": 87.22
+        }
+      ],
+      "source": "INCOIS ERDDAP (Most recent float observation: 2024-06-13T17:14:43Z) — dataset:Indian_ARGO_Floats",
+      "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+      "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+      "timestamp": "2024-06-13T17:14:43Z"
+    },
+    "risk": {
+      "safety_index": 65.71,
+      "risk_category": "Caution",
+      "vessel_class": "medium",
+      "vessel_bracket": "8-15m",
+      "applied_weights": {
+        "w1": 12,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": 0,
+        "penalty_rule": "10.0 if Hs > 2.8m"
+      },
+      "imbl_distance_nm": 104,
+      "imbl_alert": false,
+      "mpa_distance_nm": 31.7,
+      "mpa_alert": false,
+      "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix"
+    },
+    "userRole": "fisher"
+  },
+  "coast_guard": {
+    "label": "coast_guard",
+    "content": "**COAST GUARD OPERATIONAL BRIEF – PARADIP HARBOUR (ZONE 4, ODISH​A)**  \n\n**Vessel Class:** Motorized Craft (8‑15 m)  \n\n**Current Sea‑State & Atmospheric Summary**  \n\n| Parameter | Value | Source |\n|-----------|-------|--------|\n| Significant Wave Height (Hs) | **1.04 m** | Open‑Meteo Live (2026‑09‑07T08:00) |\n| Wind Speed (W) | **14.9 kt** | INCOIS ERDDAP – ASCAT (Most recent satellite observation: 2023‑05‑20T12:00:00Z) |\n| Cyclone Alert Level | **Amber (Advisory)** | State Disaster Management Seasonal Stage (Simulated Baseline Advisory) |\n| Squall / Lightning Probability (L) | **12 %** | IMD Regional Climatology Baseline (Historical Squall Frequency) |\n| Hydrodynamic Safety Index (HSI) | **65.71 / 100** (Caution) | Computed via prescribed safety formula |\n| Marine Protected Area (MPA) Buffer | **31.7 NM** – Clear | Bathymetric Shelf‑Break Model (Illustrative waypoints) |\n| International Border (IMBL) Clearance | **104.0 NM** – Clear | Bathymetric Shelf‑Break Model (Illustrative waypoints) |\n\n**Safety Assessment (Motorized Craft, 8‑15 m)**  \n\n- **HSI 65.71 / 100 → Caution** (below 70 % threshold for unrestricted operations).  \n- **Wave height 1.04 m** is well under the 2.8 m penalty trigger; vessel‑size limits are satisfied.  \n- **Wind 14.9 kt** is moderate; within safe operating envelope for motorized craft.  \n- **Cyclone Amber** indicates a regional advisory; no immediate cyclonic gale, but heightened vigilance required.  \n- **Squall probability 12 %** modest; not a prohibitive risk but warrants monitoring.  \n\n**Operational Recommendation**  \n\n- **CODE: ADVISORY** – Proceed with fishing sortie, but enforce heightened watch‑standing and real‑time condition monitoring.  \n- **Tactical Actions**  \n  - Maintain a **minimum 5 NM safety radius** from the MPA buffer (31.7 NM) and **IMBL line** (104 NM).  \n  - Limit exposure to **open‑sea zones** beyond 15 NM from shore until wind and wave trends remain stable.  \n  - Keep **continuous VHF updates** with Coast Guard command; report any rapid sea‑state escalation.  \n  - **SAR readiness**: standby at **Level 2** (enhanced readiness) due to Amber cyclone advisory.  \n\n**Key Points for Vessel Crew**  \n\n- Expected sea state: **calm to gentle (≈1 m waves)**, **moderate breeze (≈15 kt)**.  \n- No immediate MPA or border infringements.  \n- Monitor local wind/wave updates (Open‑Meteo) at **hourly intervals**.  \n\n---  \n**Evidence Footer**  \nSource: INCOIS ERDDAP (SST, ASCAT wind), INCOIS Regional Climatology (Chlorophyll‑a, Squall), Bathymetric Shelf‑Break Model (PFZ waypoints), Open‑Meteo Live (Hs), State Disaster Management (Cyclone Amber), IMD Climatology (Squall), Computed Safety Index | Observed: 2026‑09‑07T08:30Z | Grounded Advisory",
+    "weather": {
+      "significant_wave_height_m": 1.04,
+      "wave_period_s": 10.3,
+      "wind_speed_knots": 14.9,
+      "wind_direction_deg": 178,
+      "lightning_squall_prob_pct": 12,
+      "cyclone_alert_level": "Amber (Advisory)",
+      "source": "INCOIS ERDDAP (Most recent satellite observation: 2023-05-20T12:00:00Z) — dataset:ascat_daily_datasets",
+      "wave_source": "Open-Meteo Live (2026-09-07T08:00)",
+      "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+      "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
+      "timestamp": "2023-05-20T12:00:00Z"
+    },
+    "ocean": {
+      "sst_celsius": 30.22,
+      "sst_anomaly": 0.8,
+      "chlorophyll_a": 1.82,
+      "thermal_front": true,
+      "species_hsi": {
+        "Yellowfin Tuna": 0.36,
+        "Indian Mackerel": 0.49,
+        "Hilsa / Pelagics": 0.96
+      },
+      "pfz_coordinates": [
+        {
+          "lat": 19.98,
+          "lon": 87.02
+        },
+        {
+          "lat": 20.11,
+          "lon": 87.22
+        }
+      ],
+      "source": "INCOIS ERDDAP (Most recent float observation: 2024-06-13T17:14:43Z) — dataset:Indian_ARGO_Floats",
+      "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+      "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+      "timestamp": "2024-06-13T17:14:43Z"
+    },
+    "risk": {
+      "safety_index": 65.71,
+      "risk_category": "Caution",
+      "vessel_class": "medium",
+      "vessel_bracket": "8-15m",
+      "applied_weights": {
+        "w1": 12,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": 0,
+        "penalty_rule": "10.0 if Hs > 2.8m"
+      },
+      "imbl_distance_nm": 104,
+      "imbl_alert": false,
+      "mpa_distance_nm": 31.7,
+      "mpa_alert": false,
+      "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix"
+    },
+    "userRole": "coast_guard"
+  },
+  "port_operator": {
+    "label": "port_operator",
+    "content": "**PORT OPERATOR ADVISORY – PARADIP HARBOUR (Zone 4, Odisha)**  \n\n**Operational Posture:** **ADVISORY** – Motorized craft (8‑15 m) may depart, but maintain heightened watch on weather updates and be prepared for rapid condition changes.\n\n---\n\n### Hydrodynamic & Meteorological Snapshot (as of 2026‑09‑07 08:00 UTC)\n\n| Parameter                     | Current Value | Threshold for Motorized Craft (8‑15 m) | Status |\n|-------------------------------|--------------|----------------------------------------|--------|\n| Significant Wave Height (Hs) | 1.04 m **(Open‑Meteo Live 2026‑09‑07T08:00)** | ≤ 2.5 m (operational limit) | ✅ Within limit |\n| Wind Speed (W)                | 14.9 knots **(INCOIS ERDDAP – ASCAT observation 2023‑05‑20T12:00:00Z)** | ≤ 20 knots (safe operating range) | ✅ Within limit |\n| Squall / Lightning Probability (L) | 12 % **(IMD Regional Climatology Baseline)** | ≤ 15 % (acceptable) | ✅ Within limit |\n| Cyclone Alert Level           | Amber (Advisory) **(State Disaster Management Seasonal Stage)** | – | ⚠️ Advisory – monitor for escalation |\n| Hydrodynamic Safety Index (HSI) | 65.71 / 100 (Caution) | ≥ 70 preferred for unrestricted ops | ⚠️ Below preferred, proceed with caution |\n| Marine Protected Area (MPA) distance | 31.7 NM (Clear) **(Bathymetric Shelf‑Break Model – illustrative)** | ≥ 5 NM buffer required | ✅ Clear |\n| International Border (IMBL) distance | 104.0 NM (Clear) **(Bathymetric Shelf‑Break Model – illustrative)** | ≥ 10 NM buffer required | ✅ Clear |\n\n*Wave period data not provided in the current telemetry set (N/A).*\n\n---\n\n### Recommended Actions for Motorized Craft (8‑15 m)\n\n- **Depart** if vessel is in good condition and crew is briefed on the amber cyclone advisory.  \n- **Maintain** a continuous watch on cyclone updates (state disaster management bulletins) and wind forecasts.  \n- **Stay** within 5 NM of the harbour entrance until cyclone status is re‑assessed.  \n- **Prepare** SAR readiness: ensure communication equipment is functional and life‑saving gear is on board.  \n- **Avoid** the PFZ waypoints (19.98 N, 87.02 E → 20.11 N, 87.22 E) unless clearance is obtained, as they are derived from a bathymetric shelf‑break model and not a live advisory.  \n\n---\n\n**Conclusion:** Conditions are **moderately safe** for a motorized craft, but the amber cyclone alert and sub‑optimal safety index warrant a cautious approach. Proceed if operationally necessary, but keep contingency plans ready.\n\n---\n\n**Source:** Open‑Meteo Live; INCOIS ERDDAP (ASCAT); INCOIS Regional Climatology Baseline; Bathymetric Shelf‑Break Model; State Disaster Management Seasonal Stage; IMD Regional Climatology Baseline | **Observed:** 2026‑09‑07 08:00 UTC | **Grounded Advisory**",
+    "weather": {
+      "significant_wave_height_m": 1.04,
+      "wave_period_s": 10.3,
+      "wind_speed_knots": 14.9,
+      "wind_direction_deg": 178,
+      "lightning_squall_prob_pct": 12,
+      "cyclone_alert_level": "Amber (Advisory)",
+      "source": "INCOIS ERDDAP (Most recent satellite observation: 2023-05-20T12:00:00Z) — dataset:ascat_daily_datasets",
+      "wave_source": "Open-Meteo Live (2026-09-07T08:00)",
+      "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+      "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
+      "timestamp": "2023-05-20T12:00:00Z"
+    },
+    "ocean": {
+      "sst_celsius": 30.22,
+      "sst_anomaly": 0.8,
+      "chlorophyll_a": 1.82,
+      "thermal_front": true,
+      "species_hsi": {
+        "Yellowfin Tuna": 0.36,
+        "Indian Mackerel": 0.49,
+        "Hilsa / Pelagics": 0.96
+      },
+      "pfz_coordinates": [
+        {
+          "lat": 19.98,
+          "lon": 87.02
+        },
+        {
+          "lat": 20.11,
+          "lon": 87.22
+        }
+      ],
+      "source": "INCOIS ERDDAP (Most recent float observation: 2024-06-13T17:14:43Z) — dataset:Indian_ARGO_Floats",
+      "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+      "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+      "timestamp": "2024-06-13T17:14:43Z"
+    },
+    "risk": {
+      "safety_index": 65.71,
+      "risk_category": "Caution",
+      "vessel_class": "medium",
+      "vessel_bracket": "8-15m",
+      "applied_weights": {
+        "w1": 12,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": 0,
+        "penalty_rule": "10.0 if Hs > 2.8m"
+      },
+      "imbl_distance_nm": 104,
+      "imbl_alert": false,
+      "mpa_distance_nm": 31.7,
+      "mpa_alert": false,
+      "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix"
+    },
+    "userRole": "port_operator"
+  },
+  "scientist": {
+    "label": "scientist",
+    "content": "**Safety Assessment for a Motorized Craft (8‑15 m) departing Paradip Harbour (Zone 4, Odisha) today**\n\n---\n\n### 1. Raw Environmental Parameters (SI / maritime units)\n\n| Parameter | Value | Provenance |\n|-----------|-------|------------|\n| Sea Surface Temperature (SST) | **30.22 °C** | INCOIS ERDDAP – most recent ARGO float observation (2024‑06‑13 T17:14:43 Z) |\n| Chlorophyll‑a | **1.82 mg m⁻³** | INCOIS Regional Climatology Baseline (seasonal composite) |\n| Significant Wave Height (Hₛ) | **1.04 m** | Open‑Meteo Live (2026‑09‑07 T08:00) |\n| Wind Speed (W) | **14.9 knots** | INCOIS ERDDAP – most recent ASCAT satellite observation (2023‑05‑20 T12:00:00 Z) |\n| Squall / Lightning Probability (L) | **12.0 %** | IMD Regional Climatology Baseline (historical squall frequency) |\n| Cyclone Alert Level | **Amber (Advisory)** | State Disaster Management Seasonal Stage (simulated baseline advisory) |\n| PFZ Waypoints (illustrative) | (19.98 N, 87.02 E) – (20.11 N, 87.22 E) | Bathymetric Shelf‑Break Model (illustrative offset) |\n| Marine Protected Area (MPA) distance | **31.7 NM** (Clear) | Notional buffer from MPA boundary |\n| International Maritime Boundary Line (IMBL) distance | **104.0 NM** (Clear) | Notional clearance from IMBL |\n\n---\n\n### 2. Hydrodynamic Safety Index (HSI) Calculation  \n\nThe safety index is defined as  \n\n\\[\n\\text{Safety} = 100 - \\bigl(12.0 \\cdot H_s + 0.9 \\cdot W + 0.7 \\cdot L\\bigr) - \\text{Penalty}\n\\]\n\nwhere the **Penalty** = 10.0 if \\(H_s > 2.8\\) m, otherwise 0.\n\nSubstituting the observed values:\n\n\\[\n\\begin{aligned}\n12.0 \\cdot H_s &= 12.0 \\times 1.04 = 12.48 \\\\\n0.9 \\cdot W    &= 0.9 \\times 14.9 = 13.41 \\\\\n0.7 \\cdot L    &= 0.7 \\times 12.0 = 8.40 \\\\\n\\text{Sum}    &= 12.48 + 13.41 + 8.40 = 34.29 \\\\\n\\text{Penalty} &= 0 \\quad (\\text{since } H_s = 1.04\\ \\text{m} < 2.8\\ \\text{m}) \\\\\n\\text{Safety}  &= 100 - 34.29 - 0 = \\mathbf{65.71}\n\\end{aligned}\n\\]\n\n**Result:** Hydrodynamic Safety Index = **65.71 / 100** (interpreted as **Caution**).\n\n---\n\n### 3. Species Habitat Suitability Index (HSI)\n\n| Species          | HSI (0–1) |\n|------------------|----------|\n| Indian Mackerel  | **0.49** |\n| Yellowfin Tuna   | **0.36** |\n| Hilsa            | **0.96** |\n\n*These values are drawn from the INCOIS Regional Climatology Baseline (seasonal composite).*\n\n---\n\n### 4. Operational Interpretation for a Motorized Craft (8‑15 m)\n\n| Factor | Assessment | Operational Note |\n|--------|------------|-------------------|\n| **Wave Climate** (Hₛ = 1.04 m) | Light‑moderate seas; well within the design envelope of an 8‑15 m motorized craft. | No wave‑related restriction. |\n| **Wind** (14.9 kn) | Moderate breeze; below the 20‑kn threshold that would impair handling. | Normal navigation feasible. |\n| **Squall Probability** (12 %) | Modest chance of convective activity; not negligible. | Maintain vigilance for rapid wind shifts and lightning. |\n| **Cyclone Alert** (Amber) | Advisory level; no imminent cyclone, but regional monitoring advised. | Keep updated on any escalation. |\n| **Safety Index** (65.71) | Caution zone: conditions are acceptable but not optimal. | Recommend proceeding with heightened situational awareness, especially for squall development. |\n| **MPA / IMBL Clearances** | Distances well beyond required buffers. | No regulatory restriction on departure. |\n\n---\n\n### 5. Recommendation\n\nGiven the **Hydrodynamic Safety Index of 65.71 / 100 (Caution)**, the **moderate wind**, **light‑moderate seas**, and **amber cyclone advisory**, a **Motorized Craft (8‑15 m)** may **venture out** for fishing **provided** the crew:\n\n1. Continuously monitors real‑time weather updates (especially squall development).  \n2. Maintains a safety margin of at least **2 NM** from the illustrated PFZ waypoints, respecting the shelf‑break dynamics.  \n3. Is prepared to **abort** the sortie if wind speeds exceed **20 kn** or wave heights rise above **2 m**.  \n\nOverall, **venture out is permissible but with caution**.\n\n---\n\n**Source:** INCOIS ERDDAP (SST, Wind), INCOIS Regional Climatology Baseline (Chlorophyll‑a, Species HSI, Squall), Bathymetric Shelf‑Break Model (PFZ), Open‑Meteo Live (Hs), State Disaster Management Seasonal Stage (Cyclone), IMD Regional Climatology Baseline (Squall) | **Observed:** 2026‑09‑07T08:00 (Open‑Meteo) | **Grounded Advisory**",
+    "weather": {
+      "significant_wave_height_m": 1.04,
+      "wave_period_s": 10.3,
+      "wind_speed_knots": 14.9,
+      "wind_direction_deg": 178,
+      "lightning_squall_prob_pct": 12,
+      "cyclone_alert_level": "Amber (Advisory)",
+      "source": "INCOIS ERDDAP (Most recent satellite observation: 2023-05-20T12:00:00Z) — dataset:ascat_daily_datasets",
+      "wave_source": "Open-Meteo Live (2026-09-07T08:00)",
+      "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+      "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
+      "timestamp": "2023-05-20T12:00:00Z"
+    },
+    "ocean": {
+      "sst_celsius": 30.22,
+      "sst_anomaly": 0.8,
+      "chlorophyll_a": 1.82,
+      "thermal_front": true,
+      "species_hsi": {
+        "Yellowfin Tuna": 0.36,
+        "Indian Mackerel": 0.49,
+        "Hilsa / Pelagics": 0.96
+      },
+      "pfz_coordinates": [
+        {
+          "lat": 19.98,
+          "lon": 87.02
+        },
+        {
+          "lat": 20.11,
+          "lon": 87.22
+        }
+      ],
+      "source": "INCOIS ERDDAP (Most recent float observation: 2024-06-13T17:14:43Z) — dataset:Indian_ARGO_Floats",
+      "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+      "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+      "timestamp": "2024-06-13T17:14:43Z"
+    },
+    "risk": {
+      "safety_index": 65.71,
+      "risk_category": "Caution",
+      "vessel_class": "medium",
+      "vessel_bracket": "8-15m",
+      "applied_weights": {
+        "w1": 12,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": 0,
+        "penalty_rule": "10.0 if Hs > 2.8m"
+      },
+      "imbl_distance_nm": 104,
+      "imbl_alert": false,
+      "mpa_distance_nm": 31.7,
+      "mpa_alert": false,
+      "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix"
+    },
+    "userRole": "scientist"
+  },
+  "None": {
+    "label": "fisher (default when unset)",
+    "content": "🟡 **Caution: Consider delaying sea departure**\n\n- **Waves** are modest today at about **1 m** high (Open‑Meteo Live 2026‑09‑07T08:00).  \n- **Wind** is a gentle breeze around **15 knots** (Most recent INCOIS satellite observation 2023‑05‑20T12:00:00Z).  \n- **Sea‑surface temperature** is warm at **30 °C** (Most recent INCOIS float observation 2024‑06‑13T17:14:43Z).  \n- **Cyclone alert** is Amber (Advisory) – stay alert to any upgrade.  \n- **Squall / lightning chance** is low, about **12 %** (regional climatology baseline).  \n- The **Hydrodynamic Safety Index** is **65.7 / 100** (Caution).  \n\n**Fishing tip:** If you decide to go, the illustrated PFZ points (derived from the bathymetric shelf‑break model) lie roughly north‑north‑east of Paradip. The nearer waypoint (≈ 19.98 ° N, 87.02 ° E) is about **15 km** offshore and often shows higher chlorophyll (≈ 1.8 mg m⁻³), which can attract Indian mackerel and hilsa. Keep an eye on wind shifts and any cyclone bulletin updates.\n\n**Bottom line:** Conditions are not hazardous, but the safety index and amber cyclone advisory suggest waiting or limiting your trip to a short, nearby outing. Stay safe and check for any real‑time updates before you head out.\n\n---  \nSource: Open‑Meteo Live (Hs), INCOIS ERDDAP (Wind W, SST), INCOIS Regional Climatology (Chlorophyll‑a, Species HSI, Squall L), Bathymetric Shelf‑Break Model (PFZ Waypoints), State Disaster Management Seasonal Stage (Cyclone Alert) | Observed: 2026‑09‑07T08:00 (latest live data) | Grounded Advisory",
+    "weather": {
+      "significant_wave_height_m": 1.04,
+      "wave_period_s": 10.3,
+      "wind_speed_knots": 14.9,
+      "wind_direction_deg": 178,
+      "lightning_squall_prob_pct": 12,
+      "cyclone_alert_level": "Amber (Advisory)",
+      "source": "INCOIS ERDDAP (Most recent satellite observation: 2023-05-20T12:00:00Z) — dataset:ascat_daily_datasets",
+      "wave_source": "Open-Meteo Live (2026-09-07T08:00)",
+      "squall_source": "IMD Regional Climatology Baseline (Historical Squall Frequency)",
+      "cyclone_source": "State Disaster Management Seasonal Stage (Simulated Baseline Advisory)",
+      "timestamp": "2023-05-20T12:00:00Z"
+    },
+    "ocean": {
+      "sst_celsius": 30.22,
+      "sst_anomaly": 0.8,
+      "chlorophyll_a": 1.82,
+      "thermal_front": true,
+      "species_hsi": {
+        "Yellowfin Tuna": 0.36,
+        "Indian Mackerel": 0.49,
+        "Hilsa / Pelagics": 0.96
+      },
+      "pfz_coordinates": [
+        {
+          "lat": 19.98,
+          "lon": 87.02
+        },
+        {
+          "lat": 20.11,
+          "lon": 87.22
+        }
+      ],
+      "source": "INCOIS ERDDAP (Most recent float observation: 2024-06-13T17:14:43Z) — dataset:Indian_ARGO_Floats",
+      "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
+      "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+      "timestamp": "2024-06-13T17:14:43Z"
+    },
+    "risk": {
+      "safety_index": 65.71,
+      "risk_category": "Caution",
+      "vessel_class": "medium",
+      "vessel_bracket": "8-15m",
+      "applied_weights": {
+        "w1": 12,
+        "w2": 0.9,
+        "w3": 0.7,
+        "penalty": 0,
+        "penalty_rule": "10.0 if Hs > 2.8m"
+      },
+      "imbl_distance_nm": 104,
+      "imbl_alert": false,
+      "mpa_distance_nm": 31.7,
+      "mpa_alert": false,
+      "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix"
+    },
+    "userRole": "fisher"
+  }
+}

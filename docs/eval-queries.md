@@ -54,3 +54,29 @@ This document tracks the eight sample queries defined in the official ISRO brief
 - `check_zone(lat, lon)`
 - `get_hazard_alerts(lat, lon, today)`
 **Expected Agent Output:** List of specific zones (e.g., MPAs, areas with high waves) to avoid.
+
+---
+
+## Role-Aware Evaluation Matrix (SIH26176 Core Requirement)
+
+The ORCA Synthesizer Agent dynamically formats responses across four operational stakeholder registers based on the `user_role` state parameter (`userRole` in request payload), while strictly maintaining numerical identity and honest data provenance across all four:
+
+### Standard Evaluation Test Query
+- **Prompt:** `"Is it safe to venture out from Paradip for fishing today?"`
+- **Vessel Class:** `medium` (Motorized Craft, 8–15 m)
+- **Anchor:** Paradip Harbour (Zone 4, Odisha)
+
+### Operational Registers & Verification Matrix
+
+| Register ID (`user_role`) | Target Audience | Vocabulary & Register | Structural Requirements | Key Behavioral Rule |
+| :--- | :--- | :--- | :--- | :--- |
+| **`fisher`** *(Default)* | Artisanal & motorized coastal fishermen | Plain language, action-first verdict, simple and direct | Leading colored alert banner (`🟢` Safe, `🟡` Caution, `🔴` Danger), simple sea state summary, vernacular default | Zero raw mathematical formulas ($w_1, w_2, w_3$). Direct advice on catch suitability and sea conditions. Automatically invoked when `user_role` is omitted or unset. |
+| **`coast_guard`** | Maritime enforcement, Search & Rescue (SAR) controllers | Military / SAR operational brevity, tactical codes | SAR Readiness posture (e.g., Level 2 Standby), patrol radius, MPA / IMBL buffer distances with tactical clearances, vessel seaworthiness compliance | Mandatory explicit reporting of boundary coordinates and SAR state. |
+| **`port_operator`** | Harbour masters, terminal supervisors, port logistics | Port operations, berthing, and marine traffic safety | Port operational limits table, vessel transit allowances for 8–15 m motorized craft, breakwater wave action, cargo lightering warnings | Focus on harbour channel navigation, wind velocity thresholds, and berthing safety. |
+| **`scientist`** | Oceanographers, marine biologists, climate researchers | Peer-reviewed technical and mathematical rigor | Exhaustive environmental parameter table with complete SI units, complete Hydrodynamic Safety Index equation with exact substituted values using LaTeX ($$...$$), Species HSI breakdown table | Mathematical transparency with step-by-step substitution and explicit dataset provenance (ARGO Float IDs, ASCAT satellite datasets, Open-Meteo nowcasts). |
+
+### Verification Invariants Across All Registers
+1. **Numerical Identity**: All four registers receive identical underlying specialist data ($H_s = 1.04\text{ m}$, $W = 14.9\text{ kts}$, $\text{Safety Index} = 65.71/100$, $\text{SST} = 30.22^\circ\text{C}$, $\text{Chlorophyll-a} = 1.82\text{ mg/m}^3$). Only presentation, vocabulary, and depth change.
+2. **Honest Provenance Preservation**: Every register faithfully preserves live vs. baseline vs. climatology qualifications (`Open-Meteo Live`, `INCOIS ERDDAP Most recent satellite observation: 2023-05-20`, `INCOIS Regional Climatology Baseline`, `Bathymetric Shelf-Break Model (Illustrative)`).
+3. **Graceful Defaulting**: Any request without an explicit `userRole` automatically and deterministically resolves to `fisher`.
+

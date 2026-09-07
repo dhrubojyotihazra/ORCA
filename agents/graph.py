@@ -11,26 +11,26 @@ from .specialists import ocean_specialist_node, weather_specialist_node, risk_sp
 from .synthesizer_agent import synthesizer_node
 
 
-def route_to_specialists(state: AgentState) -> List[str]:
-    """
-    Conditional edge routing from planner to required initial specialists.
-    If safety is needed, routes to weather_specialist first (which chains into risk_specialist).
-    """
+def route_from_planner(state: AgentState) -> str:
+    """Routes from planner to the first required specialist node."""
     intents = state.get("intent", [])
-    targets = []
-    
     if "pfz" in intents or not intents:
-        targets.append("ocean_specialist")
-    if "weather" in intents or "safety" in intents or not intents:
-        targets.append("weather_specialist")
-    elif "geofence" in intents:
-        # Pure geofence query without weather/safety requested
-        targets.append("risk_specialist")
-        
-    if not targets:
-        targets = ["ocean_specialist", "weather_specialist"]
-        
-    return targets
+        return "ocean_specialist"
+    if "weather" in intents or "safety" in intents:
+        return "weather_specialist"
+    if "geofence" in intents:
+        return "risk_specialist"
+    return "ocean_specialist"
+
+
+def route_from_ocean(state: AgentState) -> str:
+    """Routes from ocean_specialist to weather_specialist, risk_specialist, or synthesizer."""
+    intents = state.get("intent", [])
+    if "weather" in intents or "safety" in intents:
+        return "weather_specialist"
+    if "geofence" in intents:
+        return "risk_specialist"
+    return "synthesizer"
 
 
 def route_from_weather(state: AgentState) -> str:
@@ -58,10 +58,10 @@ def build_orca_graph() -> Any:
     # 2. Graph Wiring
     builder.add_edge(START, "planner")
     
-    # Conditional fan-out from planner
+    # Route from planner to first specialist
     builder.add_conditional_edges(
         "planner",
-        route_to_specialists,
+        route_from_planner,
         {
             "ocean_specialist": "ocean_specialist",
             "weather_specialist": "weather_specialist",
@@ -69,10 +69,18 @@ def build_orca_graph() -> Any:
         },
     )
     
-    # Ocean specialist feeds directly into synthesizer
-    builder.add_edge("ocean_specialist", "synthesizer")
+    # Route from ocean specialist
+    builder.add_conditional_edges(
+        "ocean_specialist",
+        route_from_ocean,
+        {
+            "weather_specialist": "weather_specialist",
+            "risk_specialist": "risk_specialist",
+            "synthesizer": "synthesizer",
+        },
+    )
 
-    # Weather specialist routes conditionally to risk_specialist (if safety/geofence) or synthesizer
+    # Route from weather specialist
     builder.add_conditional_edges(
         "weather_specialist",
         route_from_weather,

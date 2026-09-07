@@ -48,6 +48,8 @@ class AgentInvokeRequest(BaseModel):
     location: Optional[Dict[str, Any]] = None
     vessel_type: Optional[str] = "small"
     language: Optional[str] = None
+    user_role: Optional[str] = "fisher"
+    role: Optional[str] = None
     messages: Optional[List[Dict[str, Any]]] = []
 
 
@@ -68,6 +70,7 @@ class AgentInvokeResponse(BaseModel):
     modelUsed: str
     timestamp: str
     language: str
+    userRole: Optional[str] = "fisher"
     intent: List[str]
     location: Dict[str, Any]
     oceanData: Optional[Dict[str, Any]] = None
@@ -142,12 +145,16 @@ def invoke_agents(payload: AgentInvokeRequest):
     actual executed nodes, per-node outputs, and real node execution timings.
     """
     start_total = time.time()
-    logger.info(f"LangGraph DAG Invoke: query='{payload.query[:60]}...', vessel={payload.vessel_type}")
+    valid_roles = ["fisher", "coast_guard", "port_operator", "scientist"]
+    raw_role = payload.user_role or payload.role or "fisher"
+    user_role = raw_role.lower().strip() if raw_role.lower().strip() in valid_roles else "fisher"
+    logger.info(f"LangGraph DAG Invoke: query='{payload.query[:60]}...', vessel={payload.vessel_type}, role={user_role}")
 
     initial_state: AgentState = {
         "query": payload.query,
         "vessel_type": payload.vessel_type or "small",
         "language": payload.language,
+        "user_role": user_role,
         "location": payload.location or {},
         "messages": payload.messages or [],
         "evidence_citations": [],
@@ -226,6 +233,7 @@ def invoke_agents(payload: AgentInvokeRequest):
             modelUsed="LangGraph Multi-Agent (5-Node StateGraph DAG)",
             timestamp=datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"),
             language=accumulated_state.get("language", "en"),
+            userRole=accumulated_state.get("user_role", user_role),
             intent=accumulated_state.get("intent", []),
             location=accumulated_state.get("location", {}),
             oceanData=accumulated_state.get("ocean_data"),

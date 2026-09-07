@@ -20,6 +20,8 @@ interface ChatRequestBody {
   messages: Array<{ role: string; content: string }>;
   location?: { id: string; name: string; lat: number; lon: number; sector: string };
   vesselType?: "small" | "medium" | "large";
+  userRole?: "fisher" | "coast_guard" | "port_operator" | "scientist";
+  role?: string;
 }
 
 // Language detector
@@ -51,13 +53,17 @@ export async function POST(req: NextRequest) {
         ? "Motorized Craft (8-15m)"
         : "Deep-Sea Trawler (>15m)";
 
+    const validRoles = ["fisher", "coast_guard", "port_operator", "scientist"];
+    const rawRole = (body.userRole || body.role || "fisher").toLowerCase().trim();
+    const userRole = validRoles.includes(rawRole) ? rawRole : "fisher";
+
     // ──────────────────────────────────────────────
     // PRIMARY PATH: REAL PYTHON LANGGRAPH MULTI-AGENT DAG VIA FASTAPI
     // ──────────────────────────────────────────────
     const FASTAPI_ENDPOINT = process.env.FASTAPI_AGENT_URL || "http://127.0.0.1:8000/api/agents/invoke";
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for full DAG
+      const timeoutId = setTimeout(() => controller.abort(), 75000); // 75s timeout for full DAG
 
       const fastApiResponse = await fetch(FASTAPI_ENDPOINT, {
         method: "POST",
@@ -71,6 +77,7 @@ export async function POST(req: NextRequest) {
             sector: locSector,
           },
           vessel_type: vesselType,
+          user_role: userRole,
           language: detectLanguage(userMessage),
           messages: messages.slice(-5),
         }),
@@ -84,6 +91,7 @@ export async function POST(req: NextRequest) {
           content: data.content,
           modelUsed: data.modelUsed, // "LangGraph Multi-Agent (5-Node StateGraph DAG)"
           timestamp: data.timestamp,
+          userRole: data.userRole || userRole,
           agentTrace: data.agentTrace, // REAL LangGraph streaming trace
           executedNodes: data.executedNodes,
           oceanData: data.oceanData,
@@ -348,7 +356,8 @@ MANDATORY SYNTHESIS RULES:
         userMessage,
         telemetry,
         vesselText,
-        detectedLang
+        detectedLang,
+        userRole
       );
       modelUsed = "ORCA Multi-Agent (LangGraph Synthesizer)";
     }
@@ -372,6 +381,10 @@ MANDATORY SYNTHESIS RULES:
       content: assistantReply,
       modelUsed,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      userRole,
+      oceanData,
+      weatherData,
+      riskData,
       agentTrace,
     });
   } catch (error: any) {
@@ -387,7 +400,8 @@ function generateDeterministicSynthesis(
   query: string,
   t: MarineStationTelemetry,
   vesselText: string,
-  lang: string
+  lang: string,
+  userRole: string = "fisher"
 ): string {
   const q = query.toLowerCase();
   const isPfz =
@@ -399,94 +413,116 @@ function generateDeterministicSynthesis(
     q.includes("मछली") ||
     q.includes("மீன்");
 
-  const safetyColor =
-    t.risk.riskCategory === "Safe"
-      ? "🟢 Safe to operate"
-      : t.risk.riskCategory === "Caution"
-      ? "🟡 Exercise Caution"
-      : "🔴 High Vigilance / Delay Departure";
-
-  if (isPfz) {
-    return `### 🐟 ORCA Potential Fishing Zone (PFZ) Advisory · ${t.sector}
-**Corridor Anchor**: ${t.station} (${t.coordinates.lat}°N, ${t.coordinates.lon}°E)  
-**Vessel Classification**: ${vesselText}  
-**Operational Status**: ${safetyColor}
-
-\`\`\`mermaid
-graph TD
-    User["Spoken / Text Query: PFZ Search"] --> Planner["Planner Agent: Spatial Slicing & Intent"]
-    Planner --> Ocean["Ocean Specialist: MOSDAC SST & Chlorophyll-a"]
-    Planner --> Weather["Weather Specialist: INCOIS OSF Waves & Winds"]
-    Planner --> Risk["Risk Specialist: Sea-Venture Index & Geofence"]
-    Ocean --> Synthesizer["Synthesizer Agent: Strict Grounding"]
-    Weather --> Synthesizer
-    Risk --> Synthesizer
-    Synthesizer --> Output["Verified Regional Marine Advisory"]
-\`\`\`
-
-#### 1. Species-Specific Habitat Suitability Index (HSI)
-| Target Marine Species | Suitability Index (HSI) | Optimal Temperature | Observed Chlorophyll | Local Catch Probability |
-| :--- | :---: | :--- | :--- | :--- |
-| **Indian Mackerel** | **${t.ocean.speciesHsi["Indian Mackerel"]} / 1.0** | $26.0 - 28.5^\\circ\\text{C}$ | $${t.ocean.chlorophyllA}\\,\\mu\\text{g/L}$ | **High** (Active thermal front) |
-| **Yellowfin Tuna** | **${t.ocean.speciesHsi["Yellowfin Tuna"]} / 1.0** | $27.0 - 29.0^\\circ\\text{C}$ | $0.25\\,\\mu\\text{g/L}$ | **Moderate** (Shelf break convergence) |
-| **Hilsa / Coastal Pelagics** | **${t.ocean.speciesHsi["Hilsa / Pelagics"]} / 1.0** | $28.0 - 30.0^\\circ\\text{C}$ | $2.10\\,\\mu\\text{g/L}$ | **Very High** (Estuarine nutrient plume) |
-
-#### 2. Earth Observation Vector & Target Waypoints
-- **Target PFZ Coordinates**: $${t.ocean.pfzCoordinates[0].lat}^\\circ\\text{N}, ${t.ocean.pfzCoordinates[0].lon}^\\circ\\text{E}$ (Bearing **${t.ocean.pfzCoordinates[0].bearing}**, distance **${t.ocean.pfzCoordinates[0].distanceNm} NM**)
-- **Sea Surface Temperature (SST)**: $${t.ocean.sstCelsius}^\\circ\\text{C}$ (Anomalous front $+${t.ocean.sstAnomaly}^\\circ\\text{C}$)
-- **Ocean Current & Wind**: Wind $${t.weather.windSpeedKnots}\\,\\text{knots}$ from ${t.weather.windDirectionText}, Current $0.42\\,\\text{m/s}$
-
-#### 3. Hydrodynamic Safety & Geofences
-- **Sea-Venture Safety Index**: **${t.risk.safetyIndex} / 100** (${t.risk.riskCategory})
-- **${t.risk.mpaName}**: Distance ${t.risk.mpaDistanceNm} NM (${t.risk.mpaAlert ? "⚠️ ALERT: Turtle Buffer Zone Active (<12 NM)" : "Clear"})
-- **International Maritime Boundary (IMBL)**: Distance ${t.risk.imblDistanceNm} NM (Clear)
-
----
-**Source:** ${t.ocean.source} & ${t.weather.source}  
-**Observed:** ${t.ocean.timestamp} | **Grounded Advisory Verified**`;
-  }
-
   const isLarge = vesselText.includes(">15m");
   const isMed = vesselText.includes("8-15m");
   const w1 = isLarge ? "7.0" : isMed ? "12.0" : "18.5";
   const w2 = isLarge ? "0.6" : isMed ? "0.9" : "1.2";
   const w3 = isLarge ? "0.5" : isMed ? "0.7" : "0.8";
 
-  return `### 🌊 ORCA Marine Advisory & Telemetry Synthesis · ${t.sector}
-**Station Anchor**: ${t.station} (${t.coordinates.lat}°N, ${t.coordinates.lon}°E)  
-**Vessel Classification**: ${vesselText}  
-**Status**: ${safetyColor}
+  const footer = `---\n**Source:** ${t.weather.source} & ${t.ocean.source}  \n**Observed:** ${t.weather.timestamp} | **Grounded Advisory Verified**`;
 
-\`\`\`mermaid
-graph TD
-    User["Operational Inquiry"] --> Planner["Planner Agent: Intent & Sector Routing"]
-    Planner --> Ocean["Ocean Specialist: Satellite Telemetry"]
-    Planner --> Weather["Weather Specialist: INCOIS Wave Model"]
-    Planner --> Risk["Risk Specialist: Sea-Venture Index"]
-    Ocean --> Synthesizer["Synthesizer Agent: Telemetry Grounding"]
-    Weather --> Synthesizer
-    Risk --> Synthesizer
-    Synthesizer --> Output["Synthesized Coastal Bulletin"]
-\`\`\`
+  if (userRole === "fisher") {
+    const verdictBanner =
+      t.risk.riskCategory === "Safe"
+        ? "🟢 **Safe to venture out to sea today**"
+        : t.risk.riskCategory === "Caution"
+        ? "🟡 **Caution: Consider delaying sea departure**"
+        : "🔴 **Hazardous: DO NOT venture out to sea today**";
 
-#### 1. Hydrodynamic Safety & Sea-Venture Index
+    const waveDesc = t.weather.significantWaveHeightM < 1.5 ? "calm to moderate" : "rough seas";
+    const windDesc = t.weather.windSpeedKnots < 16 ? "light to moderate breeze" : "stiff breeze";
+
+    return `### 🌊 ORCA Fisher Advisory · ${t.station} (${t.sector})
+**Boat Profile**: ${vesselText}
+
+${verdictBanner}
+
+#### Current Sea Conditions
+- **Waves**: About **${t.weather.significantWaveHeightM} metres** (${t.weather.waveSource || "INCOIS Wave Model"}) — ${waveDesc}
+- **Wind**: About **${t.weather.windSpeedKnots} knots** (${t.weather.windDirectionText}) (${t.weather.source}) — ${windDesc}
+- **Squall Risk**: **${t.weather.squallProbabilityPct}%** chance of squalls (Regional climatology average)
+- **Cyclone Stage**: **${t.weather.cycloneAlertLevel}** (Seasonal baseline advisory)
+${
+  isPfz
+    ? `
+#### Fishing Grounds & Catches
+- **Target Fishing Zone**: Coordinates **${t.ocean.pfzCoordinates[0].lat}°N, ${t.ocean.pfzCoordinates[0].lon}°E** (Bearing **${t.ocean.pfzCoordinates[0].bearing}**, distance **${t.ocean.pfzCoordinates[0].distanceNm} NM**) — *Bathymetric shelf-break model*
+- **Water Temperature**: Around **${t.ocean.sstCelsius}°C** (${t.ocean.source})
+- **Top Likely Catch**: **Hilsa / Coastal Pelagics** (HSI: ${t.ocean.speciesHsi["Hilsa / Pelagics"]})
+`
+    : ""
+}
+#### Coastal Boundaries
+- **${t.risk.mpaName}**: ${t.risk.mpaDistanceNm} NM away (${t.risk.mpaAlert ? "⚠️ In 12 NM buffer zone" : "Clear of buffer zone"})
+- **International Border (IMBL)**: ${t.risk.imblDistanceNm} NM away (Clear)
+
+${footer}`;
+  }
+
+  if (userRole === "coast_guard") {
+    return `### 🛡️ ICG Operational Coastal Briefing · ${t.station}
+**Sector**: ${t.sector} | **Target Platform**: ${vesselText} | **Safety Index**: **${t.risk.safetyIndex} / 100** (${t.risk.riskCategory})
+
+#### 1. Maritime Boundary & Geofence Status
+- **Marine Protected Area (MPA)**: ${t.risk.mpaName} at **${t.risk.mpaDistanceNm} NM** (${t.risk.mpaAlert ? "⚠️ ALERT: Vessel within 12 NM Buffer Zone" : "STATUS: CLEAR (Outside 12 NM Buffer)"})
+- **International Maritime Boundary Line (IMBL)**: Range **${t.risk.imblDistanceNm} NM** (${t.risk.imblAlert ? "⚠️ PROXIMITY WARNING (<15 NM)" : "STATUS: CLEAR"})
+- **Cyclone Advisory Stage**: **${t.weather.cycloneAlertLevel}** (State Disaster Management Baseline)
+- **Squall Probability**: **${t.weather.squallProbabilityPct}%** (IMD Climatology Baseline)
+
+#### 2. Hydrodynamic State & Tactical Enforcement
+- **Significant Wave Height ($H_s$)**: **${t.weather.significantWaveHeightM} m** (${t.weather.waveSource || "INCOIS Wave Model"})
+- **Wind Velocity ($W$)**: **${t.weather.windSpeedKnots} knots** (${t.weather.windDirectionText}) (${t.weather.source})
+- **Operational Posture**: ${t.risk.riskCategory === "Safe" ? "Routine coastal surveillance" : "Heightened standby for craft assistance and Search & Rescue (SAR)"}
+
+${footer}`;
+  }
+
+  if (userRole === "port_operator") {
+    return `### ⚓ Port Operations & Harbour Clearance Bulletin · ${t.station}
+**Harbour Sector**: ${t.sector} | **Channel Status**: ${t.risk.riskCategory === "Safe" ? "Clear for Departures" : t.risk.riskCategory === "Caution" ? "Advisory Clearance — Monitor Swell" : "Suspended Departures"}
+
+#### 1. Hydrodynamic Telemetry Overview
+| Operational Parameter | Observed Value | Port Threshold / Limit | Status & Provenance |
+| :--- | :---: | :---: | :--- |
+| **Significant Wave Height ($H_s$)** | **${t.weather.significantWaveHeightM} m** | 2.0 m draft threshold | ${t.weather.waveSource || "INCOIS OSF Model"} |
+| **Wind Speed ($W$)** | **${t.weather.windSpeedKnots} kts** | 25.0 kts channel limit | ${t.weather.source} |
+| **Wave Period ($T_p$)** | **${t.weather.wavePeriodS} s** | Normal swell envelope | Verified Telemetry |
+| **Squall Probability ($L$)** | **${t.weather.squallProbabilityPct}%** | Advisory limit 20% | IMD Climatological Baseline |
+| **Hydrodynamic Safety Index** | **${t.risk.safetyIndex} / 100** | Operational min 45.0 | ${t.risk.riskCategory} |
+
+#### 2. Vessel Departure & Berthing Windows
+- **Target Vessel**: ${vesselText} — ${t.risk.riskCategory === "Extreme Danger" ? "Hold at berth" : "Clear for transit with harbor watch"}
+- **Harbour Approach**: Wave action at breakwater measured at ${t.weather.significantWaveHeightM} m.
+
+${footer}`;
+  }
+
+  // userRole === "scientist" (default comprehensive technical dossier)
+  return `### 🔬 Oceanographic & Hydrodynamic Research Dossier · ${t.station}
+**Station Coordinates**: ${t.coordinates.lat}°N, ${t.coordinates.lon}°E (${t.sector})  
+**Target Vessel Platform**: ${vesselText}
+
+#### 1. Hydrodynamic Safety Formulations & Weight Coefficients
 - **Calculated Safety Index**: **${t.risk.safetyIndex} / 100** (${t.risk.riskCategory})
-- **Formulation**:
+- **Mathematical Formulation**:
   $$\\text{Safety Index} = 100 - (${w1} \\cdot H_s + ${w2} \\cdot W + ${w3} \\cdot L) - \\text{Penalty}$$
-- **Significant Wave Height ($H_s$)**: ${t.weather.significantWaveHeightM} m (${t.weather.waveSource || "INCOIS Model Baseline"})
-- **Wind Velocity ($W$)**: ${t.weather.windSpeedKnots} knots (${t.weather.windDirectionText})
-- **Squall / Lightning Probability ($L$)**: ${t.weather.squallProbabilityPct}%
+- **Parametric Inputs**: $H_s = ${t.weather.significantWaveHeightM}\\,\\text{m}$ (${t.weather.waveSource || "INCOIS Model Baseline"}), $W = ${t.weather.windSpeedKnots}\\,\\text{kts}$ (${t.weather.source}), $L = ${t.weather.squallProbabilityPct}\\%$
+- **Applied Penalty**: ${t.risk.riskCategory === "Hazardous" ? "10.0–25.0" : "0.0"}
 
-#### 2. Satellite Oceanographic Telemetry
-- **Sea Surface Temperature (SST)**: ${t.ocean.sstCelsius}°C (Thermal gradient $+${t.ocean.sstAnomaly}°C$)
-- **Chlorophyll-a Plume**: ${t.ocean.chlorophyllA} µg/L
-- **Cyclone Advisory Stage**: ${t.weather.cycloneAlertLevel}
+#### 2. Biological Indicators & Habitat Suitability Index (HSI)
+- **Sea Surface Temperature (SST)**: **${t.ocean.sstCelsius}°C** (${t.ocean.source})
+- **Chlorophyll-a Concentration**: **${t.ocean.chlorophyllA} µg/L** (${t.ocean.dataset})
+- **Bathymetric Shelf-Break Vector**: ${t.ocean.pfzCoordinates[0].lat}°N, ${t.ocean.pfzCoordinates[0].lon}°E (Bearing ${t.ocean.pfzCoordinates[0].bearing}, ${t.ocean.pfzCoordinates[0].distanceNm} NM)
 
-#### 3. Maritime Boundaries & Buffer Protection
-- **${t.risk.mpaName}**: ${t.risk.mpaDistanceNm} NM (${t.risk.mpaAlert ? "⚠️ WITHIN 12 NM BUFFER ZONE" : "Clear"})
-- **IMBL Border**: ${t.risk.imblDistanceNm} NM (Clear)
+| Target Marine Species | Suitability Index (HSI) | Optimal Thermal Window | Local Status |
+| :--- | :---: | :--- | :--- |
+| **Indian Mackerel** | **${t.ocean.speciesHsi["Indian Mackerel"]} / 1.0** | $26.0 - 28.5^\\circ\\text{C}$ | Active feeding front |
+| **Yellowfin Tuna** | **${t.ocean.speciesHsi["Yellowfin Tuna"]} / 1.0** | $27.0 - 29.0^\\circ\\text{C}$ | Shelf break boundary |
+| **Hilsa / Coastal Pelagics** | **${t.ocean.speciesHsi["Hilsa / Pelagics"]} / 1.0** | $28.0 - 30.0^\\circ\\text{C}$ | High suitability zone |
 
----
-**Source:** ${t.weather.source} & ${t.ocean.source}  
-**Timestamp:** ${t.weather.timestamp} | **Grounded Advisory Verified**`;
+#### 3. Spatial Boundary Analytics
+- **Marine Protected Area**: ${t.risk.mpaName} at ${t.risk.mpaDistanceNm} NM (${t.risk.mpaAlert ? "⚠️ IN 12 NM BUFFER ZONE" : "Clear"})
+- **International Maritime Boundary (IMBL)**: Distance ${t.risk.imblDistanceNm} NM (Clear)
+
+${footer}`;
 }

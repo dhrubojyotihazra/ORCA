@@ -4,7 +4,9 @@ Canonical shared state dictionary passed across all nodes in the LangGraph DAG.
 """
 
 import operator
-from typing import TypedDict, Optional, List, Dict, Any, Annotated
+from typing import TypedDict, Optional, List, Dict, Any, Annotated, Literal
+
+UserRole = Literal["fisher", "coast_guard", "port_operator", "scientist"]
 
 
 class LocationDict(TypedDict, total=False):
@@ -55,6 +57,7 @@ class AgentState(TypedDict, total=False):
     # Metadata & Context
     location: LocationDict
     vessel_type: str  # 'small' (<8m), 'medium' (8-15m), 'large' (>15m)
+    user_role: Optional[UserRole]  # 'fisher', 'coast_guard', 'port_operator', 'scientist' (default: 'fisher')
     intent: List[str]  # e.g. ["pfz", "safety", "weather", "geofence"]
     
     # Specialist Data Payloads

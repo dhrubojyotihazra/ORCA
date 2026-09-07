@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const FASTAPI_ENDPOINT = process.env.FASTAPI_AGENT_URL || "http://127.0.0.1:8000/api/agents/invoke";
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for full DAG
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for full DAG
 
       const fastApiResponse = await fetch(FASTAPI_ENDPOINT, {
         method: "POST",
@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
           oceanData: data.oceanData,
           weatherData: data.weatherData,
           riskData: data.riskData,
+          evidenceCitations: data.evidenceCitations,
           totalDurationMs: data.totalDurationMs,
         });
       }

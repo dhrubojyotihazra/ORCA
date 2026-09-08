@@ -219,8 +219,15 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
     mpa_distance = calculate_distance_nm(lat, lon, mpa_coord[0], mpa_coord[1])
     imbl_distance = calculate_distance_nm(lat, lon, imbl_coord[0], imbl_coord[1])
     
-    # Check Shapely polygon zone
+    # Check Shapely polygon zone (Bharatmaps Parivesh & UNCLOS datasets)
     zone_check = check_zone(lat, lon)
+    zd = zone_check.get("data", {})
+    is_in_restricted_zone = zd.get("is_restricted", False)
+    zone_name = zd.get("zone_name", "Open Water / EEZ")
+    zone_restr_type = zd.get("restriction_type", "")
+    zone_auth = zd.get("authority", "")
+    zone_msg = zd.get("message", "")
+    zone_src = zd.get("source", "")
 
     has_weather = bool(weather and "wind_speed_knots" in weather)
 
@@ -262,6 +269,12 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
         category = "Not Evaluated (Weather specialist omitted for this query)"
         citation = f"Risk Specialist: Geofence Only | {defaults['mpa_name']} Buffer={mpa_distance} NM | IMBL={imbl_distance} NM (Hydrodynamic safety omitted: weather data absent)"
 
+    if is_in_restricted_zone:
+        citation += f" | GEOFENCE ALERT: In {zone_name} [{zone_restr_type}] ({zone_auth}) - {zone_msg} | Source: {zone_src}"
+
+    imbl_alert = imbl_distance < 15.0 or zd.get("is_near_international_boundary", False)
+    mpa_alert = mpa_distance < 12.0 or (is_in_restricted_zone and zd.get("restriction_level") == "Strict")
+
     risk_payload: RiskAssessment = {
         "safety_index": safety_index,
         "risk_category": category,
@@ -269,14 +282,17 @@ def risk_specialist_node(state: AgentState) -> Dict[str, Any]:
         "vessel_bracket": vessel_bracket,
         "applied_weights": {"w1": w1, "w2": w2, "w3": w3, "penalty": penalty, "penalty_rule": penalty_rule} if has_weather else None,
         "imbl_distance_nm": imbl_distance,
-        "imbl_alert": imbl_distance < 15.0,
+        "imbl_alert": imbl_alert,
         "mpa_distance_nm": mpa_distance,
-        "mpa_alert": mpa_distance < 12.0,
-        "source": "PostGIS Marine Geofence & Sea-Venture Hydrodynamic Matrix",
+        "mpa_alert": mpa_alert,
+        "active_zone": zone_name if is_in_restricted_zone else None,
+        "active_zone_data": zd if is_in_restricted_zone else None,
+        "source": "Bharatmaps Parivesh Geofences & Sea-Venture Hydrodynamic Matrix",
     }
     
     return {
         "risk_data": risk_payload,
         "evidence_citations": [citation],
     }
+
 

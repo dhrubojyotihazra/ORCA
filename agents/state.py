@@ -45,7 +45,10 @@ class RiskAssessment(TypedDict, total=False):
     imbl_alert: bool
     mpa_distance_nm: float  # Distance to Marine Protected Area
     mpa_alert: bool
+    active_zone: Optional[str]
+    active_zone_data: Optional[Dict[str, Any]]
     source: str
+
 
 
 class PublicResearchData(TypedDict, total=False):

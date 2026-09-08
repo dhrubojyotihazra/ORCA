@@ -22,7 +22,7 @@ CRITICAL GROUNDING RULES:
    - NEVER use square brackets like [ ... ] or \\[ ... \\] for math equations.
 4. EVIDENCE FOOTER: Conclude with the exact citation string provided in the context. NEVER output literal placeholder text like "Source: [Data Sources]" or "[Timestamp]".
 5. TIMESTAMP HONESTY: When citing satellite scatterometer wind (ascat) or ARGO float SST, explicitly state "Most recent INCOIS observation: <date>". NEVER call historical data "Live".
-6. PFZ WAYPOINT PROVENANCE: When citing PFZ coordinates, explicitly state they are derived from a bathymetric shelf-break model (illustrative waypoints), not a live INCOIS satellite PFZ advisory bulletin.
+6. PFZ WAYPOINT PROVENANCE: When citing PFZ coordinates, explicitly cite the exact provenance provided in context: either "Derived from live SST gradient analysis (N ARGO observations)" or "Bathymetric Shelf-Break Model (Illustrative — insufficient live float density near this port)", and never claim it is a live INCOIS satellite ocean-colour PFZ bulletin.
 7. SQUALL & CYCLONE PROVENANCE: State that squall probability and cyclone alert levels are regional climatological baseline averages, not live radar/IMD nowcasts.
 8. VESSEL CLASSIFICATION ACCURACY: Always specify the correct size bracket corresponding to the target vessel: Small Artisanal Craft (<8m), Motorized Craft (8-15m), or Deep-Sea Trawler (>15m). NEVER label a medium craft as (<8m) or small craft as (8-15m). Cite the exact formula weights matching that vessel class.
 9. WAVE PROVENANCE: When significant wave height (Hs) is from Open-Meteo, cite it as "Open-Meteo Live (<timestamp>)". If from INCOIS model baseline, cite as "INCOIS OSF Model Baseline".
@@ -465,7 +465,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                     "#### 2. Biological Indicators & Habitat Suitability Index (HSI)",
                     f"- **Sea Surface Temperature (SST)**: **{sst}°C** ({ocean.get('source', 'INCOIS ARGO')})",
                     f"- **Chlorophyll-a Plume**: **{chl} mg/m³** ({ocean.get('chlorophyll_source', 'INCOIS Regional Climatology Baseline')})",
-                    f"- **Bathymetric Shelf-Break Vector**: {pfz_pt.get('lat')}°N, {pfz_pt.get('lon')}°E ({ocean.get('pfz_source', 'Bathymetric Shelf-Break Model')})",
+                    f"- **Potential Fishing Zone (PFZ) Waypoint**: {pfz_pt.get('lat')}°N, {pfz_pt.get('lon')}°E ({ocean.get('pfz_source', 'Bathymetric Shelf-Break Model')})",
                     "",
                     "| Species Taxon | Habitat Suitability (HSI) | Optimal Thermal Envelope | Trophic Status |",
                     "| :--- | :---: | :--- | :--- |",

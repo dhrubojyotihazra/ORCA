@@ -88,33 +88,39 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
     hsi_tuna = calculate_hsi(sst, chlorophyll, (27.0, 29.0), (0.15, 0.35))
     hsi_mackerel = calculate_hsi(sst, chlorophyll, (26.0, 28.5), (0.40, 1.20))
     hsi_hilsa = calculate_hsi(sst, chlorophyll, (27.5, 30.0), (1.50, 3.50))
+
+    # Derive PFZ waypoints and provenance from live ARGO or bathymetric fallback
+    pfz_coords = live_argo.get("pfz_coordinates") or [
+        {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
+        {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
+    ]
+    pfz_source = live_argo.get("pfz_source") or "Bathymetric Shelf-Break Model (Illustrative — insufficient live float density near this port)"
+    thermal_front = live_argo.get("thermal_front", False)
     
     ocean_payload: OceanTelemetry = {
         "sst_celsius": sst,
         "sst_anomaly": sst_anomaly,
         "chlorophyll_a": chlorophyll,
-        "thermal_front": True,
+        "thermal_front": thermal_front,
         "species_hsi": {
             "Yellowfin Tuna": hsi_tuna,
             "Indian Mackerel": hsi_mackerel,
             "Hilsa / Pelagics": hsi_hilsa,
         },
-        "pfz_coordinates": [
-            {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
-            {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
-        ],
+        "pfz_coordinates": pfz_coords,
         "source": sst_source,
         "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
-        "pfz_source": "Bathymetric Shelf-Break Model (Illustrative offset; not live INCOIS PFZ bulletin)",
+        "pfz_source": pfz_source,
         "timestamp": obs_time,
     }
     
     return {
         "ocean_data": ocean_payload,
         "evidence_citations": [
-            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | PFZ Coordinates: Bathymetric Model (Illustrative) | HSI(Mackerel)={hsi_mackerel}"
+            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | PFZ Coordinates: {pfz_source} | HSI(Mackerel)={hsi_mackerel}"
         ],
     }
+
 
 
 def weather_specialist_node(state: AgentState) -> Dict[str, Any]:

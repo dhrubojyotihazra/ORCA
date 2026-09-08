@@ -68,6 +68,14 @@ def planner_node(state: AgentState) -> Dict[str, Any]:
     if any(k in query for k in ["imbl", "border", "boundary", "mpa", "protected", "sanctuary", "restricted", "buffer zone", "সীমান্ত", "எல்லை"]):
         intents.append("geofence")
         
+    # Public Research Bulletin (Official Government Bulletins, IMD, NDMA, INCOIS public alerts)
+    if any(k in query for k in [
+        "bulletin", "official alert", "imd alert", "cyclone warning", "ndma", "incois advisory",
+        "public portal", "official notice", "government alert", "advisory", "advisories", "public bulletin",
+        "cyclone alert", "forecast bulletin", "official bulletin"
+    ]):
+        intents.append("public_bulletin")
+
     # If no specific intent matched, default to general situational advisory (PFZ + Weather + Safety)
     if not intents:
         intents = ["pfz", "weather", "safety"]

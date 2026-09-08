@@ -78,6 +78,7 @@ class AgentInvokeResponse(BaseModel):
     oceanData: Optional[Dict[str, Any]] = None
     weatherData: Optional[Dict[str, Any]] = None
     riskData: Optional[Dict[str, Any]] = None
+    publicResearchData: Optional[Dict[str, Any]] = None
     executedNodes: List[str]
     agentTrace: List[NodeExecutionTrace]
     evidenceCitations: List[str]
@@ -100,6 +101,10 @@ NODE_METADATA = {
     "risk_specialist": {
         "name": "Risk Specialist",
         "role": "Sea-Venture Hydrodynamics & Geofence Guard",
+    },
+    "public_research_specialist": {
+        "name": "Public Source Research Agent",
+        "role": "Official Marine & Meteorological Government Bulletins",
     },
     "synthesizer": {
         "name": "Synthesizer Agent",
@@ -131,10 +136,14 @@ def get_graph_schema():
             {"from": "START", "to": "planner"},
             {"from": "planner", "to": "ocean_specialist", "condition": "intent: pfz"},
             {"from": "planner", "to": "weather_specialist", "condition": "intent: weather/safety"},
-            {"from": "planner", "to": "risk_specialist", "condition": "intent: safety/geofence"},
-            {"from": "ocean_specialist", "to": "synthesizer"},
-            {"from": "weather_specialist", "to": "synthesizer"},
+            {"from": "planner", "to": "risk_specialist", "condition": "intent: geofence"},
+            {"from": "planner", "to": "public_research_specialist", "condition": "intent: public_bulletin"},
+            {"from": "ocean_specialist", "to": "weather_specialist"},
+            {"from": "weather_specialist", "to": "risk_specialist"},
+            {"from": "weather_specialist", "to": "public_research_specialist"},
+            {"from": "risk_specialist", "to": "public_research_specialist"},
             {"from": "risk_specialist", "to": "synthesizer"},
+            {"from": "public_research_specialist", "to": "synthesizer"},
             {"from": "synthesizer", "to": "END"},
         ],
     }
@@ -176,7 +185,14 @@ def invoke_agents(payload: AgentInvokeRequest):
 
             for node_name, node_update in chunk.items():
                 executed_nodes.append(node_name)
-                accumulated_state.update(node_update)
+                for k, v in node_update.items():
+                    if k == "evidence_citations" and isinstance(v, list):
+                        accumulated_state.setdefault("evidence_citations", [])
+                        for item in v:
+                            if item not in accumulated_state["evidence_citations"]:
+                                accumulated_state["evidence_citations"].append(item)
+                    else:
+                        accumulated_state[k] = v
 
                 meta = NODE_METADATA.get(node_name, {"name": node_name, "role": "Specialist Agent"})
                 ts_id = int(time.time() * 1000)
@@ -209,6 +225,12 @@ def invoke_agents(payload: AgentInvokeRequest):
                     cat = rdata.get("risk_category", "N/A")
                     mpa = rdata.get("mpa_distance_nm", "N/A")
                     summary = f"Sea-Venture Hydrodynamic Index: {s_idx}/100 ({cat}) | MPA Sanctuary Distance: {mpa} NM"
+                elif node_name == "public_research_specialist":
+                    pdata = node_update.get("public_research_data", {})
+                    if pdata.get("found"):
+                        summary = f"Identified official bulletin from {pdata.get('agency')}: '{pdata.get('bulletin_title')}'"
+                    else:
+                        summary = f"Checked {len(pdata.get('checked_sources', []))} official portals: Zero matching active bulletins identified (Zero-fabrication guardrail)."
                 elif node_name == "synthesizer":
                     summary = "Synthesized grounded regional multilingual response adhering strictly to specialist payloads."
 
@@ -232,7 +254,7 @@ def invoke_agents(payload: AgentInvokeRequest):
 
         return AgentInvokeResponse(
             content=final_content,
-            modelUsed="LangGraph Multi-Agent (5-Node StateGraph DAG)",
+            modelUsed="LangGraph Multi-Agent (6-Node StateGraph DAG)",
             timestamp=datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"),
             language=accumulated_state.get("language", "en"),
             userRole=accumulated_state.get("user_role", user_role),
@@ -241,6 +263,7 @@ def invoke_agents(payload: AgentInvokeRequest):
             oceanData=accumulated_state.get("ocean_data"),
             weatherData=accumulated_state.get("weather_data"),
             riskData=accumulated_state.get("risk_data"),
+            publicResearchData=accumulated_state.get("public_research_data"),
             executedNodes=executed_nodes,
             agentTrace=agent_trace,
             evidenceCitations=accumulated_state.get("evidence_citations", []),

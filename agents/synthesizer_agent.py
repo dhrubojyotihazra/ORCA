@@ -27,6 +27,12 @@ Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
 7. SQUALL & CYCLONE PROVENANCE: State that squall probability and cyclone alert levels are regional climatological baseline averages, not live radar/IMD nowcasts.
 8. VESSEL CLASSIFICATION ACCURACY: Always specify the correct size bracket corresponding to the target vessel: Small Artisanal Craft (<8m), Motorized Craft (8-15m), or Deep-Sea Trawler (>15m). NEVER label a medium craft as (<8m) or small craft as (8-15m). Cite the exact formula weights matching that vessel class.
 9. WAVE PROVENANCE: When significant wave height (Hs) is from Open-Meteo, cite it as "Open-Meteo Live (<timestamp>)". If from INCOIS model baseline, cite as "INCOIS OSF Model Baseline".
+10. PUBLIC SOURCE RESEARCH BULLETIN INTEGRATION & CITATION:
+    When public_research_data is provided:
+    - If found is True: State the official bulletin details (Agency, Title, Summary) and include the mandatory citation format:
+      "Source: [Agency] Public Bulletin ([URL]) | Retrieved: [timestamp] | Secondary source — verify with official channels before making safety-critical decisions."
+    - If found is False: Explicitly state that no active official bulletin matching the query was identified on the checked public portals. You are strictly forbidden from inventing, assuming, or hallucinating bulletin contents.
+
 
 ROLE-AWARE REGISTER PROFILES (Format strictly according to state.user_role):
 1. 'fisher' (DEFAULT):
@@ -195,6 +201,25 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             f"- International Border (IMBL): Distance {risk.get('imbl_distance_nm')} NM ({'ALERT' if risk.get('imbl_alert') else 'Clear'})",
         ])
 
+    pub_res = state.get("public_research_data")
+    if pub_res:
+        if pub_res.get("found"):
+            context_lines.extend([
+                f"- Official Public Bulletin: FOUND",
+                f"  * Agency: {pub_res.get('agency')}",
+                f"  * Portal URL: {pub_res.get('source_url')}",
+                f"  * Bulletin Title: {pub_res.get('bulletin_title')}",
+                f"  * Bulletin Summary: {pub_res.get('summary')}",
+                f"  * Mandatory Citation Format: Source: {pub_res.get('agency')} Public Bulletin ({pub_res.get('source_url')}) | Retrieved: {pub_res.get('retrieved_at')} | Secondary source — verify with official channels before making safety-critical decisions.",
+            ])
+        else:
+            context_lines.extend([
+                f"- Official Public Bulletin: NOT FOUND",
+                f"  * Reason: {pub_res.get('reason')}",
+                f"  * Checked Portals: {', '.join(pub_res.get('checked_sources', []))}",
+                f"  * Mandatory Note: Public Research Agent: No official bulletin found on checked sources ({', '.join(pub_res.get('checked_sources', []))}) | Retrieved: {pub_res.get('retrieved_at')} | Secondary source verification check complete.",
+            ])
+
     grounded_context = "\n".join(context_lines)
 
     # Check if Groq client can synthesize
@@ -269,11 +294,35 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             sources.append(weather.get("source", "INCOIS OSF"))
         if has_ocean:
             sources.append(ocean.get("source", "INCOIS ARGO Floats"))
+        if pub_res and pub_res.get("found"):
+            sources.append(f"{pub_res.get('agency')} Public Bulletin")
+        elif pub_res:
+            sources.append("Public Source Verification Check")
         if not sources:
             sources.append("INCOIS Marine Matrix")
         
         obs_stamp = (ocean.get("timestamp") if has_ocean else weather.get("timestamp")) if (has_ocean or has_weather) else "Current Session"
         footer = f"---\n**Source:** {' & '.join(sources)} | **Observed:** {obs_stamp} | **Grounded Advisory Verified**"
+
+        pub_bulletin_lines = []
+        if pub_res:
+            if pub_res.get("found"):
+                pub_bulletin_lines = [
+                    "#### Official Government Public Bulletin",
+                    f"- **Title**: {pub_res.get('bulletin_title')}",
+                    f"- **Issuing Agency**: {pub_res.get('agency')}",
+                    f"- **Bulletin Summary**: {pub_res.get('summary')}",
+                    f"- **Official Citation**: Source: {pub_res.get('agency')} Public Bulletin ({pub_res.get('source_url')}) | Retrieved: {pub_res.get('retrieved_at')} | Secondary source — verify with official channels before making safety-critical decisions.",
+                    "",
+                ]
+            else:
+                pub_bulletin_lines = [
+                    "#### Official Government Public Bulletin Notice",
+                    f"- **Bulletin Status**: {pub_res.get('reason', 'No active official government bulletin matching the query was identified on checked public portals.')}",
+                    f"- **Checked Sources**: {', '.join(pub_res.get('checked_sources', []))}",
+                    f"- **Notice**: Public Research Agent: No official bulletin found on checked sources ({', '.join(pub_res.get('checked_sources', []))}) | Retrieved: {pub_res.get('retrieved_at')} | Secondary source verification check complete.",
+                    "",
+                ]
 
         if user_role == "fisher":
             # Plain language, short direct sentences, zero raw math formulas, direct action first
@@ -327,6 +376,9 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                     "",
                 ])
 
+            if pub_bulletin_lines:
+                lines.extend(pub_bulletin_lines)
+
             lines.append(footer)
 
         elif user_role == "coast_guard":
@@ -354,6 +406,8 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                     f"- **Surface Temperature**: {sst}°C ({ocean.get('source', 'INCOIS ARGO')})",
                     "",
                 ])
+            if pub_bulletin_lines:
+                lines.extend(pub_bulletin_lines)
             lines.append(footer)
 
         elif user_role == "port_operator":
@@ -376,6 +430,8 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                 f"- **Harbour Approach Clearance**: Outer roadstead clear; breakwater swell at {hs}m.",
                 "",
             ]
+            if pub_bulletin_lines:
+                lines.extend(pub_bulletin_lines)
             lines.append(footer)
 
         else: # scientist
@@ -417,6 +473,8 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                     f"- **IMBL**: Distance {imbl_dist} NM (Clear)",
                     "",
                 ])
+            if pub_bulletin_lines:
+                lines.extend(pub_bulletin_lines)
             lines.append(footer)
 
         final_text = "\n".join(lines)

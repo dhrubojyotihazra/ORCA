@@ -48,6 +48,20 @@ class RiskAssessment(TypedDict, total=False):
     source: str
 
 
+class PublicResearchData(TypedDict, total=False):
+    found: bool
+    reason: Optional[str]
+    checked_sources: List[str]
+    source_url: Optional[str]
+    retrieved_at: Optional[str]
+    source_type: Literal["Official Government Bulletin (Secondary/Cached)"]
+    confidence: Literal["Secondary source — not a live authoritative feed"]
+    bulletin_title: Optional[str]
+    summary: Optional[str]
+    raw_snippet: Optional[str]
+    agency: Optional[str]
+
+
 class AgentState(TypedDict, total=False):
     # Core User Input
     query: str
@@ -58,14 +72,16 @@ class AgentState(TypedDict, total=False):
     location: LocationDict
     vessel_type: str  # 'small' (<8m), 'medium' (8-15m), 'large' (>15m)
     user_role: Optional[UserRole]  # 'fisher', 'coast_guard', 'port_operator', 'scientist' (default: 'fisher')
-    intent: List[str]  # e.g. ["pfz", "safety", "weather", "geofence"]
+    intent: List[str]  # e.g. ["pfz", "safety", "weather", "geofence", "public_bulletin"]
     
     # Specialist Data Payloads
     ocean_data: Optional[OceanTelemetry]
     weather_data: Optional[WeatherTelemetry]
     risk_data: Optional[RiskAssessment]
+    public_research_data: Optional[PublicResearchData]
     
     # Traceability & Verification
     evidence_citations: Annotated[List[str], operator.add]
     final_response: str
     messages: Annotated[List[Dict[str, Any]], operator.add]
+

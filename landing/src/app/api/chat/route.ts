@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
           oceanData: data.oceanData,
           weatherData: data.weatherData,
           riskData: data.riskData,
+          publicResearchData: data.publicResearchData,
           evidenceCitations: data.evidenceCitations,
           totalDurationMs: data.totalDurationMs,
         });

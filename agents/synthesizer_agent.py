@@ -20,8 +20,7 @@ CRITICAL GROUNDING RULES:
      \text{Safety} = 100 - (18.5 \cdot H_s + 1.2 \cdot W + 0.8 \cdot L) - \text{Penalty}
      $$
    - NEVER use square brackets like [ ... ] or \\[ ... \\] for math equations.
-4. Always conclude with the mandatory evidence footer:
-Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
+4. EVIDENCE FOOTER: Conclude with the exact citation string provided in the context. NEVER output literal placeholder text like "Source: [Data Sources]" or "[Timestamp]".
 5. TIMESTAMP HONESTY: When citing satellite scatterometer wind (ascat) or ARGO float SST, explicitly state "Most recent INCOIS observation: <date>". NEVER call historical data "Live".
 6. PFZ WAYPOINT PROVENANCE: When citing PFZ coordinates, explicitly state they are derived from a bathymetric shelf-break model (illustrative waypoints), not a live INCOIS satellite PFZ advisory bulletin.
 7. SQUALL & CYCLONE PROVENANCE: State that squall probability and cyclone alert levels are regional climatological baseline averages, not live radar/IMD nowcasts.
@@ -30,8 +29,9 @@ Source: [Data Sources] | Observed: [Timestamp] | Grounded Advisory
 10. PUBLIC SOURCE RESEARCH BULLETIN INTEGRATION & CITATION:
     When public_research_data is provided:
     - If found is True: State the official bulletin details (Agency, Title, Summary) and include the mandatory citation format:
-      "Source: [Agency] Public Bulletin ([URL]) | Retrieved: [timestamp] | Secondary source — verify with official channels before making safety-critical decisions."
+      "Source: <Agency> Public Bulletin (<URL>) | Retrieved: <timestamp> | Secondary source — verify with official channels before making safety-critical decisions."
     - If found is False: Explicitly state that no active official bulletin matching the query was identified on the checked public portals. You are strictly forbidden from inventing, assuming, or hallucinating bulletin contents.
+    - If the user's query is an informational/bulletin lookup (or off-topic query), DO NOT output a sea departure verdict like "Do NOT go out today - Stay in port" or sections for "Sea & Waves" and "Fishing Advice". Simply answer the inquiry directly with honest not-found status and the mandatory citation.
 
 
 ROLE-AWARE REGISTER PROFILES (Format strictly according to state.user_role):
@@ -41,12 +41,13 @@ ROLE-AWARE REGISTER PROFILES (Format strictly according to state.user_role):
    - ZERO TECHNICAL JARGON:
      * FORBIDDEN: Do NOT mention "Hydrodynamic Safety Index", raw scores like "64.75 out of 100", formulas, decimal suitability numbers (like 0.96 or 0.49), or raw latitude/longitude coordinates.
      * Use everyday language: "moderate waves (about 3-4 feet / 1 metre)", "light breeze", "good catch area 14 miles Southeast for Hilsa".
-   - Structured format:
-     * **VERDICT**: Big bold action status (🟢 **Safe for sea departure** / 🟡 **Caution: Delay departure / check radio** / 🔴 **Do NOT go out today - Stay in port**)
-     * **Sea & Waves**: Short plain description of wave height and sea conditions.
-     * **Wind & Weather**: Short plain description of wind and storm risk, mentioning if data is from an earlier satellite pass.
-     * **Fishing Advice**: Direction & distance in miles + best target fish (if queried).
-     * **Safety Rule**: 1 clear takeaway (e.g., "Small boats should stay in harbour until wind eases").
+   - Structured format (ONLY include sections for domains that were queried and present in verified telemetry):
+     * **VERDICT**: Include ONLY if sea departure or waves/weather was queried (🟢 **Safe for sea departure** / 🟡 **Caution: Delay departure / check radio** / 🔴 **Do NOT go out today - Stay in port**). If weather/safety was NOT queried or the question is an informational lookup (e.g. checking official bulletins or off-topic queries), DO NOT issue a departure verdict or tell the user to stay in port! State "ℹ️ **Operational Notice**" instead.
+     * **Sea & Waves**: Short plain description (ONLY if waves/sea queried).
+     * **Wind & Weather**: Short plain description (ONLY if wind/weather queried).
+     * **Fishing Advice**: Direction & distance in miles + best target fish (ONLY if fish/PFZ queried).
+     * **Official Public Bulletins**: Official public bulletin findings or clear statement that no matching bulletin was found on checked government portals.
+     * **Safety Rule**: 1 clear takeaway relevant to the question.
    - If regional language detected, write in that regional language using everyday coastal vocabulary.
    - Conclude with the mandatory 1-line evidence footer.
 
@@ -219,6 +220,13 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                 f"  * Checked Portals: {', '.join(pub_res.get('checked_sources', []))}",
                 f"  * Mandatory Note: Public Research Agent: No official bulletin found on checked sources ({', '.join(pub_res.get('checked_sources', []))}) | Retrieved: {pub_res.get('retrieved_at')} | Secondary source verification check complete.",
             ])
+
+    if not has_ocean and not has_weather and not has_risk:
+        context_lines.append(
+            "- QUERY CLASSIFICATION: Informational bulletin check only. Waves, wind, fishing zones, and vessel departure safety were NOT queried.\n"
+            "  * STRICTLY FORBIDDEN: Do NOT output '🔴 Do NOT go out today - Stay in port', 'Sea & Waves: No data', or 'Fishing Advice: No data'.\n"
+            "  * REQUIRED RESPONSE: State clearly whether the requested bulletin exists on official portals. Since none was found, inform the user directly that no such bulletin exists on official channels, and conclude with the mandatory citation note."
+        )
 
     grounded_context = "\n".join(context_lines)
 

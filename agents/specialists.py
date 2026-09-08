@@ -94,8 +94,9 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
         {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
         {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
     ]
-    pfz_source = live_argo.get("pfz_source") or "Bathymetric Shelf-Break Model (Illustrative — insufficient live float density near this port)"
+    pfz_source = live_argo.get("pfz_source") or "Bathymetric Shelf-Break Model (Illustrative — insufficient nearby live float density)"
     thermal_front = live_argo.get("thermal_front", False)
+    pfz_dist_nm = live_argo.get("pfz_distance_nm") or round(calculate_distance_nm(lat, lon, pfz_coords[0]["lat"], pfz_coords[0]["lon"]), 1)
     
     ocean_payload: OceanTelemetry = {
         "sst_celsius": sst,
@@ -108,6 +109,7 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
             "Hilsa / Pelagics": hsi_hilsa,
         },
         "pfz_coordinates": pfz_coords,
+        "pfz_distance_nm": pfz_dist_nm,
         "source": sst_source,
         "chlorophyll_source": "INCOIS Regional Climatology Baseline (seasonal composite)",
         "pfz_source": pfz_source,
@@ -117,7 +119,7 @@ def ocean_specialist_node(state: AgentState) -> Dict[str, Any]:
     return {
         "ocean_data": ocean_payload,
         "evidence_citations": [
-            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | PFZ Coordinates: {pfz_source} | HSI(Mackerel)={hsi_mackerel}"
+            f"Ocean Specialist: SST={sst}°C ({sst_source}) | Chl-a={chlorophyll} mg/m³ (INCOIS Climatology Baseline) | PFZ ({pfz_dist_nm} NM): {pfz_source} | HSI(Mackerel)={hsi_mackerel}"
         ],
     }
 

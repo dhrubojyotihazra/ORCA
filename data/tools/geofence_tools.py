@@ -68,7 +68,7 @@ def check_zone(lat: float, lon: float) -> dict:
             "restriction_type": "Navigable Waters",
             "restriction_level": "None",
             "authority": "Indian Coast Guard / DG Shipping",
-            "source": "Bharatmaps Parivesh & UNCLOS Baselines",
+            "source": "Bharatmaps Parivesh & Navigational Reference Baselines",
             "message": "Clear to operate."
         }
     }

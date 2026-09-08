@@ -6,7 +6,7 @@
       "Bharatmaps Parivesh Eco-Sensitive Zones (MoEFCC)",
       "Bharatmaps Parivesh Wildlife Reserves and Corridors (MoEFCC)",
       "Bharatmaps Parivesh CRZ-2019 Regulatory Zones (NCSCM / MoEFCC)",
-      "UNCLOS Maritime Delimitation Data (Indian Coast Guard)"
+      "Approximate Maritime Boundary Reference Buffers (Illustrative Geometry)"
     ],
     "total_features": 23,
     "license": "CC0-1.0 / Public Domain"
@@ -34381,12 +34381,12 @@
     {
       "type": "Feature",
       "properties": {
-        "zone_name": "International Maritime Boundary Line (IMBL) - Gujarat / Arabian Sea",
-        "restriction_type": "International Maritime Boundary",
+        "zone_name": "Approximate IMBL Reference Buffer - Gujarat / Arabian Sea",
+        "restriction_type": "Approximate Maritime Boundary Buffer",
         "restriction_level": "Warning",
-        "authority": "Indian Coast Guard (ICG) / Ministry of External Affairs",
-        "source": "Maritime Zones of India Act 1976 & UNCLOS Coordinates",
-        "message": "Approaching India-Pakistan IMBL buffer (Arabian Sea). Cross-border navigation strictly prohibited."
+        "authority": "Indian Coast Guard (Reference Buffer)",
+        "source": "Approximate IMBL reference buffer — illustrative geometry, not sourced from official hydrographic/treaty GIS datasets",
+        "message": "Approaching approximate India-Pakistan IMBL reference buffer. Illustrative boundary — consult official Indian Coast Guard navigational charts."
       },
       "geometry": {
         "type": "Polygon",
@@ -34419,12 +34419,12 @@
     {
       "type": "Feature",
       "properties": {
-        "zone_name": "International Maritime Boundary Line (IMBL) - Bay of Bengal Buffer",
-        "restriction_type": "International Maritime Boundary",
+        "zone_name": "Approximate IMBL Reference Buffer - Bay of Bengal",
+        "restriction_type": "Approximate Maritime Boundary Buffer",
         "restriction_level": "Warning",
-        "authority": "Indian Coast Guard (ICG) / Ministry of External Affairs",
-        "source": "UNCLOS Indo-Bangladesh Maritime Delimitation Award (2014)",
-        "message": "Approaching India-Bangladesh IMBL buffer (Bay of Bengal). Strict surveillance in effect."
+        "authority": "Indian Coast Guard (Reference Buffer)",
+        "source": "Approximate IMBL reference buffer — illustrative geometry, not sourced from official hydrographic/treaty GIS datasets",
+        "message": "Approaching approximate India-Bangladesh IMBL reference buffer. Illustrative boundary — consult official Indian Coast Guard navigational charts."
       },
       "geometry": {
         "type": "Polygon",

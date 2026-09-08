@@ -85,12 +85,16 @@ def get_hazard_alerts(lat: float, lon: float, target_date: datetime.date = None)
     }
 
 
+MAX_PFZ_OPERATIONAL_DIST_NM = 60.0  # 60 NM (~111 km) operational range for coastal craft
+
 @lru_cache(maxsize=128)
-def get_live_argo_sst(lat: float, lon: float) -> dict:
+def get_live_argo_sst(lat: float, lon: float, max_dist_nm: float = MAX_PFZ_OPERATIONAL_DIST_NM) -> dict:
     """
     Queries live INCOIS ERDDAP Indian_ARGO_Floats tabledap dataset for SST.
     Searches a ±3.5° bounding box for surface observations (depth <= 15m).
     Computes horizontal SST gradients across float observations to derive real thermal fronts (PFZ).
+    Enforces a strict operational distance constraint (max_dist_nm) from the target port.
+    If no thermal front is found within reachable range, falls back to the Bathymetric Shelf-Break Model.
     """
     lat_min, lat_max = round(lat - 3.5, 1), round(lat + 3.5, 1)
     lon_min, lon_max = round(lon - 3.5, 1), round(lon + 3.5, 1)
@@ -126,45 +130,53 @@ def get_live_argo_sst(lat: float, lon: float) -> dict:
                         }
                 
                 pts = list(profiles.values())
+                # Filter float observations strictly to those within operational distance (max_dist_nm) of the port
+                nearby_pts = [
+                    p for p in pts
+                    if (_haversine_dist_km(lat, lon, p["lat"], p["lon"]) / 1.852) <= max_dist_nm
+                ]
                 pfz_coords = None
                 pfz_source = None
                 thermal_front = False
 
-                # If 2+ distinct float locations, find steepest SST gradient (thermal front proxy)
-                if len(pts) >= 2:
+                # If 2+ distinct float locations within operational distance, compute steepest SST gradient
+                if len(nearby_pts) >= 2:
                     best_gradient = 0.0
                     best_pair = None
-                    for i in range(len(pts)):
-                        for j in range(i + 1, len(pts)):
-                            d_km = _haversine_dist_km(pts[i]["lat"], pts[i]["lon"], pts[j]["lat"], pts[j]["lon"])
+                    for i in range(len(nearby_pts)):
+                        for j in range(i + 1, len(nearby_pts)):
+                            d_km = _haversine_dist_km(nearby_pts[i]["lat"], nearby_pts[i]["lon"], nearby_pts[j]["lat"], nearby_pts[j]["lon"])
                             if d_km >= 5.0:  # real spatial spread >= 5km
-                                dT = abs(pts[i]["temp"] - pts[j]["temp"])
+                                dT = abs(nearby_pts[i]["temp"] - nearby_pts[j]["temp"])
                                 grad = (dT / d_km) * 100.0  # °C per 100 km
                                 if grad > best_gradient:
                                     best_gradient = grad
-                                    best_pair = (pts[i], pts[j], grad, d_km, dT)
+                                    best_pair = (nearby_pts[i], nearby_pts[j], grad, d_km, dT)
 
                     if best_pair is not None:
                         p1, p2, grad_val, d_km, dT = best_pair
-                        # Front midpoint waypoint
+                        # Front midpoint waypoint (guaranteed within operational range)
                         mid_lat = round((p1["lat"] + p2["lat"]) / 2.0, 2)
                         mid_lon = round((p1["lon"] + p2["lon"]) / 2.0, 2)
-                        # Secondary front waypoint along the thermal boundary
-                        wp2_lat = round(p1["lat"] if abs(p1["lat"] - mid_lat) > 0.04 else (mid_lat + 0.12), 2)
-                        wp2_lon = round(p1["lon"] if abs(p1["lon"] - mid_lon) > 0.04 else (mid_lon + 0.15), 2)
+                        # Secondary front waypoint at one of the nearby observations
+                        wp2_lat = round(p1["lat"], 2)
+                        wp2_lon = round(p1["lon"], 2)
 
                         pfz_coords = [{"lat": mid_lat, "lon": mid_lon}, {"lat": wp2_lat, "lon": wp2_lon}]
-                        pfz_source = f"Derived from live SST gradient analysis ({len(profiles)} ARGO observations)"
+                        pfz_source = f"Derived from live SST gradient analysis ({len(nearby_pts)} nearby ARGO observations)"
                         thermal_front = True
 
+
                 if pfz_coords is None:
-                    # Auto-fallback to bathymetric model if insufficient float density
+                    # Auto-fallback to bathymetric model if insufficient nearby live float density
                     pfz_coords = [
                         {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
                         {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
                     ]
-                    pfz_source = "Bathymetric Shelf-Break Model (Illustrative — insufficient live float density near this port)"
+                    pfz_source = "Bathymetric Shelf-Break Model (Illustrative — insufficient nearby live float density)"
                     thermal_front = False
+
+                pfz_dist_nm = round(_haversine_dist_km(lat, lon, pfz_coords[0]["lat"], pfz_coords[0]["lon"]) / 1.852, 1)
 
                 return {
                     "status": "success",
@@ -177,25 +189,31 @@ def get_live_argo_sst(lat: float, lon: float) -> dict:
                     "source": f"INCOIS ERDDAP (Most recent float observation: {obs_time}) — dataset:Indian_ARGO_Floats",
                     "pfz_coordinates": pfz_coords,
                     "pfz_source": pfz_source,
+                    "pfz_distance_nm": pfz_dist_nm,
                     "thermal_front": thermal_front,
                     "active_argo_profiles": len(profiles),
                 }
     except Exception:
         pass
 
+    fallback_coords = [
+        {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
+        {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
+    ]
+    fallback_dist_nm = round(_haversine_dist_km(lat, lon, fallback_coords[0]["lat"], fallback_coords[0]["lon"]) / 1.852, 1)
+
     return {
         "status": "fallback",
         "is_live": False,
         "sst": 29.4,
         "source": "Cached Baseline Fallback (live fetch unavailable)",
-        "pfz_coordinates": [
-            {"lat": round(lat - 0.28, 2), "lon": round(lon + 0.35, 2)},
-            {"lat": round(lat - 0.15, 2), "lon": round(lon + 0.55, 2)},
-        ],
-        "pfz_source": "Bathymetric Shelf-Break Model (Illustrative — insufficient live float density near this port)",
+        "pfz_coordinates": fallback_coords,
+        "pfz_source": "Bathymetric Shelf-Break Model (Illustrative — insufficient nearby live float density)",
+        "pfz_distance_nm": fallback_dist_nm,
         "thermal_front": False,
         "active_argo_profiles": 0,
     }
+
 
 
 

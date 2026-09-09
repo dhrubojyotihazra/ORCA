@@ -1,15 +1,18 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/lib/app-context";
 import {
   Sun,
   Moon,
   Zap,
   Map,
+  Plus,
 } from "lucide-react";
 
 export function AppHeader() {
+  const router = useRouter();
   const {
     theme,
     toggleTheme,
@@ -29,8 +32,21 @@ export function AppHeader() {
         isSidebarCollapsed ? "pl-14 sm:pl-16" : ""
       }`}
     >
-      {/* ── Right Area: Map + Voice + Theme — 3 quiet icons ── */}
+      {/* ── Right Area: New + Map + Voice + Theme — quiet controls ── */}
       <div className="flex items-center gap-1.5">
+        {/* New Marine Inquiry Trigger */}
+        <button
+          onClick={() => router.push("/new")}
+          className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            isLight
+              ? "neo-btn-light text-slate-600 hover:text-teal-700"
+              : "neo-btn-dark text-slate-300 hover:text-cyan-300"
+          }`}
+          title="New Marine Inquiry"
+          aria-label="New Marine Inquiry"
+        >
+          <Plus className="size-4 stroke-[2.5]" />
+        </button>
         {/* Marine Map */}
         <button
           onClick={() => setIsMapOpen(true)}

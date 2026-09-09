@@ -348,8 +348,8 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           // Tables
           table({ children }) {
             return (
-              <div className="my-4 overflow-x-auto rounded-2xl border border-slate-300 dark:border-white/10 shadow-sm auth-form-scrollbar">
-                <table className="w-full text-left text-xs border-collapse divide-y divide-slate-200 dark:divide-white/10">
+              <div className="w-full my-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 pb-1 touch-pan-x scrollbar-thin">
+                <table className="min-w-[500px] w-full text-left text-xs border-collapse divide-y divide-slate-200 dark:divide-white/10">
                   {children}
                 </table>
               </div>

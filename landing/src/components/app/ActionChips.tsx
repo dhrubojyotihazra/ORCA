@@ -75,7 +75,7 @@ export function ActionChips({ onSelectPrompt }: ActionChipsProps) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 pt-4 max-w-2xl mx-auto px-4 select-none">
+    <div className="flex flex-nowrap sm:flex-wrap items-center sm:justify-center overflow-x-auto w-full max-w-2xl mx-auto px-4 gap-2 pt-4 pb-2 scrollbar-none touch-pan-x select-none">
       {chips.map((chip) => {
         const Icon = chip.icon;
         return (
@@ -83,7 +83,7 @@ export function ActionChips({ onSelectPrompt }: ActionChipsProps) {
             key={chip.id}
             type="button"
             onClick={() => onSelectPrompt(chip.prompt)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer active:scale-95 ${
+            className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer active:scale-95 ${
               isLight
                 ? "bg-[#eaf1f8] text-slate-600 hover:text-slate-800 shadow-[-2px_-2px_5px_rgba(255,255,255,0.9),2px_2px_5px_rgba(180,195,215,0.35)] border border-white/60 hover:shadow-[-3px_-3px_7px_rgba(255,255,255,1),3px_3px_7px_rgba(180,195,215,0.45)]"
                 : "bg-slate-900/50 text-slate-400 hover:text-slate-200 border border-white/[0.06] shadow-[0_2px_6px_rgba(0,0,0,0.4)] hover:border-white/10"

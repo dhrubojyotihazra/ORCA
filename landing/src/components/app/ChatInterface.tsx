@@ -302,15 +302,16 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
   };
 
   const handleSend = () => {
-    if (!inputText.trim()) return;
+    const text = inputText.trim();
+    if (!text) return;
+    setInputText("");
     if (isDictating && dictationRef.current) {
       try {
         dictationRef.current.stop();
       } catch {}
       setIsDictating(false);
     }
-    sendMessage(chat.id, inputText.trim());
-    setInputText("");
+    sendMessage(chat.id, text);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -447,10 +448,10 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
             <Zap className="size-3.5" />
           </button>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle — visible on sm+, accessible via Settings on mobile */}
           <button
             onClick={toggleTheme}
-            className={`size-7 sm:size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            className={`hidden sm:flex size-7 sm:size-8 rounded-full items-center justify-center transition-all cursor-pointer ${
               isLight
                 ? "neo-btn-light text-amber-500 hover:text-amber-600"
                 : "neo-btn-dark text-amber-400 hover:text-amber-300"

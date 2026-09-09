@@ -66,6 +66,11 @@ export function VoiceOverlay() {
   const hasSpokenInTurnRef = useRef<boolean>(false);
   const isSpeakingTtsRef = useRef<boolean>(false);
   const statusRef = useRef<string>("connecting");
+  const selectedLangRef = useRef<string>(selectedLang);
+
+  useEffect(() => {
+    selectedLangRef.current = selectedLang;
+  }, [selectedLang]);
 
   useEffect(() => {
     statusRef.current = status;
@@ -217,7 +222,7 @@ export function VoiceOverlay() {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = selectedLang;
+        recognition.lang = selectedLangRef.current;
 
         recognition.onresult = (event: any) => {
           let currentText = "";
@@ -254,7 +259,7 @@ export function VoiceOverlay() {
     }
 
     setStatus("listening");
-  }, [selectedLang]);
+  }, []);
 
   // High-Fidelity Neural TTS Audio Player via Web Audio AudioContext (Autoplay-Proof)
   const playNeuralAudio = useCallback(async (text: string, langCode: string) => {
@@ -605,16 +610,16 @@ export function VoiceOverlay() {
       playChime("connected");
 
       // Welcome greeting in selected language
-      const currentLangConfig = REGIONAL_LANGUAGES.find((l) => l.code === selectedLang) || REGIONAL_LANGUAGES[0];
+      const currentLangConfig = REGIONAL_LANGUAGES.find((l) => l.code === selectedLangRef.current) || REGIONAL_LANGUAGES[0];
       setAiSpokenResponse(currentLangConfig.greeting);
-      await playNeuralAudio(currentLangConfig.greeting, selectedLang);
+      await playNeuralAudio(currentLangConfig.greeting, selectedLangRef.current);
     } catch (err: any) {
       console.error("Microphone access failed:", err);
       setMicPermission("denied");
       setStatus("mic_blocked");
       playChime("error");
     }
-  }, [cleanupAudioPipeline, selectedLang, playChime, playNeuralAudio]);
+  }, [cleanupAudioPipeline, playChime, playNeuralAudio]);
 
   useEffect(() => {
     if (isVoiceActive) {
@@ -736,11 +741,23 @@ export function VoiceOverlay() {
           {REGIONAL_LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => {
+              onClick={async () => {
+                if (selectedLang === lang.code) return;
                 setSelectedLang(lang.code);
+                selectedLangRef.current = lang.code;
                 playChime("connected");
+                if (ttsSourceNodeRef.current) {
+                  try {
+                    ttsSourceNodeRef.current.stop();
+                    ttsSourceNodeRef.current.disconnect();
+                  } catch {}
+                  ttsSourceNodeRef.current = null;
+                }
+                isSpeakingTtsRef.current = false;
+                setAiSpokenResponse(lang.greeting);
+                await playNeuralAudio(lang.greeting, lang.code);
               }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer min-h-[30px] flex items-center justify-center ${
                 selectedLang === lang.code
                   ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/40"
                   : "text-slate-400 hover:text-white"

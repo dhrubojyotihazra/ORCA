@@ -27,6 +27,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
 
   const isLight = theme === "light";
   const [prompt, setPrompt] = useState(initialText);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDictating, setIsDictating] = useState(false);
   const [lastAsrProvider, setLastAsrProvider] = useState<"bhasini" | "groq" | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -229,7 +230,11 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
   };
 
   const handleSend = () => {
-    if (!prompt.trim()) return;
+    const query = prompt.trim();
+    if (!query || isSubmitting) return;
+    setIsSubmitting(true);
+    setPrompt("");
+
     if (isDictating && dictationRef.current) {
       try {
         dictationRef.current.stop();
@@ -238,10 +243,10 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     }
 
     if (onSend) {
-      onSend(prompt.trim());
-      setPrompt("");
+      onSend(query);
+      setIsSubmitting(false);
     } else {
-      createNewChat(prompt.trim());
+      createNewChat(query);
     }
   };
 

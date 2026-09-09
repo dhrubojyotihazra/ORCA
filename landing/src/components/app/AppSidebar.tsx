@@ -216,17 +216,22 @@ export function AppSidebar() {
         {/* Location & Vessel compact row */}
         <button
           onClick={() => setIsLocationOpen((prev) => !prev)}
-          className={`w-full flex items-center gap-2 text-left text-[11px] rounded-xl px-2 py-1.5 transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2 text-left rounded-xl px-2.5 py-2 transition-colors cursor-pointer ${
             isLight
-              ? "text-slate-600 hover:bg-slate-200/40"
-              : "text-slate-400 hover:bg-white/5"
+              ? "text-slate-700 hover:bg-slate-200/50"
+              : "text-slate-300 hover:bg-white/5"
           }`}
         >
-          <MapPin className="size-3 text-cyan-500 shrink-0" />
-          <span className="truncate flex-1">
-            {userLocation.name} · {vesselType === "small" ? "<8m" : vesselType === "medium" ? "8-15m" : ">15m"}
-          </span>
-          <ChevronDown className={`size-3 opacity-50 transition-transform ${isLocationOpen ? "rotate-180" : ""}`} />
+          <MapPin className="size-3.5 text-cyan-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold truncate leading-tight">
+              {userLocation.name}
+            </div>
+            <div className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono leading-tight">
+              {vesselType === "small" ? "<8m Craft" : vesselType === "medium" ? "8-15m Motorized" : ">15m Trawler"}
+            </div>
+          </div>
+          <ChevronDown className={`size-3 opacity-50 transition-transform shrink-0 ${isLocationOpen ? "rotate-180" : ""}`} />
         </button>
 
         {/* Expandable location/vessel picker */}

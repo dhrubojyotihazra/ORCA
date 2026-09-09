@@ -158,6 +158,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [chats]);
 
+  // Synchronize dark mode class on document.documentElement for Tailwind dark: variants (Bug ORCA-001)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.classList.toggle("dark", theme === "dark");
+    }
+  }, [theme]);
+
   const toggleTheme = () => {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
@@ -499,7 +506,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
       {/* ── Global Cyber-Ocean Toast Notification Container ── */}
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none max-w-md w-full px-4">
+      <div className="fixed bottom-20 sm:bottom-auto sm:top-5 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none max-w-md w-full px-4">
         {toasts.map((toast) => (
           <div
             key={toast.id}

@@ -1,6 +1,12 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from datetime import datetime
+
+try:
+    import email_validator
+    from pydantic import EmailStr
+except Exception:
+    EmailStr = str
 
 LanguageType = Literal["en", "hi", "bn", "mr", "ta"]
 VesselType = Literal["small", "medium", "large"]

@@ -16,10 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import edge_tts
 
-# Ensure project root is on sys.path
+# Ensure project root and backend dir are on sys.path
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -30,9 +33,15 @@ logger = logging.getLogger("ORCA-FastAPI")
 from agents.graph import orca_graph
 from agents.state import AgentState
 
+from app.routers.auth import router as auth_router
+from app.routers.user import router as user_router
+from app.routers.chat import router as chat_router
+from app.routers.alerts import router as alerts_router
+from app.routers.voice import router as voice_router
+
 app = FastAPI(
     title="ORCA Multi-Agent Marine Intelligence Engine (SIH26176)",
-    description="FastAPI Service executing the real LangGraph 5-node StateGraph DAG for Marine Decision Support",
+    description="FastAPI Service executing the real LangGraph 5-node StateGraph DAG for Marine Decision Support with Supabase PostGIS and Auth",
     version="1.0.0",
 )
 
@@ -46,6 +55,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register Supabase API routers
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")
+app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(voice_router, prefix="/api/v1")
+
+# Convenience aliases under /api
+app.include_router(auth_router, prefix="/api")
+app.include_router(user_router, prefix="/api")
+app.include_router(alerts_router, prefix="/api")
 
 
 class AgentInvokeRequest(BaseModel):
@@ -130,10 +151,13 @@ def root():
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
+    from app.services.supabase_client import get_supabase_client
+    supabase_connected = get_supabase_client() is not None
     return {
         "status": "online",
         "engine": "LangGraph StateGraph DAG (SIH26176)",
         "version": "1.0.0",
+        "database": "supabase" if supabase_connected else "fallback_mode",
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "registered_nodes": list(NODE_METADATA.keys()),
     }

@@ -15,7 +15,7 @@ if PROJECT_ROOT not in sys.path:
 # Import ORCA LangGraph multi-agent graph
 _langgraph_agent = None
 try:
-    from agents.graph import app as agent_graph
+    from agents.graph import orca_graph as agent_graph
     _langgraph_agent = agent_graph
     logger.info("Successfully loaded ORCA LangGraph multi-agent collaborative graph.")
 except Exception as e:
@@ -23,20 +23,25 @@ except Exception as e:
 
 class AgentService:
     @staticmethod
-    async def invoke_agent(query: str, language: str = "en", location: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    async def invoke_agent(query: str, language: str = "en", location: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Invoke LangGraph agent pipeline or fallback to mock agent response."""
         if _langgraph_agent:
             try:
                 initial_state = {
                     "query": query,
                     "language": language,
-                    "location": location or {"latitude": 20.90, "longitude": 70.37, "location_name": "Veraval Port"},
-                    "vessel_type": "small"
+                    "location": location or {"lat": 20.90, "lon": 70.37, "name": "Veraval Port"},
+                    "vessel_type": "small",
+                    "user_role": "fisher",
+                    "messages": [],
+                    "evidence_citations": []
                 }
                 result = await asyncio.to_thread(_langgraph_agent.invoke, initial_state)
+                final_text = result.get("final_response") or result.get("final_answer", "Advisory generated.")
+                citations = result.get("evidence_citations") or result.get("evidence", [])
                 return {
-                    "final_answer": result.get("final_answer", "Agent processed query successfully."),
-                    "evidence": result.get("evidence", []),
+                    "final_answer": final_text,
+                    "evidence": citations,
                     "map_layers": result.get("map_layers", [])
                 }
             except Exception as e:

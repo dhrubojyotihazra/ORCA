@@ -69,8 +69,24 @@ interface AppContextType {
   language: string;
   setLanguage: (lang: string) => void;
 
+  // User Authentication & Profile (Supabase Auth)
+  user: UserSession;
+  authToken: string | null;
+  logout: () => void;
+  syncUserSession: () => Promise<void>;
+
   // Global Toast Notifications
   showToast: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+}
+
+export interface UserSession {
+  id: string;
+  email?: string;
+  displayName?: string;
+  role?: string;
+  locationName?: string;
+  vesselType?: string;
+  isAuthenticated: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -121,7 +137,82 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 3500);
   };
 
-  // Initialize theme, settings, and chats from localStorage, and auto-collapse sidebar on mobile screens
+  // ── User Authentication & Profile Session (Supabase Auth) ──
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserSession>({
+    id: "anonymous",
+    displayName: "Guest Officer",
+    role: "fisher",
+    isAuthenticated: false,
+  });
+
+  const syncUserSession = async () => {
+    try {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("orca_access_token");
+      if (!token) {
+        setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
+        setAuthToken(null);
+        return;
+      }
+      setAuthToken(token);
+      const savedName = localStorage.getItem("orca_user_name") || "Captain Fisher";
+      const savedRole = localStorage.getItem("orca_user_role") || "fisher";
+      const savedPort = localStorage.getItem("orca_user_port") || "Veraval Port";
+      const savedEmail = localStorage.getItem("orca_user_email") || undefined;
+      const savedId = localStorage.getItem("orca_user_id") || "00000000-0000-0000-0000-000000000001";
+
+      setUser({
+        id: savedId,
+        email: savedEmail,
+        displayName: savedName,
+        role: savedRole,
+        locationName: savedPort,
+        isAuthenticated: true,
+      });
+
+      if (["fisher", "coast_guard", "port_operator", "scientist"].includes(savedRole)) {
+        setUserRole(savedRole as any);
+      }
+
+      // Fetch fresh profile from backend
+      try {
+        const res = await fetch("/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          setUser((prev) => ({
+            ...prev,
+            displayName: profile.display_name || prev.displayName,
+            locationName: profile.location_name || prev.locationName,
+            vesselType: profile.vessel_type || prev.vesselType,
+            isAuthenticated: true,
+          }));
+        }
+      } catch {}
+    } catch {}
+  };
+
+  const logout = () => {
+    try {
+      localStorage.removeItem("orca_access_token");
+      localStorage.removeItem("orca_user_id");
+      localStorage.removeItem("orca_user_name");
+      localStorage.removeItem("orca_user_role");
+      localStorage.removeItem("orca_user_email");
+      localStorage.removeItem("orca_user_port");
+      fetch("/api/auth/logout", {
+        method: "POST",
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      }).catch(() => {});
+    } catch {}
+    setAuthToken(null);
+    setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
+    showToast("Signed out successfully.", "info");
+  };
+
+  // Initialize theme, settings, auth session, and chats from localStorage, and auto-collapse sidebar on mobile screens
   useEffect(() => {
     try {
       if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -146,6 +237,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setChats(parsed);
         }
       }
+      syncUserSession();
     } catch {}
   }, []);
 
@@ -501,6 +593,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setHapticFeedback,
         language,
         setLanguage,
+        user,
+        authToken,
+        logout,
+        syncUserSession,
         showToast,
       }}
     >

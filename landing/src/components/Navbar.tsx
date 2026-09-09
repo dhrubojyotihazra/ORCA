@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useApp } from '@/lib/app-context';
 import type { LucideIcon } from 'lucide-react';
 
 export interface NotchItemData {
@@ -72,6 +73,7 @@ const NAV_ITEMS: NotchItemData[] = [
 ];
 
 export function Navbar() {
+  const { user } = useApp();
   const [activeId, setActiveId] = useState<string>('hero');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const router = useRouter();
@@ -258,18 +260,31 @@ export function Navbar() {
               )}
             </button>
 
-            {/* 3. Right Action Slot: 👤 Sign In */}
+            {/* 3. Right Action Slot: 👤 Sign In / Workspace */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleSignIn}
-                aria-label="Sign in"
-                className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-xs font-medium text-zinc-200 hover:text-white transition-all outline-none"
-              >
-                <User className="size-3.5 text-teal-400" />
-                <span className="hidden sm:inline font-medium">Sign in</span>
-                <LogIn className="size-3 text-zinc-400" />
-              </button>
+              {user.isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={() => router.push('/app')}
+                  aria-label="Launch Workspace"
+                  className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-950/80 hover:bg-teal-900/90 border border-teal-500/40 text-xs font-semibold text-teal-300 hover:text-teal-200 transition-all outline-none shadow-[0_0_12px_rgba(20,184,166,0.25)]"
+                >
+                  <span className="size-2 rounded-full bg-teal-400 animate-pulse" />
+                  <span className="max-w-[70px] sm:max-w-[110px] truncate">{user.displayName || "Workspace"}</span>
+                  <LogIn className="size-3 text-teal-400" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSignIn}
+                  aria-label="Sign in"
+                  className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-xs font-medium text-zinc-200 hover:text-white transition-all outline-none"
+                >
+                  <User className="size-3.5 text-teal-400" />
+                  <span className="hidden sm:inline font-medium">Sign in</span>
+                  <LogIn className="size-3 text-zinc-400" />
+                </button>
+              )}
             </div>
 
           </div>

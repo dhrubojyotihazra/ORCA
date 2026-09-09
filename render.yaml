@@ -19,3 +19,9 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: "*"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

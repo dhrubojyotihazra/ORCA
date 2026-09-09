@@ -66,7 +66,9 @@ app.include_router(voice_router, prefix="/api/v1")
 # Convenience aliases under /api
 app.include_router(auth_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 app.include_router(alerts_router, prefix="/api")
+app.include_router(voice_router, prefix="/api")
 
 
 class AgentInvokeRequest(BaseModel):

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { GlassFilterDefs } from '@/components/GlassFilterDefs';
-import { OceanGlobeCard } from '@/components/OceanGlobeCard';
+import { AppDemoVideoPreview } from '@/components/AppDemoVideoPreview';
 import { FishyButton } from '@/components/ui/fishy-button';
 
 interface TrailPoint {
@@ -339,9 +339,9 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Right Column: Interactive 3D Cobe Globe with Key Coastal Fishing Grounds */}
-        <div id="demo" className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end scroll-mt-24">
-          <OceanGlobeCard />
+        {/* Right Column: Interactive App Demo Video Preview (Recorded with Recordly -> YouTube) */}
+        <div id="demo" className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end scroll-mt-24 pointer-events-auto">
+          <AppDemoVideoPreview />
         </div>
 
       </div>

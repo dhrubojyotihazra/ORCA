@@ -3,12 +3,21 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Play, ExternalLink, Sparkles } from 'lucide-react';
+import { MacbookPro } from '@/components/ui/macbook-pro';
 
 interface AppDemoVideoPreviewProps {
   videoSrc?: string;
   posterSrc?: string;
   youtubeUrl?: string;
   className?: string;
+}
+
+function YoutubeIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+    </svg>
+  );
 }
 
 export function AppDemoVideoPreview({
@@ -32,42 +41,37 @@ export function AppDemoVideoPreview({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-      className={`group relative w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[440px] select-none cursor-pointer ${className}`}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className={`group relative w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[500px] xl:max-w-[550px] select-none cursor-pointer transition-transform duration-500 ease-out hover:scale-[1.015] ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label="Watch full ORCA app walkthrough on YouTube"
     >
-      {/* ── Ambient Cyan Glow Behind the Chassis ── */}
-      <div className="absolute -inset-1 rounded-[30px] bg-gradient-to-r from-teal-500/20 via-cyan-500/30 to-sky-500/20 opacity-70 blur-xl group-hover:opacity-100 group-hover:blur-2xl transition-all duration-500 -z-10" />
+      {/* ── Oceanic Cyan Ambient Glow Behind MacBook ── */}
+      <div className="absolute -inset-2 sm:-inset-4 rounded-[30px] bg-gradient-to-r from-teal-500/20 via-cyan-500/35 to-blue-500/20 opacity-60 blur-2xl sm:blur-3xl group-hover:opacity-95 group-hover:blur-[36px] transition-all duration-700 -z-10 pointer-events-none" />
 
-      {/* ── Glass Chassis ── */}
-      <div className="relative rounded-[26px] overflow-hidden border border-cyan-400/25 group-hover:border-cyan-300/50 bg-[#031526]/85 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(6,182,212,0.18)] transition-all duration-500">
-        
-        {/* ── Window Title Bar ── */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-black/40 border-b border-white/10">
-          {/* Traffic Lights */}
-          <div className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-rose-500/80 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
-            <span className="size-2.5 rounded-full bg-amber-500/80 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
-            <span className="size-2.5 rounded-full bg-emerald-500/80 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
-          </div>
+      {/* ── Photorealistic MacBook Pro Chassis ── */}
+      <div className="relative w-full aspect-[650/400] drop-shadow-[0_25px_60px_rgba(0,0,0,0.85)]">
+        {/* SVG MacBook Hardware Frame */}
+        <MacbookPro
+          src={posterSrc}
+          className="w-full h-full text-black"
+        />
 
-          {/* Window Title */}
-          <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/70 font-medium tracking-wide">
-            <Sparkles className="size-3 text-cyan-300" />
-            <span>ORCA App Walkthrough</span>
-          </div>
-
-          {/* Live Preview Pill */}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[10px] font-mono font-bold text-cyan-300">
-            <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span>PREVIEW</span>
-          </div>
-        </div>
-
-        {/* ── Video Player Screen ── */}
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-black flex items-center justify-center">
+        {/* ── Interactive Screen Area Overlay (Coordinates match SVG screen viewport) ── */}
+        <div
+          className="absolute overflow-hidden rounded-[3px] sm:rounded-[5px] bg-[#020b14]"
+          style={{
+            left: '11.465%',
+            top: '5.33%',
+            width: '77.11%',
+            height: '80.96%',
+          }}
+        >
+          {/* Looping muted video preview (Recordly recording) or high-res poster */}
           {!hasVideoError ? (
             <video
               ref={videoRef}
@@ -78,61 +82,63 @@ export function AppDemoVideoPreview({
               muted
               playsInline
               onError={() => setHasVideoError(true)}
-              className="w-full h-full object-cover object-top filter brightness-[0.92] group-hover:brightness-100 transition-all duration-500"
+              className="w-full h-full object-cover object-top filter brightness-[0.94] contrast-[1.02] group-hover:brightness-100 transition-all duration-500"
             />
           ) : (
             <img
               src={posterSrc}
-              alt="ORCA App Demo Preview"
-              className="w-full h-full object-cover object-top filter brightness-[0.92] group-hover:brightness-100 transition-all duration-500"
+              alt="ORCA App Demo"
+              className="w-full h-full object-cover object-top filter brightness-[0.94] group-hover:brightness-100 transition-all duration-500"
             />
           )}
 
-          {/* Vignette & Glare Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+          {/* Notch Cover for camera authenticity */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[10.8%] h-[2.5%] min-h-[5px] bg-black rounded-b-[3px] z-20 pointer-events-none flex items-center justify-center">
+            <span className="size-[2px] sm:size-[3px] rounded-full bg-[#080d4c] shadow-[0_0_2px_rgba(59,130,246,0.6)]" />
+          </div>
 
-          {/* ── Floating YouTube Play Overlay ── */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 pointer-events-none">
-            {/* Play Button */}
+          {/* Screen Vignette Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent pointer-events-none z-10" />
+
+          {/* Live Preview Badge (Top Right of Screen) */}
+          <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20 flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md border border-cyan-400/30 text-[9px] sm:text-[10px] font-mono font-semibold text-cyan-300 shadow-lg pointer-events-none">
+            <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="tracking-wider uppercase">DEMO PREVIEW</span>
+          </div>
+
+          {/* ── Centered YouTube Play Badge ── */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-2.5 p-3 z-20 pointer-events-none">
+            {/* Play Button Icon */}
             <div className="relative flex items-center justify-center">
               {/* Pulsing ring */}
-              <span className="absolute size-14 sm:size-16 rounded-full bg-cyan-400/30 animate-ping opacity-60" />
+              <span className="absolute size-11 sm:size-14 rounded-full bg-cyan-400/30 animate-ping opacity-70" />
               
-              {/* Frosted Play Disc */}
-              <div className="relative size-14 sm:size-16 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 p-[2px] shadow-[0_0_30px_rgba(6,182,212,0.6)] group-hover:scale-110 group-hover:shadow-[0_0_40px_rgba(6,182,212,0.85)] transition-all duration-300">
-                <div className="w-full h-full rounded-full bg-[#021324]/90 backdrop-blur-md flex items-center justify-center">
-                  <Play className="size-6 sm:size-7 text-white fill-white ml-0.5" />
+              <div className="relative size-10 sm:size-12 rounded-full bg-gradient-to-br from-cyan-400 via-teal-500 to-cyan-600 p-[1.5px] shadow-[0_0_25px_rgba(6,182,212,0.6)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_35px_rgba(6,182,212,0.85)]">
+                <div className="w-full h-full rounded-full bg-[#031526]/90 backdrop-blur-xl flex items-center justify-center pl-0.5">
+                  <Play className="size-4 sm:size-5 text-cyan-300 fill-cyan-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
                 </div>
               </div>
             </div>
 
-            {/* YouTube Watch Pill */}
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-xs font-semibold shadow-lg group-hover:scale-105 transition-all duration-300">
-              <span className="text-rose-400 font-black tracking-tight">▶ YouTube</span>
-              <span className="text-white/80">·</span>
-              <span>Watch Full Demo</span>
-              <ExternalLink className="size-3 text-cyan-300 ml-0.5" />
+            {/* Click to Watch CTA Label */}
+            <div className="flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/15 text-white/90 shadow-xl transition-all duration-300 group-hover:border-cyan-400/50 group-hover:bg-cyan-950/80">
+              <YoutubeIcon className="size-3 sm:size-3.5 text-red-500" />
+              <span className="text-[10px] sm:text-xs font-medium tracking-wide">
+                Watch Full Walkthrough
+              </span>
+              <ExternalLink className="size-2.5 sm:size-3 text-cyan-300 opacity-80 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
 
-          {/* ── Bottom Quick Bar ── */}
-          <div className="absolute bottom-0 inset-x-0 px-3 py-2 bg-gradient-to-t from-black/95 to-transparent flex items-center justify-between text-[10px] font-mono text-white/70">
-            <span className="flex items-center gap-1 text-cyan-300/90 font-medium">
-              <span>●</span> Recorded with Recordly
+          {/* Bottom Metatag Strip */}
+          <div className="absolute bottom-2 left-2.5 right-2.5 z-20 hidden sm:flex items-center justify-between text-[9px] font-mono text-white/60 pointer-events-none">
+            <span className="flex items-center gap-1">
+              <Sparkles className="size-2.5 text-cyan-400" />
+              <span>ORCA v2.4 • Mission Dispatch</span>
             </span>
-            <span className="text-white/50">1080p HD</span>
+            <span>HD Walkthrough (Recordly)</span>
           </div>
         </div>
-
-        {/* ── Bottom Footer Status Bar ── */}
-        <div className="px-4 py-2.5 bg-black/50 border-t border-white/10 flex items-center justify-between text-[11px]">
-          <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-teal-400 shadow-[0_0_8px_#2dd4bf]" />
-            <span className="text-white font-medium">Interactive Demo Walkthrough</span>
-          </div>
-          <span className="font-mono text-cyan-300 text-[10px]">Click to Play ↗</span>
-        </div>
-
       </div>
     </motion.div>
   );

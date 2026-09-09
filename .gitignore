@@ -38,6 +38,9 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+*.tsbuildinfo
+AGENTS.md
+CLAUDE.md
 
 # Gemini & Agent Artifacts
 .gemini/

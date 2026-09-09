@@ -36,9 +36,12 @@ app = FastAPI(
     version="1.0.0",
 )
 
+allowed_origins_raw = os.getenv("ALLOWED_ORIGINS", "*")
+origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins if origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -316,4 +319,7 @@ async def generate_voice_tts(req: VoiceTTSRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    logger.info(f"Starting ORCA FastAPI server on {host}:{port}")
+    uvicorn.run(app, host=host, port=port)

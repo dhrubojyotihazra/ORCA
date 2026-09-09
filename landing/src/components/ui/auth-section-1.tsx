@@ -213,6 +213,17 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
     };
   }, [mode, method, role, errorMessage, successMessage, otpSent]);
 
+  const [windowWidth, setWindowWidth] = useState<number>(1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const rightAvatarSize = windowWidth < 900 ? 280 : windowWidth < 1150 ? 340 : 420;
+
   const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   // Expression override for Kirby:
@@ -493,7 +504,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
 
   return (
     <section
-      className={`min-h-[100dvh] w-full ${s.pageBg} antialiased [font-synthesis:none] flex items-center justify-center p-0 sm:p-4 md:p-6 transition-colors duration-500 overflow-y-auto lg:overflow-hidden relative`}
+      className={`min-h-[100dvh] w-full ${s.pageBg} antialiased [font-synthesis:none] flex items-center justify-center p-0 sm:p-4 md:p-6 transition-colors duration-500 overflow-y-auto md:overflow-hidden relative`}
     >
       {/* Scoped CSS for smooth authentication card scrollbar */}
       <style jsx global>{`
@@ -513,12 +524,12 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
       `}</style>
 
       {/* ── Main Two-Card Layout ── */}
-      <div className="grid w-full max-w-[1380px] min-h-[100dvh] sm:min-h-0 sm:h-full lg:h-[min(94dvh,840px)] gap-4 sm:gap-6 lg:grid-cols-[1fr_1.1fr] my-auto">
+      <div className="grid w-full max-w-[1380px] min-h-[100dvh] sm:min-h-0 sm:h-full md:h-[min(94dvh,840px)] gap-4 sm:gap-5 md:gap-6 md:grid-cols-[1fr_1fr] lg:grid-cols-[1fr_1.1fr] my-auto">
         {/* ══════════════════════════════════════════════════════════════ */}
         {/* ── Left Column: Master Neomorphic Authentication Card ── */}
         {/* ══════════════════════════════════════════════════════════════ */}
         <div
-          className={`relative flex flex-col rounded-none sm:rounded-[32px] overflow-hidden min-h-[100dvh] sm:min-h-0 max-h-none sm:max-h-[100dvh] lg:max-h-full ${s.card} transition-all duration-500`}
+          className={`relative flex flex-col rounded-none sm:rounded-[32px] overflow-hidden min-h-[100dvh] sm:min-h-0 max-h-none sm:max-h-[100dvh] md:max-h-full ${s.card} transition-all duration-500`}
         >
           {/* ── Underwater Seascape Photo Backdrop Layer (Image 2) ── */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
@@ -535,10 +546,10 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="auth-form-scrollbar relative z-10 flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:p-8 lg:p-10 flex flex-col scroll-smooth select-none pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.75rem,env(safe-area-inset-bottom))]"
+            className="auth-form-scrollbar relative z-10 flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:p-6 md:p-8 lg:p-10 flex flex-col scroll-smooth select-none pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.75rem,env(safe-area-inset-bottom))]"
           >
             <div className="mx-auto w-full max-w-[460px] space-y-3.5 sm:space-y-4 my-auto py-1 sm:py-2">
-            {/* ── Top Bar: Return Link + Badge + Mobile Studio + Theme Switch ── */}
+            {/* ── Top Bar: Return Link + Badge + Theme Switch ── */}
             <div className="flex items-center justify-between gap-2">
               <Link
                 href="/"
@@ -557,17 +568,6 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
                   <span>ISRO × INCOIS</span>
                 </div>
 
-                {/* Mobile Studio Drawer Trigger: allows phone users to explore animations & expressions */}
-                <button
-                  type="button"
-                  onClick={() => setIsStudioOpen((prev) => !prev)}
-                  className={`lg:hidden size-8 rounded-full ${s.themeSwitch} flex items-center justify-center transition-all duration-300 cursor-pointer touch-manipulation active:scale-90`}
-                  title="Explore 23 Animations & 28 Expressions"
-                  aria-label="Avatar Studio"
-                >
-                  <ZapIcon className="size-3.5 text-amber-400 drop-shadow" />
-                </button>
-
                 {/* Light / Dark Mode Toggle with touch-friendly 32px size */}
                 <button
                   type="button"
@@ -585,24 +585,16 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
               </div>
             </div>
 
-            {/* ── Headline & Mobile Cloudee Avatar (scales dynamically, reacts to mobile typing) ── */}
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h1 className={`text-xl sm:text-2xl md:text-[28px] font-extrabold tracking-tight ${s.heading}`}>
-                  {mode === "login" ? "Sign in to ORCA" : "Create an Account"}
-                </h1>
-                {mode === "register" && (
-                  <p className={`text-xs mt-0.5 ${s.subheading}`}>
-                    Coastal Operator Verification
-                  </p>
-                )}
-              </div>
-
-              {/* Mobile Live Reactive Cloudee Avatar (hidden on desktop where full column is active) */}
-              <div className="lg:hidden shrink-0 relative flex items-center justify-center">
-                <div className="absolute inset-0 -m-2 rounded-full bg-cyan-400/20 blur-md pointer-events-none animate-pulse" />
+            {/* ── Mobile Cloudee Mascot (visible on mobile only, centered with glow) ── */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 pb-1">
+              <div
+                className="relative cursor-pointer touch-manipulation active:scale-95 transition-transform"
+                onClick={() => setIsStudioOpen(true)}
+                title="Tap to open Cloudee Studio"
+              >
+                <div className="absolute inset-0 -m-3 rounded-full bg-cyan-400/25 blur-xl pointer-events-none animate-pulse" />
                 <CloudeeAvatar
-                  size={72}
+                  size={96}
                   manualTarget={manualAvatarTarget}
                   isPasswordFocused={isPasswordFocused}
                   isPasswordVisible={showPassword}
@@ -613,6 +605,18 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
                   accentColor="#06b6d4"
                 />
               </div>
+            </div>
+
+            {/* ── Headline ── */}
+            <div className="text-center md:text-left">
+              <h1 className={`text-xl sm:text-2xl md:text-[28px] font-extrabold tracking-tight ${s.heading}`}>
+                {mode === "login" ? "Sign in to ORCA" : "Create an Account"}
+              </h1>
+              {mode === "register" && (
+                <p className={`text-xs mt-0.5 ${s.subheading}`}>
+                  Coastal Operator Verification
+                </p>
+              )}
             </div>
 
             {/* ── Mode Switch: Sign In vs Create Account ── */}
@@ -1099,7 +1103,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
         {/* ══════════════════════════════════════════════════════════════ */}
         {/* ── Right Column: Visual Stage with Fluid Wave & Kirby Avatar ── */}
         {/* ══════════════════════════════════════════════════════════════ */}
-        <div className="relative hidden lg:flex overflow-hidden rounded-[32px] bg-[#0284c7] shadow-2xl border border-white/20 dark:border-t-cyan-400/35 dark:border-x-cyan-500/15 dark:border-b-black/80 dark:shadow-[0_24px_70px_rgba(0,0,0,0.95),0_0_45px_rgba(6,182,212,0.15)]">
+        <div className="relative hidden md:flex overflow-hidden rounded-[32px] bg-[#0284c7] shadow-2xl border border-white/20 dark:border-t-cyan-400/35 dark:border-x-cyan-500/15 dark:border-b-black/80 dark:shadow-[0_24px_70px_rgba(0,0,0,0.95),0_0_45px_rgba(6,182,212,0.15)]">
           {/* Underwater Seascape Backdrop Layer (active when rightStageBg is "underwater" or "hybrid") */}
           {(rightStageBg === "underwater" || rightStageBg === "hybrid") && (
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
@@ -1193,7 +1197,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
               )}
 
               <CloudeeAvatar
-                size={420}
+                size={rightAvatarSize}
                 manualTarget={manualAvatarTarget}
                 isPasswordFocused={isPasswordFocused}
                 isPasswordVisible={showPassword}

@@ -116,6 +116,18 @@ NODE_METADATA = {
 }
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "ORCA Multi-Agent Backend Service (ISRO SIH26176)",
+        "status": "online",
+        "health": "/health",
+        "docs": "/docs",
+        "engine": "LangGraph StateGraph DAG",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
+
+
 @app.get("/health")
 def health_check():
     return {

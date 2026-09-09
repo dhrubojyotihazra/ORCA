@@ -1,84 +1,43 @@
-# ─── Next.js ───────────────────────────────────────────────────────────────
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules/
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-!data/certs/incois_intermediate.pem
-landing/AGENTS.md
-landing/CLAUDE.md
-
-# debug & logs
-*.log
-*.log*
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-scratch/
-
-# env files
-.env*
-!.env.example
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# ─── Python ────────────────────────────────────────────────────────────────
-# Byte-compiled / optimized / DLL files
+# Python & Virtual Environments
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-dist/
-develop-eggs/
-downloads/
-eggs/
-.eggs/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
-.venv/
 venv/
-ENV/
+.venv/
 env/
+# Environment & Secrets (STRICT)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!.env.example
+migration_info.json
+*.pem
+*.key
+*.cert
+.pytest_cache/
 
-# IDEs and editors
+# Node.js & Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS and IDE Files
+.DS_Store
+Thumbs.db
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# Gemini & Agent Artifacts
+.gemini/

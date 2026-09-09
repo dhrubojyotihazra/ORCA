@@ -51,11 +51,13 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     vesselType,
     showToast,
     setIsSettingsOpen,
+    language,
   } = useApp();
 
   const isLight = theme === "light";
   const [inputText, setInputText] = useState("");
   const [isDictating, setIsDictating] = useState(false);
+  const [lastAsrProvider, setLastAsrProvider] = useState<"bhasini" | "groq" | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -221,6 +223,9 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
             setIsTranscribing(true);
             const formData = new FormData();
             formData.append("file", audioBlob, "speech.webm");
+            if (language) {
+              formData.append("language", language);
+            }
 
             const res = await fetch("/api/voice/transcribe", {
               method: "POST",
@@ -229,6 +234,11 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
 
             if (res.ok) {
               const data = await res.json();
+              if (data.provider === "bhasini") {
+                setLastAsrProvider("bhasini");
+              } else if (data.provider === "groq") {
+                setLastAsrProvider("groq");
+              }
               if (data.text && data.text.trim()) {
                 const transcribed = data.text.trim();
                 setInputText((prev) => {
@@ -241,7 +251,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
               }
             }
           } catch (fetchErr) {
-            console.warn("Groq Whisper transcription network error:", fetchErr);
+            console.warn("ASR transcription network error:", fetchErr);
           } finally {
             setIsTranscribing(false);
           }
@@ -756,7 +766,7 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
             onKeyDown={handleKeyDown}
             placeholder={
               isTranscribing
-                ? "Transcribing audio with Groq Whisper LPU..."
+                ? "Transcribing audio with Bhasini AI..."
                 : isDictating
                 ? "Recording voice... Speak now (Click mic again when finished)..."
                 : "Reply to Orca..."
@@ -793,6 +803,13 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
               <span className="text-[11px] font-mono text-slate-400">
                 {`ORCA Multi-Agent`}
               </span>
+
+              {lastAsrProvider === "bhasini" && (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="MeitY National AI Language Architecture">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Speech recognition via Bhasini (Government of India)
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

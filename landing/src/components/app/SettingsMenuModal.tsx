@@ -111,12 +111,13 @@ export function SettingsMenuModal() {
       id: "synth",
       name: "Multilingual Indic Synthesizer",
       desc: "Low-connectivity localized voice & structured bulletin formatting",
-      model: "Groq LPU / Whisper Small",
+      model: "Bhasini ULCA (MeitY) / Groq LPU Whisper",
       status: "Active",
     },
   ];
 
   const connectors = [
+    { name: "Digital India Bhasini Gateway", type: "MeitY National AI ASR / Indic NLP Pipeline", status: "Connected", ping: "85ms" },
     { name: "ISRO MOSDAC Satellite Telemetry", type: "Oceansat-3 & INSAT-3DR", status: "Connected", ping: "42ms" },
     { name: "INCOIS ERDDAP Marine Server", type: "Ocean State Forecasts & PFZ", status: "Connected", ping: "68ms" },
     { name: "NavIC Satellite Constellation", type: "Indian Regional GNSS / PNT", status: "Synchronized", ping: "12ms" },

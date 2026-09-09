@@ -43,6 +43,7 @@ export function VoiceOverlay() {
   const [isMuted, setIsMuted] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [lastUserSpeech, setLastUserSpeech] = useState("");
+  const [lastAsrProvider, setLastAsrProvider] = useState<"bhasini" | "groq" | null>(null);
   const [aiSpokenResponse, setAiSpokenResponse] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
   const [freqBands, setFreqBands] = useState<number[]>(new Array(20).fill(0));
@@ -411,6 +412,8 @@ export function VoiceOverlay() {
         if (audioBlob.size > 800) {
           const formData = new FormData();
           formData.append("file", audioBlob, "speech.webm");
+          const langCode = selectedLang.split("-")[0] || "en";
+          formData.append("language", langCode);
 
           const whisperRes = await fetch("/api/voice/transcribe", {
             method: "POST",
@@ -419,13 +422,18 @@ export function VoiceOverlay() {
 
           if (whisperRes.ok) {
             const data = await whisperRes.json();
+            if (data.provider === "bhasini") {
+              setLastAsrProvider("bhasini");
+            } else if (data.provider === "groq") {
+              setLastAsrProvider("groq");
+            }
             if (data.text && data.text.trim()) {
               queryText = data.text.trim();
             }
           }
         }
       } catch (whisperErr) {
-        console.warn("Whisper transcription error:", whisperErr);
+        console.warn("ASR transcription error:", whisperErr);
       }
     }
 
@@ -924,10 +932,10 @@ export function VoiceOverlay() {
             <div className="animate-fade-in space-y-1">
               <p className="text-[11px] font-mono text-amber-300 font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5">
                 <Loader2 className="size-3.5 animate-spin" />
-                <span>Groq Whisper Large-v3 Transcribing...</span>
+                <span>Bhasini AI Indic Speech Transcribing...</span>
               </p>
               <p className="text-xs text-slate-300">
-                Converting audio to text with high precision...
+                Converting Indic audio to text via MeitY National AI pipeline...
               </p>
             </div>
           ) : status === "speaking" ? (
@@ -946,11 +954,21 @@ export function VoiceOverlay() {
               <span>Synthesizing INCOIS wave, wind & safety data...</span>
             </div>
           ) : (
-            <div className="space-y-1 text-xs text-slate-300">
+            <div className="space-y-1.5 text-xs text-slate-300">
               {lastUserSpeech ? (
-                <div className="flex items-center justify-center gap-1.5 text-slate-300">
-                  <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
-                  <span>You: <strong className="text-cyan-300 font-medium italic">"{lastUserSpeech}"</strong></span>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center gap-1.5 text-slate-300">
+                    <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                    <span>You: <strong className="text-cyan-300 font-medium italic">"{lastUserSpeech}"</strong></span>
+                  </div>
+                  {lastAsrProvider === "bhasini" && (
+                    <div className="flex justify-center pt-0.5">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="MeitY National AI Language Architecture">
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Speech recognition via Bhasini (Government of India)
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-slate-400">

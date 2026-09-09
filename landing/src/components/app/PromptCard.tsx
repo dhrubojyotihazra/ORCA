@@ -22,11 +22,13 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     createNewChat,
     setIsVoiceActive,
     showToast,
+    language,
   } = useApp();
 
   const isLight = theme === "light";
   const [prompt, setPrompt] = useState(initialText);
   const [isDictating, setIsDictating] = useState(false);
+  const [lastAsrProvider, setLastAsrProvider] = useState<"bhasini" | "groq" | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dictationRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +142,9 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
             setIsTranscribing(true);
             const formData = new FormData();
             formData.append("file", audioBlob, "speech.webm");
+            if (language) {
+              formData.append("language", language);
+            }
 
             const res = await fetch("/api/voice/transcribe", {
               method: "POST",
@@ -148,6 +153,11 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
 
             if (res.ok) {
               const data = await res.json();
+              if (data.provider === "bhasini") {
+                setLastAsrProvider("bhasini");
+              } else if (data.provider === "groq") {
+                setLastAsrProvider("groq");
+              }
               if (data.text && data.text.trim()) {
                 const transcribed = data.text.trim();
                 setPrompt((prev) => {
@@ -160,7 +170,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
               }
             }
           } catch (fetchErr) {
-            console.warn("Groq Whisper transcription network error:", fetchErr);
+            console.warn("ASR transcription network error:", fetchErr);
           } finally {
             setIsTranscribing(false);
           }
@@ -281,7 +291,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
           onKeyDown={handleKeyDown}
           placeholder={
             isTranscribing
-              ? "Transcribing audio with Groq Whisper LPU..."
+              ? "Transcribing audio with Bhasini AI..."
               : isDictating
               ? "Recording voice... Speak now (Click mic again when finished)..."
               : "Ask about fishing zones, weather safety, or sea conditions..."
@@ -295,7 +305,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
 
         {/* ── Bottom Controls ── */}
         <div className="flex items-center justify-between gap-2 pt-2 select-none">
-          {/* Left: Attachment */}
+          {/* Left: Attachment & Provenance */}
           <div className="flex items-center gap-2">
             <input
               type="file"
@@ -316,6 +326,13 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
             >
               <Plus className="size-4 stroke-[2.5]" />
             </button>
+
+            {lastAsrProvider === "bhasini" && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="MeitY National AI Language Architecture">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Speech recognition via Bhasini (Government of India)
+              </span>
+            )}
           </div>
 
           {/* Right: Dictation (Speech to Text) + Gemini Live Voice Mode + Send */}

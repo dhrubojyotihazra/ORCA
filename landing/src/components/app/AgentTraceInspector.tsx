@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Activity,
   Layers,
+  Radio,
 } from "lucide-react";
 
 interface AgentTraceInspectorProps {
@@ -74,6 +75,24 @@ const AGENT_CONFIG: Record<
     accentColor: "text-rose-400",
     badgeBg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
     borderColor: "border-rose-500/30",
+  },
+  public_research: {
+    icon: Radio,
+    accentColor: "text-amber-400",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    borderColor: "border-amber-500/30",
+  },
+  public_research_specialist: {
+    icon: Radio,
+    accentColor: "text-amber-400",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    borderColor: "border-amber-500/30",
+  },
+  public_advisor: {
+    icon: Radio,
+    accentColor: "text-amber-400",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    borderColor: "border-amber-500/30",
   },
   synthesizer: {
     icon: Sparkles,

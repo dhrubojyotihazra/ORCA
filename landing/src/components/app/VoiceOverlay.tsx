@@ -962,11 +962,21 @@ export function VoiceOverlay() {
                     <span>You: <strong className="text-cyan-300 font-medium italic">"{lastUserSpeech}"</strong></span>
                   </div>
                   {lastAsrProvider === "bhasini" && (
-                    <div className="flex justify-center pt-0.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="MeitY National AI Language Architecture">
-                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Speech recognition via Bhasini (Government of India)
-                      </span>
+                    <div className="flex justify-center pt-1">
+                      <div
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[11px] font-medium bg-gradient-to-r from-[#0e1824] to-[#0a111a] text-slate-200 border border-white/[0.1] shadow-[0_4px_14px_rgba(0,0,0,0.6),inset_0_1px_1.5px_rgba(255,255,255,0.12)]"
+                        title="MeitY National AI Language Architecture (ULCA)"
+                      >
+                        <span className="relative flex size-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                        </span>
+                        <span className="font-semibold text-emerald-400 tracking-tight">Bhasini ASR</span>
+                        <span className="opacity-30">|</span>
+                        <span className="text-[10px] text-slate-300 font-normal">
+                          Speech recognition via Bhasini (Government of India)
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>

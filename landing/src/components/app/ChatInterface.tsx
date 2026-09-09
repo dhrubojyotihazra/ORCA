@@ -805,10 +805,24 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
               </span>
 
               {lastAsrProvider === "bhasini" && (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="MeitY National AI Language Architecture">
-                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Speech recognition via Bhasini (Government of India)
-                </span>
+                <div
+                  className={`hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-xl text-[10px] font-medium transition-all ${
+                    isLight
+                      ? "bg-[#edf3f9] text-slate-700 shadow-[-2px_-2px_5px_rgba(255,255,255,0.95),2px_2px_5px_rgba(175,192,212,0.45)] border border-white/80"
+                      : "bg-gradient-to-r from-[#111e2e]/90 to-[#0c1622]/90 text-slate-200 border border-white/[0.08] shadow-[0_3px_10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.12)]"
+                  }`}
+                  title="MeitY National AI Language Architecture (ULCA)"
+                >
+                  <span className="relative flex size-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                  </span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight">Bhasini ASR</span>
+                  <span className="opacity-30">|</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
+                    Speech recognition via Bhasini (Government of India)
+                  </span>
+                </div>
               )}
             </div>
 

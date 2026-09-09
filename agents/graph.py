@@ -53,9 +53,9 @@ def route_from_weather(state: AgentState) -> str:
 
 
 def route_from_risk(state: AgentState) -> str:
-    """Routes from risk_specialist to public_research_specialist if bulletins requested, else synthesizer."""
+    """Routes from risk_specialist to public_research_specialist if bulletins/safety requested, else synthesizer."""
     intents = state.get("intent", [])
-    if "public_bulletin" in intents:
+    if "public_bulletin" in intents or "safety" in intents:
         return "public_research_specialist"
     return "synthesizer"
 

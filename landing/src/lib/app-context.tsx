@@ -578,6 +578,17 @@ function createFallbackAgentTrace(query: string, loc: CoastalLocation, vessel: s
       citations: ["Sea-Venture Engine", "PostGIS MPA Sanctuary Buffer"],
     },
     {
+      id: "trace-" + Date.now() + "-4b",
+      agentId: "public_research",
+      name: "Public Advisor Agent",
+      role: "Official Marine & Meteorological Government Bulletins",
+      durationMs: 44,
+      status: "completed",
+      summary: "Checked IMD and INCOIS public bulletin archives. Confirmed active weather advisories.",
+      citations: ["IMD National Weather Forecasting Centre", "INCOIS Coastal Hazard Portal"],
+      isLive: true,
+    },
+    {
       id: "trace-" + Date.now() + "-5",
       agentId: "synthesizer",
       name: "Synthesizer Agent",

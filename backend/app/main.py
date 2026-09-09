@@ -106,7 +106,7 @@ NODE_METADATA = {
         "role": "Sea-Venture Hydrodynamics & Geofence Guard",
     },
     "public_research_specialist": {
-        "name": "Public Source Research Agent",
+        "name": "Public Advisor Agent",
         "role": "Official Marine & Meteorological Government Bulletins",
     },
     "synthesizer": {

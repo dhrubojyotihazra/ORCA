@@ -59,10 +59,14 @@ def planner_node(state: AgentState) -> Dict[str, Any]:
     # Weather (Waves, wind, cyclone)
     if any(k in query for k in ["wave", "wind", "cyclone", "weather", "hawa", "storm", "हवा", "লাটা", "বাতাস", "காற்று", "புயல்"]):
         intents.append("weather")
+        if "public_bulletin" not in intents and any(k in query for k in ["cyclone", "storm", "warning", "alert", "weather", "புயல்"]):
+            intents.append("public_bulletin")
         
     # Safety / Navigation
-    if any(k in query for k in ["safe", "safety", "danger", "index", "boat", "suraksha", "सुरक्षित", "নিরাপদ", "பாதுகாப்பு"]):
+    if any(k in query for k in ["safe", "safety", "danger", "index", "boat", "sail", "suraksha", "सुरक्षित", "নিরাপদ", "பாதுகாப்பு"]):
         intents.append("safety")
+        if "public_bulletin" not in intents:
+            intents.append("public_bulletin")
         
     # Geofence / IMBL border / Marine Protected Area
     if any(k in query for k in ["imbl", "border", "boundary", "mpa", "protected", "sanctuary", "restricted", "buffer zone", "সীমান্ত", "எல்லை"]):
@@ -70,15 +74,18 @@ def planner_node(state: AgentState) -> Dict[str, Any]:
         
     # Public Research Bulletin (Official Government Bulletins, IMD, NDMA, INCOIS public alerts)
     if any(k in query for k in [
-        "bulletin", "official alert", "imd alert", "cyclone warning", "ndma", "incois advisory",
+        "bulletin", "bulletins", "official alert", "imd alert", "cyclone warning", "ndma", "incois advisory",
         "public portal", "official notice", "government alert", "advisory", "advisories", "public bulletin",
-        "cyclone alert", "forecast bulletin", "official bulletin"
+        "cyclone alert", "forecast bulletin", "official bulletin", "warning", "warnings", "alert", "alerts",
+        "notice", "notices", "government", "sarkari", "khabar", "खबर", "বিজ্ঞপ্তি", "அறிவிப்பு",
+        "advisor", "public advisor", "research agent"
     ]):
-        intents.append("public_bulletin")
+        if "public_bulletin" not in intents:
+            intents.append("public_bulletin")
 
-    # If no specific intent matched, default to general situational advisory (PFZ + Weather + Safety)
+    # If no specific intent matched, default to general situational advisory (PFZ + Weather + Safety + Public Bulletin)
     if not intents:
-        intents = ["pfz", "weather", "safety"]
+        intents = ["pfz", "weather", "safety", "public_bulletin"]
         
     # 3. Location Extraction
     location: LocationDict = state.get("location") or {}

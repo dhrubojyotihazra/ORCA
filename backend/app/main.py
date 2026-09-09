@@ -116,7 +116,7 @@ NODE_METADATA = {
 }
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {
         "service": "ORCA Multi-Agent Backend Service (ISRO SIH26176)",
@@ -128,7 +128,7 @@ def root():
     }
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     return {
         "status": "online",

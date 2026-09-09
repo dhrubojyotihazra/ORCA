@@ -9,7 +9,7 @@ from typing import Dict, Any
 from .state import AgentState
 
 
-SYNTHESIZER_SYSTEM_PROMPT = """You are the ORCA Marine Synthesizer for ISRO SIH26176.
+SYNTHESIZER_SYSTEM_PROMPT = r"""You are the ORCA Marine Synthesizer for ISRO SIH26176.
 CRITICAL GROUNDING RULES:
 1. You MUST strictly cite ONLY the verified numeric data present in the provided specialist payloads.
 2. You are mathematically forbidden from assuming wave heights, fish zones, or safety conditions if data is absent.

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     // ──────────────────────────────────────────────
     // PRIMARY PATH: REAL PYTHON LANGGRAPH MULTI-AGENT DAG VIA FASTAPI
     // ──────────────────────────────────────────────
-    const backendBase = (process.env.BACKEND_URL || process.env.FASTAPI_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+    const backendBase = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || process.env.FASTAPI_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
     const FASTAPI_ENDPOINT = process.env.FASTAPI_AGENT_URL || `${backendBase}/api/agents/invoke`;
     try {
       const controller = new AbortController();

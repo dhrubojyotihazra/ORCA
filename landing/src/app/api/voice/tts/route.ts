@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Call FastAPI Neural TTS service
-    const backendBase = (process.env.BACKEND_URL || process.env.FASTAPI_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+    const backendBase = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || process.env.FASTAPI_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
     const fastApiResponse = await fetch(`${backendBase}/api/voice/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

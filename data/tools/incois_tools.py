@@ -1,9 +1,33 @@
 import datetime
 import math
+import os
 import requests
+import certifi
 from functools import lru_cache
 
 INCOIS_ERDDAP_BASE = "https://erddap.incois.gov.in/erddap"
+
+CERT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "certs"))
+INTERMEDIATE_PEM = os.path.join(CERT_DIR, "incois_intermediate.pem")
+BUNDLE_FILE = os.path.join(CERT_DIR, "orca_ca_bundle.pem")
+
+def get_incois_ca_bundle() -> str:
+    """
+    Returns verified CA bundle containing root certificates + pinned GlobalSign RSA OV SSL CA 2018
+    intermediate certificate required for validating *.incois.gov.in without disabling TLS validation.
+    """
+    if os.path.exists(BUNDLE_FILE):
+        return BUNDLE_FILE
+    os.makedirs(CERT_DIR, exist_ok=True)
+    with open(certifi.where(), "r", encoding="utf-8") as f_cert:
+        base_bundle = f_cert.read()
+    inter_cert = ""
+    if os.path.exists(INTERMEDIATE_PEM):
+        with open(INTERMEDIATE_PEM, "r", encoding="utf-8") as f_inter:
+            inter_cert = f_inter.read()
+    with open(BUNDLE_FILE, "w", encoding="utf-8") as f_out:
+        f_out.write(base_bundle.strip() + "\n\n" + inter_cert.strip() + "\n")
+    return BUNDLE_FILE
 
 def _haversine_dist_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculates great-circle distance between two geographic coordinates in km."""
@@ -108,7 +132,7 @@ def get_live_argo_sst(lat: float, lon: float, max_dist_nm: float = MAX_PFZ_OPERA
         f"&PRES>=0&PRES<=15&time>={since}"
     )
     try:
-        r = requests.get(url, verify=False, timeout=3.5)
+        r = requests.get(url, verify=get_incois_ca_bundle(), timeout=3.5)
         if r.status_code == 200:
             rows = r.json().get("table", {}).get("rows", [])
             valid_rows = [row for row in rows if row[3] is not None and -2 <= row[3] <= 40]
@@ -233,7 +257,7 @@ def get_live_ascat_wind(lat: float, lon: float) -> dict:
         f"?wind_speed%5B({last_date})%5D%5B(10.0)%5D%5B({lat_lo}):({lat_hi})%5D%5B({lon_lo}):({lon_hi})%5D"
     )
     try:
-        r = requests.get(url, verify=False, timeout=3.5)
+        r = requests.get(url, verify=get_incois_ca_bundle(), timeout=3.5)
         if r.status_code == 200:
             rows = r.json().get("table", {}).get("rows", [])
             valid_winds = [row[4] for row in rows if len(row) > 4 and row[4] is not None and row[4] > 0]

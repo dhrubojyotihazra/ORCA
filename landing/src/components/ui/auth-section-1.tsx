@@ -193,6 +193,18 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Light-touch rate limiting state (max 5 submissions per 60s)
+  const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
+  const attemptsRef = useRef<{ count: number; firstAttempt: number }>({ count: 0, firstAttempt: 0 });
+
+  useEffect(() => {
+    if (rateLimitCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setRateLimitCooldown((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [rateLimitCooldown]);
+
   // Viewport scroll detection for overflowing form content
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -291,6 +303,24 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    // Light-touch rate limit: prevent rapid repeated submission spam
+    if (rateLimitCooldown > 0) {
+      setErrorMessage(`Too many attempts. Cooldown active: please wait ${rateLimitCooldown}s.`);
+      return;
+    }
+
+    const now = Date.now();
+    if (now - attemptsRef.current.firstAttempt > 60000) {
+      attemptsRef.current = { count: 1, firstAttempt: now };
+    } else {
+      attemptsRef.current.count += 1;
+      if (attemptsRef.current.count > 5) {
+        setRateLimitCooldown(30);
+        setErrorMessage("Rate limit exceeded: 5 attempts per minute. Cooldown active (30s).");
+        return;
+      }
+    }
 
     if (mode === "login" && method === "phone" && !otpSent) {
       if (phone.replace(/\D/g, "").length < 10) {

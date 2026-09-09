@@ -24,6 +24,7 @@ node_modules/
 # misc
 .DS_Store
 *.pem
+!data/certs/incois_intermediate.pem
 landing/AGENTS.md
 landing/CLAUDE.md
 

@@ -58,7 +58,7 @@ graph TD
 1. **INCOIS ERDDAP**:
    - Host: `https://erddap.incois.gov.in/erddap/`
    - Datasets: `Indian_ARGO_Floats`, `incois_oceansat2_datasets`, `incois_argo_sst_weekly`
-   - Secure TLS connection with `{ rejectUnauthorized: false }` handling NIC intermediate certificates.
+   - Secure TLS connection with strict verification (`rejectUnauthorized: true`) using pinned government intermediate CA (`incois_intermediate.pem`).
 2. **ISRO MOSDAC**:
    - Host: `https://mosdac.gov.in`
    - Datasets: Oceansat-3 scatterometer wind vectors and OCM-3 Chlorophyll-a products.

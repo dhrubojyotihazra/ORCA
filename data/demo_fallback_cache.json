@@ -1,57 +1,52 @@
 {
   "mosdac": {
     "get_sst": {
-      "20.1_70.2_2026-09-02": {
+      "22.5_69.5_2026-09-10": {
         "status": "success",
-        "data": {
-          "lat": 20.1,
-          "lon": 70.2,
-          "date": "2026-09-02",
-          "sst": 29.5,
-          "unit": "Celsius",
-          "source": "MOSDAC_CACHE"
-        }
+        "data": {"lat": 22.5, "lon": 69.5, "date": "2026-09-10", "sst": 29.1, "unit": "Celsius", "source": "MOSDAC_CACHE"}
+      },
+      "9.0_78.5_2026-09-10": {
+        "status": "success",
+        "data": {"lat": 9.0, "lon": 78.5, "date": "2026-09-10", "sst": 30.2, "unit": "Celsius", "source": "MOSDAC_CACHE"}
       }
     },
     "get_chlorophyll": {
-      "20.1_70.2_2026-09-02": {
+      "22.5_69.5_2026-09-10": {
         "status": "success",
-        "data": {
-          "lat": 20.1,
-          "lon": 70.2,
-          "date": "2026-09-02",
-          "chlorophyll": 1.2,
-          "unit": "mg/m^3",
-          "source": "MOSDAC_CACHE"
-        }
+        "data": {"lat": 22.5, "lon": 69.5, "date": "2026-09-10", "chlorophyll": 1.4, "unit": "mg/m^3", "source": "MOSDAC_CACHE"}
+      },
+      "9.0_78.5_2026-09-10": {
+        "status": "success",
+        "data": {"lat": 9.0, "lon": 78.5, "date": "2026-09-10", "chlorophyll": 0.8, "unit": "mg/m^3", "source": "MOSDAC_CACHE"}
+      }
+    },
+    "get_ocean_current": {
+      "22.5_69.5_2026-09-10": {
+        "status": "success",
+        "data": {"lat": 22.5, "lon": 69.5, "date": "2026-09-10", "speed": 0.6, "speed_unit": "m/s", "direction": 140.0, "direction_unit": "degrees", "source": "MOSDAC_CACHE"}
       }
     }
   },
   "incois": {
     "get_pfz_advisories": {
-      "Gujarat_2026-09-02": {
+      "Gujarat_2026-09-10": {
         "status": "success",
         "data": {
           "sector": "Gujarat",
-          "date": "2026-09-02",
-          "pfz_zones": [
-            {"lat": 20.1, "lon": 70.2, "depth": "30-50m"},
-            {"lat": 20.3, "lon": 70.5, "depth": "50-100m"}
-          ],
+          "date": "2026-09-10",
+          "pfz_zones": [{"lat": 22.1, "lon": 69.2, "depth": "40-60m"}, {"lat": 21.8, "lon": 69.8, "depth": "50-80m"}],
           "source": "INCOIS_CACHE"
         }
       }
     },
     "get_hazard_alerts": {
-      "20.1_70.2_2026-09-02": {
+      "22.5_69.5_2026-09-10": {
         "status": "success",
         "data": {
-          "lat": 20.1,
-          "lon": 70.2,
-          "date": "2026-09-02",
-          "alerts": [
-            {"type": "High Wave", "severity": "Warning", "message": "High waves expected up to 3m."}
-          ],
+          "lat": 22.5,
+          "lon": 69.5,
+          "date": "2026-09-10",
+          "alerts": [{"type": "High Wave", "severity": "Warning", "message": "High waves 2.5m - 3.0m expected off Gujarat coast."}],
           "source": "INCOIS_CACHE"
         }
       }

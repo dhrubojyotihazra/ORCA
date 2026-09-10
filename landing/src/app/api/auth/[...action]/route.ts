@@ -70,6 +70,12 @@ async function proxyAuth(req: NextRequest, { params }: { params: Promise<{ actio
         is_anonymous: false,
       });
     }
+    if (actionPath === "google") {
+      const redirectUrl = req.nextUrl.searchParams.get("redirect_to") || "http://localhost:3000/app";
+      return NextResponse.json({
+        url: `https://tpsbavjmnqevlvrermnf.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`,
+      });
+    }
     return NextResponse.json({ status: "success" });
   }
 }

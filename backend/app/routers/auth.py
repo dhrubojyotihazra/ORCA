@@ -32,10 +32,10 @@ async def verify_otp(body: OtpVerifyRequest):
     """Verify phone OTP"""
     return await AuthService.verify_otp(phone=body.phone, token=body.token)
 
-@router.post("/google")
-async def google_auth():
+@router.api_route("/google", methods=["GET", "POST"])
+async def google_auth(redirect_to: Optional[str] = None):
     """Get Google OAuth redirect URL"""
-    return await AuthService.get_google_auth_url()
+    return await AuthService.get_google_auth_url(redirect_to=redirect_to)
 
 @router.get("/me")
 async def get_me(current_user: Dict[str, Any] = Depends(get_current_user)):

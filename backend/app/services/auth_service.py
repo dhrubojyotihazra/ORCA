@@ -204,14 +204,21 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     @staticmethod
-    async def get_google_auth_url() -> Dict[str, str]:
+    async def get_google_auth_url(redirect_to: Optional[str] = None) -> Dict[str, str]:
         client = get_supabase_client()
+        target_redirect = redirect_to or "http://localhost:3000/app"
         if not client:
-            return {"url": "https://accounts.google.com/o/oauth2/auth?mock=true"}
+            return {"url": f"https://accounts.google.com/o/oauth2/auth?mock=true&redirect={target_redirect}"}
             
         try:
-            res = client.auth.get_url_for_provider("google", {"redirect_to": "http://localhost:3000/auth/callback"})
+            res = client.auth.sign_in_with_oauth({
+                "provider": "google",
+                "options": {
+                    "redirect_to": target_redirect
+                }
+            })
             return {"url": res.url}
         except Exception as e:
             logger.error(f"Google auth URL error: {e}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            direct_url = f"https://tpsbavjmnqevlvrermnf.supabase.co/auth/v1/authorize?provider=google&redirect_to={target_redirect}"
+            return {"url": direct_url}

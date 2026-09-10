@@ -649,6 +649,7 @@ function parseJwtPayload(token: string): any {
           location: userLocation,
           vesselType,
           userRole,
+          language,
         }),
       })
         .then(async (r) => {
@@ -777,6 +778,7 @@ function parseJwtPayload(token: string): any {
         location: userLocation,
         vesselType,
         userRole,
+        language,
       }),
     })
       .then(async (r) => {

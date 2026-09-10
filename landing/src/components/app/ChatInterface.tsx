@@ -52,9 +52,22 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
     showToast,
     setIsSettingsOpen,
     language,
+    user,
   } = useApp();
 
   const isLight = theme === "light";
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
+
+  const userInitial = user?.displayName
+    ? user.displayName.charAt(0).toUpperCase()
+    : user?.email
+    ? user.email.charAt(0).toUpperCase()
+    : "D";
+
   const [inputText, setInputText] = useState("");
   const [isDictating, setIsDictating] = useState(false);
   const [lastAsrProvider, setLastAsrProvider] = useState<"bhasini" | "groq" | null>(null);
@@ -465,11 +478,22 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
           {/* User Profile / Settings Menu Trigger */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="size-7 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-1 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0"
+            data-tour="operator-profile-btn"
+            className="size-7 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-1 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden relative"
             title="Operator Settings & Profile"
             aria-label="Operator Settings & Profile"
           >
-            D
+            {user?.avatarUrl && !avatarError ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.displayName || "Operator"}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              userInitial
+            )}
           </button>
         </div>
       </div>
@@ -544,8 +568,18 @@ export function ChatInterface({ chat }: ChatInterfaceProps) {
                 </div>
 
                 {/* User Avatar */}
-                <div className="size-8 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm self-start mt-1">
-                  D
+                <div className="size-8 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm self-start mt-1 overflow-hidden relative">
+                  {user?.avatarUrl && !avatarError ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.displayName || "User"}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    userInitial
+                  )}
                 </div>
               </div>
             );

@@ -22,15 +22,38 @@ interface ChatRequestBody {
   vesselType?: "small" | "medium" | "large";
   userRole?: "fisher" | "coast_guard" | "port_operator" | "scientist";
   role?: string;
+  language?: string;
 }
 
-// Language detector
-function detectLanguage(text: string): "en" | "hi" | "bn" | "ta" | "mr" {
+const LANGUAGE_META: Record<string, { name: string; native: string; script: string }> = {
+  bn: { name: "Bengali", native: "বাংলা", script: "Bengali script" },
+  hi: { name: "Hindi", native: "हिन्दी", script: "Devanagari script" },
+  mr: { name: "Marathi", native: "मराठी", script: "Devanagari script" },
+  pa: { name: "Punjabi", native: "ਪੰਜਾਬੀ", script: "Gurmukhi script" },
+  ta: { name: "Tamil", native: "தமிழ்", script: "Tamil script" },
+  te: { name: "Telugu", native: "తెలుగు", script: "Telugu script" },
+  or: { name: "Odia", native: "ଓଡ଼ିଆ", script: "Odia script" },
+  gu: { name: "Gujarati", native: "ગુજરાતી", script: "Gujarati script" },
+  ml: { name: "Malayalam", native: "മലയാളം", script: "Malayalam script" },
+  kn: { name: "Kannada", native: "ಕನ್ನಡ", script: "Kannada script" },
+};
+
+// Comprehensive Indic Language & Script detector
+function detectLanguage(text: string, requestedLang?: string): string {
   if (/[\u0980-\u09FF]/.test(text)) return "bn"; // Bengali
+  if (/[\u0A00-\u0A7F]/.test(text)) return "pa"; // Punjabi (Gurmukhi)
+  if (/[\u0A80-\u0AFF]/.test(text)) return "gu"; // Gujarati
+  if (/[\u0B00-\u0B7F]/.test(text)) return "or"; // Odia
   if (/[\u0B80-\u0BFF]/.test(text)) return "ta"; // Tamil
+  if (/[\u0C00-\u0C7F]/.test(text)) return "te"; // Telugu
+  if (/[\u0C80-\u0CFF]/.test(text)) return "kn"; // Kannada
+  if (/[\u0D00-\u0D7F]/.test(text)) return "ml"; // Malayalam
   if (/[\u0900-\u097F]/.test(text)) {
-    if (["आहे", "कशी", "लाटा", "हवामान", "मासे"].some((w) => text.includes(w))) return "mr"; // Marathi
+    if (["आहे", "कशी", "लाटा", "हवामान", "मासे", "मार्ग", "कोणता", "बंदरापासून", "स्थिती", "लक्षात", "घेता", "सध्याचे", "सर्वात", "सुरक्षित"].some((w) => text.includes(w))) return "mr"; // Marathi
     return "hi"; // Hindi
+  }
+  if (requestedLang && requestedLang !== "en" && requestedLang in LANGUAGE_META) {
+    return requestedLang;
   }
   return "en";
 }
@@ -56,6 +79,8 @@ export async function POST(req: NextRequest) {
     const validRoles = ["fisher", "coast_guard", "port_operator", "scientist"];
     const rawRole = (body.userRole || body.role || "fisher").toLowerCase().trim();
     const userRole = validRoles.includes(rawRole) ? rawRole : "fisher";
+    const detectedLang = detectLanguage(userMessage, body.language);
+    const langMeta = LANGUAGE_META[detectedLang];
 
     // ──────────────────────────────────────────────
     // PRIMARY PATH: REAL PYTHON LANGGRAPH MULTI-AGENT DAG VIA FASTAPI
@@ -79,7 +104,7 @@ export async function POST(req: NextRequest) {
           },
           vessel_type: vesselType,
           user_role: userRole,
-          language: detectLanguage(userMessage),
+          language: detectedLang,
           messages: messages.slice(-5),
         }),
         signal: controller.signal,
@@ -167,7 +192,6 @@ export async function POST(req: NextRequest) {
       intents.push("pfz", "weather", "safety");
     }
 
-    const detectedLang = detectLanguage(userMessage);
     const plannerDuration = Date.now() - plannerStart + 18; // slight jitter for realism
 
     agentTrace.push({
@@ -332,7 +356,7 @@ MANDATORY SYNTHESIS RULES:
 4. Mathematical Precision: Include the Sea-Venture Safety Index formula in LaTeX:
    $$\\text{Safety Index} = 100 - (w_1 \\cdot H_s + w_2 \\cdot W + w_3 \\cdot L) - \\text{Penalty}_{\\text{vessel}}$$
 5. Plain Bearing & Distance: Express target fishing coordinates with bearing and distance in Nautical Miles.
-6. Multilingual Respect: If the user asked in ${detectedLang.toUpperCase()} (${detectedLang !== "en" ? "Regional Indic script detected" : "English"}), formulate your response with bilingual support (regional greeting/summary followed by technical synthesis).
+6. CRITICAL MULTILINGUAL MANDATE: If the user asked in or selected a regional Indian language (${langMeta ? `${langMeta.name} / ${langMeta.native}` : "English"}), you MUST generate the ENTIRE advisory in ${langMeta ? `${langMeta.name} (${langMeta.native})` : "English"} using ${langMeta ? langMeta.script : "Latin"}. Every heading, verdict banner, sea & wave description, wind report, and safety rule MUST be written in natural, fluent ${langMeta ? langMeta.name : "English"}. DO NOT output in English if a regional language was used or selected.
 7. Strict Grounding: Cite ONLY the verified numbers provided above. Never invent wave heights or coordinates.`;
 
     const fullMessages = [

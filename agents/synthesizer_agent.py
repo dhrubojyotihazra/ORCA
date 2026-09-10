@@ -48,8 +48,11 @@ ROLE-AWARE REGISTER PROFILES (Format strictly according to state.user_role):
      * **Fishing Advice**: Direction & distance in miles + best target fish (ONLY if fish/PFZ queried).
      * **Official Public Bulletins**: Official public bulletin findings or clear statement that no matching bulletin was found on checked government portals.
      * **Safety Rule**: 1 clear takeaway relevant to the question.
-   - If regional language detected, write in that regional language using everyday coastal vocabulary.
-   - Conclude with the mandatory 1-line evidence footer.
+    - MANDATORY MULTILINGUAL SCRIPT DIRECTIVE:
+      If a regional Indian language is specified or detected (e.g., Bengali, Hindi, Marathi, Punjabi, Tamil, Telugu, Odia, Gujarati, Malayalam, Kannada), you MUST write the COMPLETE response in that regional language and its native script.
+      Every section heading, caution badge, sea & wave description, wind report, and safety rule MUST be fully translated into the target regional language.
+      DO NOT output in English if a regional language was used or specified.
+    - Conclude with the mandatory 1-line evidence footer.
 
 2. 'coast_guard':
    - Audience: Indian Coast Guard (ICG) commanders & coastal surveillance officers.
@@ -103,26 +106,97 @@ VESSEL_SPECS = {
     },
 }
 
+LANGUAGE_MAP = {
+    "bn": ("Bengali", "বাংলা", "Bengali script"),
+    "hi": ("Hindi", "हिन्दी", "Devanagari script"),
+    "mr": ("Marathi", "मराठी", "Devanagari script"),
+    "pa": ("Punjabi", "ਪੰਜਾਬੀ", "Gurmukhi script"),
+    "ta": ("Tamil", "தமிழ்", "Tamil script"),
+    "te": ("Telugu", "తెలుగు", "Telugu script"),
+    "or": ("Odia", "ଓଡ଼ିଆ", "Odia script"),
+    "gu": ("Gujarati", "ગુજરાતી", "Gujarati script"),
+    "ml": ("Malayalam", "മലയാളം", "Malayalam script"),
+    "kn": ("Kannada", "ಕನ್ನಡ", "Kannada script"),
+}
+
 REGIONAL_TEMPLATES = {
-    "hi": {
-        "title": "🌊 ओर्का समुद्री सलाहकार रिपोर्ट (ORCA Marine Advisory)",
-        "safety_warn": "⚠️ सावधानी: समुद्र में जाने से पहले सुरक्षा सूचकांक की जांच करें।",
-    },
     "bn": {
         "title": "🌊 ওরকা সামুদ্রিক উপদেষ্টা রিপোর্ট (ORCA Marine Advisory)",
-        "safety_warn": "⚠️ সতর্কতা: সমুদ্রে যাওয়ার আগে সুরক্ষা সূচক পরীক্ষা করুন।",
-    },
-    "ta": {
-        "title": "🌊 ஓர்கா கடல்சார் ஆலோசனை அறிக்கை (ORCA Marine Advisory)",
-        "safety_warn": "⚠️ எச்சரிக்கை: கடலுக்குச் செல்வதற்கு முன் பாதுகாப்பு குறியீட்டைச் சரிபார்க்கவும்.",
+        "safe": "🟢 সমুদ্রে যাওয়া নিরাপদ",
+        "caution": "🟡 সতর্কতা: সমুদ্রযাত্রা বিলম্বিত করুন / রেডিও পর্যবেক্ষণ করুন",
+        "danger": "🔴 বিপজ্জনক: আজ সমুদ্রে যাবেন না - বন্দরে থাকুন",
+        "sea_waves": "সমুদ্র ও ঢেউয়ের অবস্থা",
+        "wind_weather": "বাতাস ও আবহাওয়া",
+        "fishing": "মৎস্য শিকার ও সম্ভাব্য ক্ষেত্র",
+        "boundaries": "উপকূলীয় ও সীমান্ত অঞ্চল",
+        "notice": "ℹ️ উপকূলীয় বিজ্ঞপ্তি",
+        "source": "উৎস",
+        "observed": "পর্যবেক্ষিত",
     },
     "mr": {
         "title": "🌊 ओर्का सागरी सल्लागार अहवाल (ORCA Marine Advisory)",
-        "safety_warn": "⚠️ सावधान: समुद्रात जाण्यापूर्वी सुरक्षा निर्देशांकाची खात्री करा.",
+        "safe": "🟢 समुद्रात जाणे सुरक्षित आहे",
+        "caution": "🟡 सावधान: प्रवास पुढे ढकला / रेडिओ तपासा",
+        "danger": "🔴 धोकादायक: आज समुद्रात जाऊ नका - बंदरातच राहा",
+        "sea_waves": "समुद्र आणि लाटांची स्थिती",
+        "wind_weather": "वारा आणि हवामान",
+        "fishing": "मासेमारी क्षेत्र व संभाव्य मासे",
+        "boundaries": "सागरी सीमा व संरक्षित क्षेत्र",
+        "notice": "ℹ️ सागरी सूचना",
+        "source": "स्रोत",
+        "observed": "निरीक्षण वेळ",
+    },
+    "pa": {
+        "title": "🌊 ਓਰਕਾ ਸਮੁੰਦਰੀ ਸਲਾਹਕਾਰ ਰਿਪੋਰਟ (ORCA Marine Advisory)",
+        "safe": "🟢 ਸਮੁੰਦਰ ਵਿੱਚ ਜਾਣਾ ਸੁਰੱਖਿਅਤ ਹੈ",
+        "caution": "🟡 ਚੇਤਾਵਨੀ: ਰਵਾਨਗੀ ਵਿੱਚ ਦੇਰੀ ਕਰੋ / ਰੇਡੀਓ ਦੀ ਜਾਂਚ ਕਰੋ",
+        "danger": "🔴 ਖ਼ਤਰਨਾਕ: ਅੱਜ ਸਮੁੰਦਰ ਵਿੱਚ ਨਾ ਜਾਓ - ਬੰਦਰਗਾਹ ਵਿੱਚ ਰਹੋ",
+        "sea_waves": "ਸਮੁੰਦਰ ਅਤੇ ਲਹਿਰਾਂ ਦੀ ਸਥਿਤੀ",
+        "wind_weather": "ਹਵਾ ਅਤੇ ਮੌਸਮ",
+        "fishing": "ਮੱਛੀ ਫੜਨ ਵਾਲੇ ਖੇਤਰ",
+        "boundaries": "ਤੱਟਵਰਤੀ ਸੀਮਾਵਾਂ",
+        "notice": "ℹ️ ਤੱਟਵਰਤੀ ਸੂਚਨਾ",
+        "source": "ਸਰੋਤ",
+        "observed": "ਨਿਰੀਖਣ",
+    },
+    "hi": {
+        "title": "🌊 ओर्का समुद्री सलाहकार रिपोर्ट (ORCA Marine Advisory)",
+        "safe": "🟢 समुद्र में जाना सुरक्षित है",
+        "caution": "🟡 सावधानी: रवाना होने से पहले रेडियो जाँच करें",
+        "danger": "🔴 खतरनाक: आज समुद्र में न जाएं - बंदरगाह में रहें",
+        "sea_waves": "समुद्र और लहरें",
+        "wind_weather": "हवा और मौसम",
+        "fishing": "मछली पकड़ने के क्षेत्र",
+        "boundaries": "तटीय सीमाएं",
+        "notice": "ℹ️ तटीय सूचना",
+        "source": "स्रोत",
+        "observed": "अवलोकन",
+    },
+    "ta": {
+        "title": "🌊 ஓர்கா கடல்சார் ஆலோசனை அறிக்கை (ORCA Marine Advisory)",
+        "safe": "🟢 கடலுக்குச் செல்வது பாதுகாப்பானது",
+        "caution": "🟡 எச்சரிக்கை: புறப்படுவதைத் தள்ளிப் போடவும் / வானொலியைச் சரிபார்க்கவும்",
+        "danger": "🔴 ஆபத்தானது: இன்று கடலுக்குச் செல்ல வேண்டாம் - துறைமுகத்திலேயே இருக்கவும்",
+        "sea_waves": "கடல் மற்றும் அலைகளின் நிலை",
+        "wind_weather": "காற்று மற்றும் வானிலை",
+        "fishing": "மீன்பிடி பகுதிகள்",
+        "boundaries": "கடலோர எல்லைகள்",
+        "notice": "ℹ️ கடலோர அறிவிப்பு",
+        "source": "ஆதாரம்",
+        "observed": "கண்காணிக்கப்பட்டது",
     },
     "en": {
         "title": "🌊 ORCA Marine Advisory & Telemetry Synthesis",
-        "safety_warn": "⚠️ Advisory: Verify vessel seaworthiness before entering coastal corridors.",
+        "safe": "🟢 Safe to venture out to sea today",
+        "caution": "🟡 Caution: Consider delaying sea departure / check radio",
+        "danger": "🔴 Hazardous: DO NOT venture out to sea today - Stay in port",
+        "sea_waves": "Current Sea Conditions",
+        "wind_weather": "Wind & Weather",
+        "fishing": "Fishing Grounds & Catches",
+        "boundaries": "Coastal Boundaries",
+        "notice": "ℹ️ Operational Coastal Notice",
+        "source": "Source",
+        "observed": "Observed",
     }
 }
 
@@ -159,13 +233,25 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
     has_risk = bool(risk and risk.get("safety_index") is not None)
     has_geofence = bool(risk and "mpa_distance_nm" in risk)
 
+    # Multilingual mandate formulation
+    if lang != "en" and lang in LANGUAGE_MAP:
+        lang_name, native_name, script = LANGUAGE_MAP[lang]
+        lang_directive = (
+            f"CRITICAL MULTILINGUAL MANDATE: The user's query is in {lang_name} ({native_name}).\n"
+            f"  * YOU MUST WRITE THE ENTIRE RESPONSE IN {lang_name} ({native_name}) using {script}.\n"
+            f"  * Translate all headings, caution badges, wave heights, wind, and advice directly into {lang_name}.\n"
+            f"  * DO NOT output in English. Zero English sentences allowed except standard acronyms like IMD, INCOIS, MOSDAC."
+        )
+    else:
+        lang_directive = "- Language: English (EN)"
+
     # Dynamic grounded context construction - zero fabrication of unqueried domains
     context_lines = [
         "VERIFIED SPECIALIST TELEMETRY (STRICT GROUND TRUTH - DO NOT INVENT UNQUERIED DATA):",
         f"- Target User Role Register: {user_role.upper()} (MUST ADOPT THE '{user_role}' REGISTER PROFILE DEFINED ABOVE)",
         f"- Location Anchor: {port_name} ({sector})",
         f"- Target Vessel: {vessel_display}",
-        f"- Target Language: {lang.upper()} (Respond in {lang} if regional, or English with regional header)",
+        lang_directive,
     ]
 
     if has_ocean:

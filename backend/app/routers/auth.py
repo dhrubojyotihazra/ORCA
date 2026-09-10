@@ -8,7 +8,7 @@ from app.models.user import (
 )
 from app.services.auth_service import AuthService
 from app.dependencies import get_current_user
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

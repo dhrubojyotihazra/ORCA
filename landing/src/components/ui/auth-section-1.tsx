@@ -35,6 +35,7 @@ import { CloudeeAvatar, type TargetOverride } from "@/components/avatar/CloudeeA
 import { CloudeeStudioDrawer } from "@/components/avatar/CloudeeStudioDrawer";
 import { GlassButton, ZapIcon } from "@/components/ui/glass-button";
 import { FishyButton } from "@/components/ui/fishy-button";
+import { supabase } from "@/lib/supabase";
 
 // ── Data & Types ──
 
@@ -299,24 +300,30 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
     }
   };
 
-  // Handle Google OAuth Sign-In via Supabase
+  // Handle Google OAuth Sign-In via Supabase Client SDK
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
       const redirectUrl = `${window.location.origin}/app`;
-      const res = await fetch(`/api/auth/google?redirect_to=${encodeURIComponent(redirectUrl)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
       }
-      window.location.href = `https://tpsbavjmnqevlvrermnf.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
-    } catch (err) {
-      console.warn("Google OAuth redirect error:", err);
-      window.location.href = `https://tpsbavjmnqevlvrermnf.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/app")}`;
+    } catch (err: any) {
+      console.error("Google OAuth error:", err);
+      setIsLoading(false);
+      setErrorMessage(err.message || "Failed to initiate Google sign-in. Please try again.");
     }
   };
 
@@ -351,19 +358,27 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
       }
       setIsLoading(true);
       try {
-        await fetch("/api/auth/otp/send", {
+        const res = await fetch("/api/auth/otp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: `+91${cleanPhone}` }),
         });
-      } catch (err) {
-        console.warn("OTP send fallback:", err);
-      } finally {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Failed to send OTP.");
+        }
         setIsLoading(false);
         setOtpSent(true);
         setResendTimer(30);
         setIsOtpFocused(true);
-        setTimeout(() => otpInputsRef.current[0]?.focus(), 100);
+        setSuccessMessage(data.message || `Verification code sent to +91 ${cleanPhone}`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+          otpInputsRef.current[0]?.focus();
+        }, 2000);
+      } catch (err: any) {
+        setIsLoading(false);
+        setErrorMessage(err.message || "Failed to initiate OTP. Please try again.");
       }
       return;
     }
@@ -385,18 +400,24 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           }),
         });
         const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Invalid or expired OTP code.");
+        }
         if (data.access_token) {
           localStorage.setItem("orca_access_token", data.access_token);
           localStorage.setItem("orca_user_id", data.user_id || "");
           localStorage.setItem("orca_user_phone", phone);
+          localStorage.setItem("orca_user_name", `Officer ${phone.slice(-4)}`);
         }
-      } catch (err) {
-        console.warn("OTP verify error fallback:", err);
+        setIsLoading(false);
+        setSuccessMessage("Identity verified! Welcome aboard.");
+        setTimeout(() => router.push("/app"), 800);
+        return;
+      } catch (err: any) {
+        setIsLoading(false);
+        setErrorMessage(err.message || "Invalid OTP code. Please verify.");
+        return;
       }
-      setIsLoading(false);
-      setSuccessMessage("Identity verified! Welcome aboard.");
-      setTimeout(() => router.push("/app"), 900);
-      return;
     }
 
     if (mode === "login" && method === "email") {
@@ -413,21 +434,21 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
         const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email: email.trim(), password }),
         });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || "Invalid credentials.");
-        }
         const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Invalid email or passcode.");
+        }
         if (data.access_token) {
           localStorage.setItem("orca_access_token", data.access_token);
           localStorage.setItem("orca_user_id", data.user_id || "");
-          localStorage.setItem("orca_user_email", email);
+          localStorage.setItem("orca_user_email", email.trim());
+          localStorage.setItem("orca_user_name", email.split("@")[0]);
         }
         setIsLoading(false);
         setSuccessMessage("Identity verified! Welcome aboard.");
-        setTimeout(() => router.push("/app"), 900);
+        setTimeout(() => router.push("/app"), 800);
         return;
       } catch (err: any) {
         setIsLoading(false);
@@ -481,7 +502,13 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           }),
         });
         const signupData = await signupRes.json();
-        const token = signupData.access_token || `mock-jwt-token-${Date.now()}`;
+        if (!signupRes.ok) {
+          throw new Error(signupData.detail || "Registration failed. Please check inputs.");
+        }
+        if (!signupData.access_token) {
+          throw new Error("Account created, but authentication token was not returned.");
+        }
+        const token = signupData.access_token;
         localStorage.setItem("orca_access_token", token);
         localStorage.setItem("orca_user_id", signupData.user_id || "");
         localStorage.setItem("orca_user_name", name);
@@ -509,7 +536,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
 
         setIsLoading(false);
         setSuccessMessage("Account registered! Initializing dashboard...");
-        setTimeout(() => router.push("/app"), 900);
+        setTimeout(() => router.push("/app"), 800);
         return;
       } catch (err: any) {
         setIsLoading(false);

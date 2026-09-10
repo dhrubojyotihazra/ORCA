@@ -8,6 +8,7 @@ import {
   AgentTraceStep,
 } from "./chat-store";
 import { useRouter } from "next/navigation";
+import { supabase } from "./supabase";
 
 export interface CoastalLocation {
   id: string;
@@ -149,6 +150,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const syncUserSession = async () => {
     try {
       if (typeof window === "undefined") return;
+
+      // 1. Check live Supabase session (e.g. from Google OAuth callback or persistent auth)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const u = session.user;
+        const displayName =
+          u.user_metadata?.full_name ||
+          u.user_metadata?.name ||
+          localStorage.getItem("orca_user_name") ||
+          u.email?.split("@")[0] ||
+          "Captain";
+        const role = (u.user_metadata?.role || localStorage.getItem("orca_user_role") || "fisher") as any;
+        const port = u.user_metadata?.port || localStorage.getItem("orca_user_port") || "Veraval Port";
+
+        setAuthToken(session.access_token);
+        setUser({
+          id: u.id,
+          email: u.email,
+          displayName,
+          role,
+          locationName: port,
+          isAuthenticated: true,
+        });
+
+        localStorage.setItem("orca_access_token", session.access_token);
+        localStorage.setItem("orca_user_id", u.id);
+        if (u.email) localStorage.setItem("orca_user_email", u.email);
+        localStorage.setItem("orca_user_name", displayName);
+        localStorage.setItem("orca_user_role", role);
+
+        if (["fisher", "coast_guard", "port_operator", "scientist"].includes(role)) {
+          setUserRole(role);
+        }
+        return;
+      }
+
+      // 2. Check local storage fallback
       const token = localStorage.getItem("orca_access_token");
       if (!token) {
         setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
@@ -196,6 +234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     try {
+      supabase.auth.signOut().catch(() => {});
       localStorage.removeItem("orca_access_token");
       localStorage.removeItem("orca_user_id");
       localStorage.removeItem("orca_user_name");
@@ -211,6 +250,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
     showToast("Signed out successfully.", "info");
   };
+
+  // Listen to live Supabase Auth state changes (OAuth redirects, token refresh, sign-in)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        const displayName =
+          u.user_metadata?.full_name ||
+          u.user_metadata?.name ||
+          u.email?.split("@")[0] ||
+          "Captain";
+        const role = (u.user_metadata?.role || "fisher") as any;
+        const port = u.user_metadata?.port || "Home Port";
+
+        setAuthToken(session.access_token);
+        setUser({
+          id: u.id,
+          email: u.email,
+          displayName,
+          role,
+          locationName: port,
+          isAuthenticated: true,
+        });
+
+        localStorage.setItem("orca_access_token", session.access_token);
+        localStorage.setItem("orca_user_id", u.id);
+        if (u.email) localStorage.setItem("orca_user_email", u.email);
+        localStorage.setItem("orca_user_name", displayName);
+        localStorage.setItem("orca_user_role", role);
+
+        if (["fisher", "coast_guard", "port_operator", "scientist"].includes(role)) {
+          setUserRole(role);
+        }
+
+        // Clean up hash fragment or OAuth query code from browser address bar
+        if (typeof window !== "undefined") {
+          if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        }
+      } else if (event === "SIGNED_OUT") {
+        setAuthToken(null);
+        setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
+        localStorage.removeItem("orca_access_token");
+        localStorage.removeItem("orca_user_id");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Initialize theme, settings, auth session, and chats from localStorage, and auto-collapse sidebar on mobile screens
   useEffect(() => {

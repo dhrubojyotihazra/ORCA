@@ -150,6 +150,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsOnboardingOpen(true);
   }, []);
 
+function parseJwtPayload(token: string): any {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    try {
+      return JSON.parse(atob(token.split(".")[1]));
+    } catch {
+      return null;
+    }
+  }
+}
+
   // ── User Authentication & Profile Session (Supabase Auth) ──
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserSession>({
@@ -163,23 +185,88 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       if (typeof window === "undefined") return;
 
-      // 1. Check live Supabase session (e.g. from Google OAuth callback or persistent auth)
+      // 1. Instant local storage & JWT hydration (zero async delay)
+      const token = localStorage.getItem("orca_access_token");
+      let savedAvatar = localStorage.getItem("orca_user_avatar") || undefined;
+      let savedName = localStorage.getItem("orca_user_name") || undefined;
+      let savedEmail = localStorage.getItem("orca_user_email") || undefined;
+      let savedId = localStorage.getItem("orca_user_id") || undefined;
+      const savedRole = localStorage.getItem("orca_user_role") || "fisher";
+      const savedPort = localStorage.getItem("orca_user_port") || "Veraval Port";
+
+      if (token) {
+        // Decode JWT token directly to extract Google avatar, name, email
+        const jwt = parseJwtPayload(token);
+        if (jwt) {
+          const jwtAvatar =
+            jwt.user_metadata?.avatar_url ||
+            jwt.user_metadata?.picture ||
+            jwt.picture ||
+            jwt.avatar_url;
+          if (jwtAvatar) {
+            savedAvatar = jwtAvatar;
+            localStorage.setItem("orca_user_avatar", jwtAvatar);
+          }
+
+          const jwtName =
+            jwt.user_metadata?.full_name ||
+            jwt.user_metadata?.name ||
+            jwt.user_metadata?.display_name ||
+            jwt.name;
+          if (jwtName && (!savedName || savedName === "Maritime Officer" || savedName === "Guest Officer")) {
+            savedName = jwtName;
+            localStorage.setItem("orca_user_name", jwtName);
+          }
+
+          if (jwt.email && !savedEmail) {
+            savedEmail = jwt.email;
+            localStorage.setItem("orca_user_email", jwt.email);
+          }
+
+          if (jwt.sub && !savedId) {
+            savedId = jwt.sub;
+            localStorage.setItem("orca_user_id", jwt.sub);
+          }
+        }
+
+        setAuthToken(token);
+        setUser({
+          id: savedId || "00000000-0000-0000-0000-000000000001",
+          email: savedEmail,
+          displayName: savedName || (savedEmail ? savedEmail.split("@")[0] : "Maritime Officer"),
+          avatarUrl: savedAvatar,
+          role: savedRole,
+          locationName: savedPort,
+          isAuthenticated: true,
+        });
+
+        if (["fisher", "coast_guard", "port_operator", "scientist"].includes(savedRole)) {
+          setUserRole(savedRole as any);
+        }
+      } else {
+        setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
+        setAuthToken(null);
+      }
+
+      // 2. Check live Supabase session (e.g. from Google OAuth callback or persistent auth)
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const u = session.user;
         const displayName =
           u.user_metadata?.full_name ||
           u.user_metadata?.name ||
-          localStorage.getItem("orca_user_name") ||
+          u.user_metadata?.display_name ||
+          savedName ||
           u.email?.split("@")[0] ||
           "Maritime Officer";
-        const role = (u.user_metadata?.role || localStorage.getItem("orca_user_role") || "fisher") as any;
-        const port = u.user_metadata?.port || localStorage.getItem("orca_user_port") || "Veraval Port";
+        const role = (u.user_metadata?.role || savedRole || "fisher") as any;
+        const port = u.user_metadata?.port || savedPort || "Veraval Port";
 
         const avatarUrl =
           u.user_metadata?.avatar_url ||
           u.user_metadata?.picture ||
-          localStorage.getItem("orca_user_avatar") ||
+          u.user_metadata?.avatar ||
+          savedAvatar ||
           undefined;
 
         setAuthToken(session.access_token);
@@ -206,51 +293,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 2. Check local storage fallback
-      const token = localStorage.getItem("orca_access_token");
-      if (!token) {
-        setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
-        setAuthToken(null);
-        return;
+      // Fetch fresh profile from backend if logged in
+      if (token) {
+        try {
+          const res = await fetch("/api/user/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const profile = await res.json();
+            setUser((prev) => ({
+              ...prev,
+              displayName: profile.display_name || prev.displayName,
+              locationName: profile.location_name || prev.locationName,
+              vesselType: profile.vessel_type || prev.vesselType,
+              isAuthenticated: true,
+            }));
+          }
+        } catch {}
       }
-      setAuthToken(token);
-      const savedEmail = localStorage.getItem("orca_user_email") || undefined;
-      const savedName = localStorage.getItem("orca_user_name") || (savedEmail ? savedEmail.split("@")[0] : "Maritime Officer");
-      const savedAvatar = localStorage.getItem("orca_user_avatar") || undefined;
-      const savedRole = localStorage.getItem("orca_user_role") || "fisher";
-      const savedPort = localStorage.getItem("orca_user_port") || "Veraval Port";
-      const savedId = localStorage.getItem("orca_user_id") || "00000000-0000-0000-0000-000000000001";
-
-      setUser({
-        id: savedId,
-        email: savedEmail,
-        displayName: savedName,
-        avatarUrl: savedAvatar,
-        role: savedRole,
-        locationName: savedPort,
-        isAuthenticated: true,
-      });
-
-      if (["fisher", "coast_guard", "port_operator", "scientist"].includes(savedRole)) {
-        setUserRole(savedRole as any);
-      }
-
-      // Fetch fresh profile from backend
-      try {
-        const res = await fetch("/api/user/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const profile = await res.json();
-          setUser((prev) => ({
-            ...prev,
-            displayName: profile.display_name || prev.displayName,
-            locationName: profile.location_name || prev.locationName,
-            vesselType: profile.vessel_type || prev.vesselType,
-            isAuthenticated: true,
-          }));
-        }
-      } catch {}
     } catch {}
   };
 
@@ -291,6 +351,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("orca_access_token", accessToken);
           document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
           document.cookie = `orca_access_token=${accessToken}; path=/; max-age=2592000; SameSite=Lax`;
+
+          // Decode JWT immediately from hash
+          const jwt = parseJwtPayload(accessToken);
+          if (jwt) {
+            const avatarUrl =
+              jwt.user_metadata?.avatar_url ||
+              jwt.user_metadata?.picture ||
+              jwt.picture ||
+              jwt.avatar_url;
+            const displayName =
+              jwt.user_metadata?.full_name ||
+              jwt.user_metadata?.name ||
+              jwt.user_metadata?.display_name ||
+              jwt.email?.split("@")[0];
+            if (avatarUrl) localStorage.setItem("orca_user_avatar", avatarUrl);
+            if (displayName) localStorage.setItem("orca_user_name", displayName);
+            if (jwt.email) localStorage.setItem("orca_user_email", jwt.email);
+            if (jwt.sub) localStorage.setItem("orca_user_id", jwt.sub);
+
+            setAuthToken(accessToken);
+            setUser((prev) => ({
+              ...prev,
+              id: jwt.sub || prev.id,
+              email: jwt.email || prev.email,
+              displayName: displayName || prev.displayName,
+              avatarUrl: avatarUrl || prev.avatarUrl,
+              isAuthenticated: true,
+            }));
+          }
+
           if (refreshToken) {
             supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
           }

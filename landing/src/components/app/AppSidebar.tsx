@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -38,9 +38,14 @@ export function AppSidebar() {
   } = useApp();
 
   const isLight = theme === "light";
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
 
   const filteredChats = searchQuery.trim()
     ? chats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -337,12 +342,13 @@ export function AppSidebar() {
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all overflow-hidden">
-                  {user?.avatarUrl ? (
+                  {user?.avatarUrl && !avatarError ? (
                     <img
                       src={user.avatarUrl}
                       alt={displayName}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
                     initial

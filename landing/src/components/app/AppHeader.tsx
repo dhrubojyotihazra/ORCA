@@ -26,6 +26,12 @@ export function AppHeader() {
   } = useApp();
 
   const isLight = theme === "light";
+  const [avatarError, setAvatarError] = React.useState(false);
+
+  React.useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
+
   const userInitial = user?.displayName
     ? user.displayName.charAt(0).toUpperCase()
     : user?.email
@@ -105,16 +111,17 @@ export function AppHeader() {
         <button
           onClick={() => setIsSettingsOpen(true)}
           data-tour="operator-profile-btn"
-          className="size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-2 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden"
+          className="size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-2 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden relative"
           title="Operator Settings & Profile"
           aria-label="Operator Settings & Profile"
         >
-          {user?.avatarUrl ? (
+          {user?.avatarUrl && !avatarError ? (
             <img
               src={user.avatarUrl}
               alt={user.displayName || "Operator"}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
+              onError={() => setAvatarError(true)}
             />
           ) : (
             userInitial

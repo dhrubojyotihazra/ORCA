@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -58,6 +58,11 @@ export function SettingsMenuModal() {
 
   // Upgrade success state
   const [upgradeSubmitted, setUpgradeSubmitted] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatarUrl]);
 
   if (!isSettingsOpen) return null;
 
@@ -197,12 +202,13 @@ export function SettingsMenuModal() {
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0 overflow-hidden ring-2 ring-white/20 dark:ring-cyan-400/25">
-                  {user?.avatarUrl ? (
+                  {user?.avatarUrl && !avatarError ? (
                     <img
                       src={user.avatarUrl}
                       alt={user.displayName || "Operator"}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
                     (user?.displayName || user?.email || "O").charAt(0).toUpperCase()
@@ -833,12 +839,13 @@ export function SettingsMenuModal() {
                       {/* Avatar Profile Row */}
                       <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#070e1a] border border-slate-200 dark:border-white/10">
                         <div className="size-12 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0 overflow-hidden ring-2 ring-cyan-400/30">
-                          {user?.avatarUrl ? (
+                          {user?.avatarUrl && !avatarError ? (
                             <img
                               src={user.avatarUrl}
                               alt={user.displayName || "Operator"}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
+                              onError={() => setAvatarError(true)}
                             />
                           ) : (
                             (user?.displayName || user?.email || "O").charAt(0).toUpperCase()

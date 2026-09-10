@@ -490,18 +490,12 @@ export default function ArcFlowCarousel({
                 </span>
               </div>
 
-              {/* Bottom Content: Title and Description */}
+              {/* Bottom Content: Title */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-5 text-white z-10">
                 {item.title ? (
                   <h3 className="text-sm sm:text-base lg:text-lg font-bold font-heading text-white tracking-tight leading-snug group-hover:text-teal-300 transition-colors duration-200">
                     {item.title}
                   </h3>
-                ) : null}
-
-                {item.description ? (
-                  <p className="mt-1 sm:mt-2 text-[11px] sm:text-xs lg:text-[13px] leading-relaxed text-white/70 line-clamp-2 sm:line-clamp-3 group-hover:text-white/95 transition-colors duration-200">
-                    {item.description}
-                  </p>
                 ) : null}
               </div>
             </div>

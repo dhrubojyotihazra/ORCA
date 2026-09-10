@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, ExternalLink, Sparkles } from 'lucide-react';
+import { Play, ExternalLink } from 'lucide-react';
 import { MacbookPro } from '@/components/ui/macbook-pro';
 
 interface AppDemoVideoPreviewProps {
@@ -100,12 +100,6 @@ export function AppDemoVideoPreview({
           {/* Screen Vignette Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent pointer-events-none z-10" />
 
-          {/* Live Preview Badge (Top Right of Screen) */}
-          <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20 flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md border border-cyan-400/30 text-[9px] sm:text-[10px] font-mono font-semibold text-cyan-300 shadow-lg pointer-events-none">
-            <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="tracking-wider uppercase">DEMO PREVIEW</span>
-          </div>
-
           {/* ── Centered YouTube Play Badge ── */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-2.5 p-3 z-20 pointer-events-none">
             {/* Play Button Icon */}
@@ -128,15 +122,6 @@ export function AppDemoVideoPreview({
               </span>
               <ExternalLink className="size-2.5 sm:size-3 text-cyan-300 opacity-80 group-hover:translate-x-0.5 transition-transform" />
             </div>
-          </div>
-
-          {/* Bottom Metatag Strip */}
-          <div className="absolute bottom-2 left-2.5 right-2.5 z-20 hidden sm:flex items-center justify-between text-[9px] font-mono text-white/60 pointer-events-none">
-            <span className="flex items-center gap-1">
-              <Sparkles className="size-2.5 text-cyan-400" />
-              <span>ORCA v2.4 • Mission Dispatch</span>
-            </span>
-            <span>HD Walkthrough (Recordly)</span>
           </div>
         </div>
       </div>

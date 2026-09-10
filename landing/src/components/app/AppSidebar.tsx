@@ -336,9 +336,18 @@ export function AppSidebar() {
               aria-label="Open Settings & Operator Profile"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all">
-                  {initial}
-                  <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
+                <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all overflow-hidden">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    initial
+                  )}
+                  <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black z-10" />
                 </div>
                 <div className="min-w-0">
                   <span className={`text-xs font-semibold block truncate ${isLight ? "text-slate-800" : "text-slate-200"}`}>

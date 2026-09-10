@@ -195,17 +195,31 @@ export function SettingsMenuModal() {
                   : "bg-[#0c1524] border border-white/10 shadow-[0_2px_12px_rgba(0,0,0,0.3)] hover:border-cyan-500/30 active:scale-[0.99]"
               }`}
             >
-              <div className="min-w-0 pr-2">
-                <span className="text-[13px] sm:text-sm font-semibold tracking-tight truncate block">
-                  {user?.email || user?.displayName || "commander@orca.ocean"}
-                </span>
-                <span
-                  className={`text-[11px] block truncate mt-0.5 ${
-                    isLight ? "text-slate-500" : "text-slate-400 font-mono"
-                  }`}
-                >
-                  {userLocation.name} Fleet · Call Sign: ORCA-DELTA-1
-                </span>
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0 overflow-hidden ring-2 ring-white/20 dark:ring-cyan-400/25">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.displayName || "Operator"}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    (user?.displayName || user?.email || "O").charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[13px] sm:text-sm font-semibold tracking-tight truncate block">
+                    {user?.displayName || user?.email || "commander@orca.ocean"}
+                  </span>
+                  <span
+                    className={`text-[11px] block truncate mt-0.5 ${
+                      isLight ? "text-slate-500" : "text-slate-400 font-mono"
+                    }`}
+                  >
+                    {user?.email ? user.email : `${userLocation.name} Fleet · Call Sign: ORCA-DELTA-1`}
+                  </span>
+                </div>
               </div>
               <span
                 className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ${
@@ -816,6 +830,26 @@ export function SettingsMenuModal() {
                       </button>
                     </div>
                     <div className="space-y-2.5 text-xs">
+                      {/* Avatar Profile Row */}
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#070e1a] border border-slate-200 dark:border-white/10">
+                        <div className="size-12 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0 overflow-hidden ring-2 ring-cyan-400/30">
+                          {user?.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt={user.displayName || "Operator"}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            (user?.displayName || user?.email || "O").charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-bold text-sm block truncate">{user?.displayName || "Commissioned Officer"}</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate font-mono">{user?.email || "officer@orca.ocean"}</span>
+                        </div>
+                      </div>
+
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#070e1a] border border-slate-200 dark:border-white/10 space-y-1">
                         <span className="text-[10px] uppercase font-mono text-slate-400">Officer Name</span>
                         <div className="font-bold text-sm">

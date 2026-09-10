@@ -89,6 +89,7 @@ export interface UserSession {
   id: string;
   email?: string;
   displayName?: string;
+  avatarUrl?: string;
   role?: string;
   locationName?: string;
   vesselType?: string;
@@ -175,11 +176,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const role = (u.user_metadata?.role || localStorage.getItem("orca_user_role") || "fisher") as any;
         const port = u.user_metadata?.port || localStorage.getItem("orca_user_port") || "Veraval Port";
 
+        const avatarUrl =
+          u.user_metadata?.avatar_url ||
+          u.user_metadata?.picture ||
+          localStorage.getItem("orca_user_avatar") ||
+          undefined;
+
         setAuthToken(session.access_token);
         setUser({
           id: u.id,
           email: u.email,
           displayName,
+          avatarUrl,
           role,
           locationName: port,
           isAuthenticated: true,
@@ -190,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (u.email) localStorage.setItem("orca_user_email", u.email);
         localStorage.setItem("orca_user_name", displayName);
         localStorage.setItem("orca_user_role", role);
+        if (avatarUrl) localStorage.setItem("orca_user_avatar", avatarUrl);
 
         if (["fisher", "coast_guard", "port_operator", "scientist"].includes(role)) {
           setUserRole(role);
@@ -207,6 +216,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setAuthToken(token);
       const savedEmail = localStorage.getItem("orca_user_email") || undefined;
       const savedName = localStorage.getItem("orca_user_name") || (savedEmail ? savedEmail.split("@")[0] : "Maritime Officer");
+      const savedAvatar = localStorage.getItem("orca_user_avatar") || undefined;
       const savedRole = localStorage.getItem("orca_user_role") || "fisher";
       const savedPort = localStorage.getItem("orca_user_port") || "Veraval Port";
       const savedId = localStorage.getItem("orca_user_id") || "00000000-0000-0000-0000-000000000001";
@@ -215,6 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: savedId,
         email: savedEmail,
         displayName: savedName,
+        avatarUrl: savedAvatar,
         role: savedRole,
         locationName: savedPort,
         isAuthenticated: true,
@@ -252,6 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("orca_user_role");
       localStorage.removeItem("orca_user_email");
       localStorage.removeItem("orca_user_port");
+      localStorage.removeItem("orca_user_avatar");
       if (typeof document !== "undefined") {
         document.cookie = "orca_logged_in=; path=/; max-age=0;";
         document.cookie = "orca_access_token=; path=/; max-age=0;";
@@ -304,12 +316,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "Maritime Officer";
         const role = (u.user_metadata?.role || "fisher") as any;
         const port = u.user_metadata?.port || "Home Port";
+        const avatarUrl =
+          u.user_metadata?.avatar_url ||
+          u.user_metadata?.picture ||
+          localStorage.getItem("orca_user_avatar") ||
+          undefined;
 
         setAuthToken(session.access_token);
         setUser({
           id: u.id,
           email: u.email,
           displayName,
+          avatarUrl,
           role,
           locationName: port,
           isAuthenticated: true,
@@ -320,6 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (u.email) localStorage.setItem("orca_user_email", u.email);
         localStorage.setItem("orca_user_name", displayName);
         localStorage.setItem("orca_user_role", role);
+        if (avatarUrl) localStorage.setItem("orca_user_avatar", avatarUrl);
 
         if (typeof document !== "undefined") {
           document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
   ThemeMode,
   ChatSession,
@@ -78,6 +78,11 @@ interface AppContextType {
 
   // Global Toast Notifications
   showToast: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+
+  // Interactive Onboarding Tour
+  isOnboardingOpen: boolean;
+  setIsOnboardingOpen: (open: boolean) => void;
+  startOnboarding: () => void;
 }
 
 export interface UserSession {
@@ -138,6 +143,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 3500);
   };
 
+  // Interactive Onboarding Tour State
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const startOnboarding = useCallback(() => {
+    setIsOnboardingOpen(true);
+  }, []);
+
   // ── User Authentication & Profile Session (Supabase Auth) ──
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserSession>({
@@ -160,7 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           u.user_metadata?.name ||
           localStorage.getItem("orca_user_name") ||
           u.email?.split("@")[0] ||
-          "Captain";
+          "Maritime Officer";
         const role = (u.user_metadata?.role || localStorage.getItem("orca_user_role") || "fisher") as any;
         const port = u.user_metadata?.port || localStorage.getItem("orca_user_port") || "Veraval Port";
 
@@ -194,10 +205,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       setAuthToken(token);
-      const savedName = localStorage.getItem("orca_user_name") || "Captain Fisher";
+      const savedEmail = localStorage.getItem("orca_user_email") || undefined;
+      const savedName = localStorage.getItem("orca_user_name") || (savedEmail ? savedEmail.split("@")[0] : "Maritime Officer");
       const savedRole = localStorage.getItem("orca_user_role") || "fisher";
       const savedPort = localStorage.getItem("orca_user_port") || "Veraval Port";
-      const savedEmail = localStorage.getItem("orca_user_email") || undefined;
       const savedId = localStorage.getItem("orca_user_id") || "00000000-0000-0000-0000-000000000001";
 
       setUser({
@@ -241,6 +252,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("orca_user_role");
       localStorage.removeItem("orca_user_email");
       localStorage.removeItem("orca_user_port");
+      if (typeof document !== "undefined") {
+        document.cookie = "orca_logged_in=; path=/; max-age=0;";
+        document.cookie = "orca_access_token=; path=/; max-age=0;";
+      }
       fetch("/api/auth/logout", {
         method: "POST",
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
@@ -260,7 +275,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           u.user_metadata?.full_name ||
           u.user_metadata?.name ||
           u.email?.split("@")[0] ||
-          "Captain";
+          "Maritime Officer";
         const role = (u.user_metadata?.role || "fisher") as any;
         const port = u.user_metadata?.port || "Home Port";
 
@@ -280,6 +295,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("orca_user_name", displayName);
         localStorage.setItem("orca_user_role", role);
 
+        if (typeof document !== "undefined") {
+          document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `orca_access_token=${session.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+        }
+
         if (["fisher", "coast_guard", "port_operator", "scientist"].includes(role)) {
           setUserRole(role);
         }
@@ -295,6 +315,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
         localStorage.removeItem("orca_access_token");
         localStorage.removeItem("orca_user_id");
+        if (typeof document !== "undefined") {
+          document.cookie = "orca_logged_in=; path=/; max-age=0;";
+          document.cookie = "orca_access_token=; path=/; max-age=0;";
+        }
       }
     });
 
@@ -321,12 +345,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedLang) {
         setLanguageState(savedLang);
       }
-      const savedChats = localStorage.getItem("orca_chats_sessions_v4");
-      if (savedChats) {
-        const parsed = JSON.parse(savedChats);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setChats(parsed);
+      // Clean slate migration: Ensure single high-fidelity tutorial chat is initialized
+      const tutorialResetDone = localStorage.getItem("orca_tutorial_reset_v6");
+      if (!tutorialResetDone) {
+        setChats(INITIAL_CHATS);
+        localStorage.setItem("orca_chats_sessions_v4", JSON.stringify(INITIAL_CHATS));
+        localStorage.setItem("orca_tutorial_reset_v6", "true");
+      } else {
+        const savedChats = localStorage.getItem("orca_chats_sessions_v4");
+        if (savedChats) {
+          try {
+            const parsed = JSON.parse(savedChats);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setChats(parsed);
+            } else {
+              setChats(INITIAL_CHATS);
+            }
+          } catch {
+            setChats(INITIAL_CHATS);
+          }
+        } else {
+          setChats(INITIAL_CHATS);
         }
+      }
+
+      // Check if user has seen onboarding tour
+      const seenTour = localStorage.getItem("orca_tutorial_seen_v1");
+      if (!seenTour) {
+        setIsOnboardingOpen(true);
       }
       syncUserSession();
     } catch {}
@@ -689,6 +735,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         logout,
         syncUserSession,
         showToast,
+        isOnboardingOpen,
+        setIsOnboardingOpen,
+        startOnboarding,
       }}
     >
       {children}

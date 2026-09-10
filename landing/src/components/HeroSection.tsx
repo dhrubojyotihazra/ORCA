@@ -330,7 +330,13 @@ export function HeroSection() {
               borderRadius="16px"
               fishSpeed="2.0s"
               onClick={() => {
-                router.push('/login');
+                const token = typeof window !== "undefined" ? localStorage.getItem("orca_access_token") : null;
+                const hasCookie = typeof document !== "undefined" && document.cookie.includes("orca_logged_in=true");
+                if (token || hasCookie) {
+                  router.push('/app');
+                } else {
+                  router.push('/login');
+                }
               }}
             >
               <span>TALK TO ORCA</span>

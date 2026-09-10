@@ -45,26 +45,26 @@ export interface ChatSession {
 
 export const INITIAL_CHATS: ChatSession[] = [
   {
-    id: "1",
-    title: "Zone 4 PFZ & Tuna Chlorophyll",
-    createdAt: "Just now",
+    id: "orca-walkthrough-tutorial",
+    title: "ORCA Maritime Tutorial & Walkthrough",
+    createdAt: "Demo / Tutorial",
     model: "ORCA Multi-Agent (LangGraph)",
     statusDotColor: "bg-teal-400",
     messages: [
       {
-        id: "msg-1-1",
+        id: "msg-tut-1",
         role: "user",
-        content: "Where is the nearest Potential Fishing Zone (PFZ) today from Paradip Harbour?",
-        timestamp: "6:14 PM",
+        content: "Where is the nearest Potential Fishing Zone (PFZ) today from Paradip Harbour, and what are the ocean conditions?",
+        timestamp: "08:00 AM",
       },
       {
-        id: "msg-1-2",
+        id: "msg-tut-2",
         role: "assistant",
         content: `### 🐟 ORCA Potential Fishing Zone (PFZ) Advisory · Zone 4
 **Corridor Anchor**: Paradip Harbour ($20.26^\\circ\\text{N}, 86.67^\\circ\\text{E}$) · Bay of Bengal  
 **Target Sector**: 14.2 Nautical Miles Southeast (Bearing $135^\\circ$ SE)
 
-Here is the operational directed acyclic graph (DAG) executed on **LangGraph**:
+Here is the operational multi-agent collaboration graph executed on **LangGraph**:
 
 \`\`\`mermaid
 graph TD
@@ -93,7 +93,7 @@ graph TD
 
 ---
 **Source:** MOSDAC Oceansat-3 & INCOIS PFZ Mission Bulletin #0906 | **Grounded Advisory Verified**`,
-        timestamp: "6:14 PM",
+        timestamp: "08:00 AM",
         modelUsed: "ORCA Multi-Agent (LangGraph · 5 Agents)",
         agentTrace: [
           {
@@ -154,23 +154,14 @@ graph TD
           },
         ],
       },
-    ],
-  },
-  {
-    id: "2",
-    title: "Sea-Venture Hydrodynamic Safety Index",
-    createdAt: "2 hours ago",
-    model: "ORCA Multi-Agent (LangGraph)",
-    statusDotColor: "bg-teal-400",
-    messages: [
       {
-        id: "msg-2-1",
+        id: "msg-tut-3",
         role: "user",
-        content: "Is it safe to venture into the sea tomorrow morning for a small motorized fishing boat (<8m)?",
-        timestamp: "4:20 PM",
+        content: "Is it safe to venture into the sea tomorrow morning for a motorized craft (<8m)?",
+        timestamp: "08:02 AM",
       },
       {
-        id: "msg-2-2",
+        id: "msg-tut-4",
         role: "assistant",
         content: `### 🌊 Hydrodynamic Safety Advisory & Sea-Venture Index
 **Corridor**: Paradip Harbour to Haldia Port (Zone 4)  
@@ -196,75 +187,17 @@ Where calibrated weights for craft $<8\\text{m}$:
 
 ---
 **Source:** INCOIS High-Resolution Wave Forecast System (OSF Bulletin #20260906-04) | **Grounded Advisory Verified**`,
-        timestamp: "4:22 PM",
+        timestamp: "08:03 AM",
         modelUsed: "ORCA Multi-Agent (LangGraph)",
       },
-    ],
-  },
-  {
-    id: "3",
-    title: "INCOIS High Wave & Cyclone Warning",
-    createdAt: "Yesterday",
-    model: "ORCA Multi-Agent (LangGraph)",
-    statusDotColor: "bg-amber-400",
-    messages: [
       {
-        id: "msg-3-1",
+        id: "msg-tut-5",
         role: "user",
-        content: "Are there any lightning or cyclone alerts near Dhamra Port and Digha Coast?",
-        timestamp: "Yesterday",
+        content: "What marine protected boundaries and sovereign borders are nearby?",
+        timestamp: "08:04 AM",
       },
       {
-        id: "msg-3-2",
-        role: "assistant",
-        content: `### ⚠️ Synoptic Weather Alert: Condition Amber
-**Area of Vigilance**: North Bay of Bengal (Dhamra Port, Chandipur, and Digha Coast)  
-**Warning Issued**: 2026-09-06 12:00 UTC by IMD & INCOIS
-
-#### Real-time Synoptic Vector Artifact:`,
-        timestamp: "Yesterday",
-        modelUsed: "ORCA Multi-Agent (LangGraph)",
-        artifact: {
-          id: "art-cyclone-vector",
-          title: "Dhamra_Digha_Synoptic_Vector.json",
-          type: "data",
-          language: "json",
-          subtitle: "Zone 4 Coastal Hazard Matrix",
-          content: `{
-  "corridor": "Dhamra Port to Digha Coast",
-  "zone": "Marine Zone 4",
-  "synoptic_forecast": {
-    "wind_speed_knots": 22.4,
-    "gust_knots": 31.0,
-    "wave_height_meters": 2.6,
-    "barometric_pressure_hpa": 1002.4,
-    "lightning_strike_index": "High (Level 3)"
-  },
-  "safety_status": {
-    "condition": "Condition Amber (Advisory)",
-    "action_required": "Small craft remain in harbor",
-    "monitored_stations": ["Dhamra", "Chandipur", "Digha"]
-  }
-}`,
-        },
-      },
-    ],
-  },
-  {
-    id: "4",
-    title: "IMBL & Gahirmatha Sanctuary Geofencing",
-    createdAt: "2 days ago",
-    model: "ORCA Multi-Agent (LangGraph)",
-    statusDotColor: "bg-cyan-400",
-    messages: [
-      {
-        id: "msg-4-1",
-        role: "user",
-        content: "Which fishing zones should be avoided due to international maritime boundaries or sanctuary restrictions?",
-        timestamp: "2 days ago",
-      },
-      {
-        id: "msg-4-2",
+        id: "msg-tut-6",
         role: "assistant",
         content: `### 🛡️ Maritime Geofencing & Protected Areas Report
 **Vessel Navigation System · PostGIS Geofence Engine**
@@ -284,8 +217,33 @@ The following maritime zones are currently active with operational restrictions:
 
 ---
 **Source:** PostGIS Marine Geofence Engine & Indian Coast Guard Advisory | **Verified Boundary Layer**`,
-        timestamp: "2 days ago",
+        timestamp: "08:05 AM",
         modelUsed: "ORCA Multi-Agent (LangGraph)",
+        artifact: {
+          id: "art-geofence-vector",
+          title: "Zone4_Geofence_Manifest.json",
+          type: "data",
+          language: "json",
+          subtitle: "PostGIS Sanctuary & Border Coordinates",
+          content: `{
+  "corridor": "Zone 4 Coastal Waters",
+  "postgis_zones": [
+    {
+      "name": "Gahirmatha Marine Sanctuary",
+      "type": "MPA_NO_TAKE",
+      "status": "ACTIVE_RESTRICTION",
+      "buffer_nm": 12.0,
+      "species_protected": "Lepidochelys olivacea"
+    },
+    {
+      "name": "IMBL Sovereign Buffer",
+      "type": "BORDER_GUARD",
+      "status": "CLEARANCE_REQUIRED",
+      "distance_nm": 18.4
+    }
+  ]
+}`,
+        },
       },
     ],
   },

@@ -23,6 +23,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     setIsVoiceActive,
     showToast,
     language,
+    user,
   } = useApp();
 
   const isLight = theme === "light";
@@ -79,14 +80,18 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
     };
   }, []);
 
-  const [greeting, setGreeting] = useState("Evening, Captain.");
+  const [greeting, setGreeting] = useState("Welcome to Mission Control");
 
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Morning, Captain.");
-    else if (hour < 17) setGreeting("Afternoon, Captain.");
-    else setGreeting("Evening, Captain.");
-  }, []);
+    const timeOfDay = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+    const name = user?.displayName
+      ? user.displayName.split(" ")[0]
+      : user?.email
+      ? user.email.split("@")[0]
+      : "Commander";
+    setGreeting(`${timeOfDay}, ${name}.`);
+  }, [user]);
 
   // ── Speech-to-Text: Dual Engine (MediaRecorder + Groq Whisper + WebSpeech) ──
   const toggleDictation = async () => {
@@ -283,6 +288,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
 
       {/* ── Neomorphic Prompt Card ── */}
       <div
+        data-tour="prompt-card"
         className={`relative rounded-[24px] p-4 transition-all duration-300 ${
           isLight ? "neo-prompt-light" : "neo-prompt-dark"
         } ${isDictating ? "ring-2 ring-rose-500/50" : ""}`}
@@ -360,6 +366,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
             <button
               type="button"
               onClick={toggleDictation}
+              data-tour="dictation-mic-btn"
               className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
                 isTranscribing
                   ? "bg-amber-500 text-white shadow-lg shadow-amber-500/40 animate-pulse"
@@ -391,6 +398,7 @@ export function PromptCard({ initialText = "", onSend, showHero = true }: Prompt
             <button
               type="button"
               onClick={() => setIsVoiceActive(true)}
+              data-tour="live-voice-pill"
               className={`h-8 px-3 rounded-full flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer active:scale-95 ${
                 isLight
                   ? "bg-gradient-to-r from-teal-50 to-cyan-100 text-teal-800 border border-teal-200/80 shadow-[-2px_-2px_5px_rgba(255,255,255,0.9),2px_2px_5px_rgba(180,195,215,0.4)] hover:shadow-cyan-500/20"

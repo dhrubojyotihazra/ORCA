@@ -52,7 +52,7 @@ async function proxyUser(req: NextRequest, { params }: { params: Promise<{ actio
     console.warn(`User proxy to ${url} failed, using local fallback:`, err.message);
     return NextResponse.json({
       id: "00000000-0000-0000-0000-000000000001",
-      display_name: "Captain Fisher",
+      display_name: "Maritime Officer",
       language: "en",
       location_name: "Veraval Port",
       vessel_type: "medium",

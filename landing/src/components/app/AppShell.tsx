@@ -9,6 +9,7 @@ import { ArtifactsDrawer } from "./ArtifactsDrawer";
 import { VoiceOverlay } from "./VoiceOverlay";
 import { MarineMapModal } from "./MarineMapModal";
 import { SettingsMenuModal } from "./SettingsMenuModal";
+import { OnboardingTourModal } from "./OnboardingTourModal";
 import { WebGLLiquid } from "@/components/ui/webgl-liquid";
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
@@ -95,6 +96,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
       {/* ── Context-Aware Profile & Settings Sheet ── */}
       <SettingsMenuModal />
+
+      {/* ── Interactive Onboarding Screen & Tooltip Tour ── */}
+      <OnboardingTourModal />
     </div>
   );
 }

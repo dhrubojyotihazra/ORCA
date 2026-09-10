@@ -181,7 +181,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
   const Field1Icon = activeRole.field1Icon;
   const Field2Icon = activeRole.field2Icon;
 
-  const [phone, setPhone] = useState("98765 43210");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -408,6 +408,10 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           localStorage.setItem("orca_user_id", data.user_id || "");
           localStorage.setItem("orca_user_phone", phone);
           localStorage.setItem("orca_user_name", `Officer ${phone.slice(-4)}`);
+          if (typeof document !== "undefined") {
+            document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `orca_access_token=${data.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+          }
         }
         setIsLoading(false);
         setSuccessMessage("Identity verified! Welcome aboard.");
@@ -445,6 +449,10 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
           localStorage.setItem("orca_user_id", data.user_id || "");
           localStorage.setItem("orca_user_email", email.trim());
           localStorage.setItem("orca_user_name", email.split("@")[0]);
+          if (typeof document !== "undefined") {
+            document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+            document.cookie = `orca_access_token=${data.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+          }
         }
         setIsLoading(false);
         setSuccessMessage("Identity verified! Welcome aboard.");
@@ -514,6 +522,10 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
         localStorage.setItem("orca_user_name", name);
         localStorage.setItem("orca_user_role", role);
         localStorage.setItem("orca_user_port", currentRoleInputs.field2 || "Home Port");
+        if (typeof document !== "undefined") {
+          document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `orca_access_token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+        }
 
         // Save onboarding profile
         try {
@@ -968,7 +980,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
                           setErrorMessage("Please enter a valid 10-digit Indian mobile number.");
                         }
                       }}
-                      placeholder="98765 43210"
+                      placeholder="Enter 10-digit mobile number"
                       maxLength={11}
                       required
                       className="w-full bg-transparent px-3 py-1.5 text-base sm:text-sm outline-none font-mono font-bold tracking-wider placeholder-slate-400 dark:placeholder-slate-500"
@@ -1503,7 +1515,7 @@ export default function AuthSectionOne({ initialMode = "login" }: AuthSectionOne
                           setForgotError(null);
                           setForgotContact(e.target.value);
                         }}
-                        placeholder="e.g. 9876543210 or officer@incois.gov.in"
+                        placeholder="Enter mobile number or officer email"
                         className="w-full bg-transparent text-sm outline-none font-medium placeholder-slate-400 dark:placeholder-slate-500"
                       />
                     </div>

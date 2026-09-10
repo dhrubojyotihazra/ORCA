@@ -22,9 +22,15 @@ export function AppHeader() {
     setIsMapOpen,
     isSidebarCollapsed,
     setIsSettingsOpen,
+    user,
   } = useApp();
 
   const isLight = theme === "light";
+  const userInitial = user?.displayName
+    ? user.displayName.charAt(0).toUpperCase()
+    : user?.email
+    ? user.email.charAt(0).toUpperCase()
+    : "O";
 
   return (
     <header
@@ -37,6 +43,7 @@ export function AppHeader() {
         {/* New Marine Inquiry Trigger */}
         <button
           onClick={() => router.push("/new")}
+          data-tour="new-inquiry-btn"
           className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             isLight
               ? "neo-btn-light text-slate-600 hover:text-teal-700"
@@ -50,6 +57,7 @@ export function AppHeader() {
         {/* Marine Map */}
         <button
           onClick={() => setIsMapOpen(true)}
+          data-tour="marine-map-btn"
           className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             isLight
               ? "neo-btn-light text-slate-500 hover:text-teal-700"
@@ -64,6 +72,7 @@ export function AppHeader() {
         {/* Voice Mode */}
         <button
           onClick={() => setIsVoiceActive(true)}
+          data-tour="voice-mode-btn"
           className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             isVoiceActive
               ? "bg-cyan-500 text-white shadow-[0_0_16px_rgba(6,182,212,0.6)] animate-pulse"
@@ -80,6 +89,7 @@ export function AppHeader() {
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
+          data-tour="theme-toggle-btn"
           className={`size-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             isLight
               ? "neo-btn-light text-amber-500 hover:text-amber-600"
@@ -94,11 +104,12 @@ export function AppHeader() {
         {/* User Profile / Settings Menu Trigger */}
         <button
           onClick={() => setIsSettingsOpen(true)}
+          data-tour="operator-profile-btn"
           className="size-8 rounded-full flex items-center justify-center font-bold text-xs bg-gradient-to-tr from-cyan-500 to-teal-400 text-white shadow-sm ring-2 ring-white/30 dark:ring-cyan-400/30 hover:ring-cyan-400 transition-all cursor-pointer active:scale-95 shrink-0"
           title="Operator Settings & Profile"
           aria-label="Operator Settings & Profile"
         >
-          D
+          {userInitial}
         </button>
       </div>
     </header>

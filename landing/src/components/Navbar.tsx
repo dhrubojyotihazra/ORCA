@@ -116,11 +116,17 @@ export function Navbar() {
     setIsDropdownOpen((prev) => !prev);
   }, []);
 
-  // Navigate to the full-screen login page
+  // Navigate to the full-screen login page or direct to app if already authenticated
   const handleSignIn = useCallback(() => {
-    router.push('/login');
+    const token = typeof window !== "undefined" ? localStorage.getItem("orca_access_token") : null;
+    const hasCookie = typeof document !== "undefined" && document.cookie.includes("orca_logged_in=true");
+    if (token || hasCookie || user.isAuthenticated) {
+      router.push('/app');
+    } else {
+      router.push('/login');
+    }
     setIsDropdownOpen(false);
-  }, [router]);
+  }, [router, user.isAuthenticated]);
 
   // Close dropdown on outside click
   useEffect(() => {

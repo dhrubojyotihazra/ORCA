@@ -25,6 +25,7 @@ import {
   Check,
   Sparkles,
   ExternalLink,
+  Compass,
 } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 
@@ -43,6 +44,9 @@ export function SettingsMenuModal() {
     userLocation,
     vesselType,
     showToast,
+    user,
+    logout,
+    startOnboarding,
   } = useApp();
 
   const isLight = theme === "light";
@@ -193,7 +197,7 @@ export function SettingsMenuModal() {
             >
               <div className="min-w-0 pr-2">
                 <span className="text-[13px] sm:text-sm font-semibold tracking-tight truncate block">
-                  dhrubojyotihazra@gmail.com
+                  {user?.email || user?.displayName || "commander@orca.ocean"}
                 </span>
                 <span
                   className={`text-[11px] block truncate mt-0.5 ${
@@ -554,6 +558,40 @@ export function SettingsMenuModal() {
               </button>
             </div>
 
+            {/* Guided Tour Replay */}
+            <div
+              className={`w-full rounded-2xl border overflow-hidden transition-colors ${
+                isLight
+                  ? "bg-white border-slate-200/70 shadow-[0_2px_8px_rgba(0,0,0,0.02)]"
+                  : "bg-[#0c1524] border-white/10 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
+              }`}
+            >
+              <button
+                onClick={() => {
+                  setIsSettingsOpen(false);
+                  startOnboarding();
+                }}
+                className={`w-full p-3.5 sm:p-4 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                  isLight ? "hover:bg-slate-50" : "hover:bg-white/[0.03]"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-xl flex items-center justify-center bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0">
+                    <Compass className="size-4" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold block text-cyan-600 dark:text-cyan-400">
+                      Replay Onboarding Tour
+                    </span>
+                    <span className={`text-xs block ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                      Launch the guided walkthrough & mission tutorial
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className={`size-4 ${isLight ? "text-slate-400" : "text-slate-500"}`} />
+              </button>
+            </div>
+
             {/* 7. Card Group: Danger Zone - Log Out */}
             <div
               className={`w-full rounded-2xl border overflow-hidden transition-colors ${
@@ -780,7 +818,9 @@ export function SettingsMenuModal() {
                     <div className="space-y-2.5 text-xs">
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#070e1a] border border-slate-200 dark:border-white/10 space-y-1">
                         <span className="text-[10px] uppercase font-mono text-slate-400">Officer Name</span>
-                        <div className="font-bold text-sm">Dhrubojyoti Hazra</div>
+                        <div className="font-bold text-sm">
+                          {user?.displayName || (user?.email ? user.email.split("@")[0] : "Commissioned Officer")}
+                        </div>
                       </div>
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#070e1a] border border-slate-200 dark:border-white/10 space-y-1">
                         <span className="text-[10px] uppercase font-mono text-slate-400">Assigned Station</span>

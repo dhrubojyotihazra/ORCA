@@ -34,6 +34,7 @@ export function AppSidebar() {
     userRole,
     setUserRole,
     setIsSettingsOpen,
+    user,
   } = useApp();
 
   const isLight = theme === "light";
@@ -129,6 +130,7 @@ export function AppSidebar() {
       <div className="px-4 py-2">
         <button
           onClick={handleNewChat}
+          data-tour="sidebar-new-inquiry"
           className={`w-full py-2.5 px-4 rounded-2xl flex items-center gap-2.5 font-medium text-sm transition-all duration-200 cursor-pointer ${
             isLight
               ? "bg-[#e5eff9] text-sky-950 hover:bg-[#dce9f6] shadow-[-2px_-2px_6px_rgba(255,255,255,0.9),2px_2px_6px_rgba(180,195,215,0.4)] border border-white/60 active:scale-[0.98]"
@@ -176,7 +178,7 @@ export function AppSidebar() {
       )}
 
       {/* ── Chat History List (Scrollable) ── */}
-      <div className="flex-1 overflow-y-auto px-2 space-y-0.5 auth-form-scrollbar pr-1">
+      <div data-tour="sidebar-chats" className="flex-1 overflow-y-auto px-2 space-y-0.5 auth-form-scrollbar pr-1">
         {filteredChats.map((chat) => {
           const isActive = pathname === `/chat/${chat.id}` || activeChatId === chat.id;
           return (
@@ -286,7 +288,7 @@ export function AppSidebar() {
             </div>
 
             {/* Stakeholder Role Selector (SIH26176) */}
-            <div className="pt-1.5 border-t border-black/5 dark:border-white/5">
+            <div data-tour="sidebar-roles" className="pt-1.5 border-t border-black/5 dark:border-white/5">
               <span className={`text-[9px] uppercase tracking-wider font-semibold block mb-1 px-1 ${
                 isLight ? "text-slate-400" : "text-slate-500"
               }`}>
@@ -318,32 +320,39 @@ export function AppSidebar() {
         )}
 
         {/* User profile & Settings trigger row */}
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-2xl transition-all cursor-pointer group text-left ${
-            isLight
-              ? "hover:bg-slate-200/60 active:scale-[0.99]"
-              : "hover:bg-white/[0.06] active:scale-[0.99]"
-          }`}
-          title="Open Settings & Operator Profile"
-          aria-label="Open Settings & Operator Profile"
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all">
-              D
-              <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-xs font-semibold block truncate ${isLight ? "text-slate-800" : "text-slate-200"}`}>
-                Dhrubojyoti
-              </span>
-              <span className="text-[10px] text-cyan-500 block truncate font-mono">
-                Team Lead · Settings
-              </span>
-            </div>
-          </div>
-          <Settings className={`size-3.5 shrink-0 transition-transform group-hover:rotate-45 ${isLight ? "text-slate-400 group-hover:text-slate-700" : "text-slate-500 group-hover:text-cyan-300"}`} />
-        </button>
+        {(() => {
+          const displayName = user?.displayName || (user?.email ? user.email.split("@")[0] : "Officer");
+          const initial = displayName.charAt(0).toUpperCase();
+          const subtitle = user?.email || `${userRole.replace("_", " ")} · Settings`;
+          return (
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className={`w-full flex items-center justify-between px-2 py-1.5 rounded-2xl transition-all cursor-pointer group text-left ${
+                isLight
+                  ? "hover:bg-slate-200/60 active:scale-[0.99]"
+                  : "hover:bg-white/[0.06] active:scale-[0.99]"
+              }`}
+              title="Open Settings & Operator Profile"
+              aria-label="Open Settings & Operator Profile"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="relative size-7.5 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-cyan-400/40 transition-all">
+                  {initial}
+                  <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
+                </div>
+                <div className="min-w-0">
+                  <span className={`text-xs font-semibold block truncate ${isLight ? "text-slate-800" : "text-slate-200"}`}>
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] text-cyan-500 block truncate font-mono">
+                    {subtitle}
+                  </span>
+                </div>
+              </div>
+              <Settings className={`size-3.5 shrink-0 transition-transform group-hover:rotate-45 ${isLight ? "text-slate-400 group-hover:text-slate-700" : "text-slate-500 group-hover:text-cyan-300"}`} />
+            </button>
+          );
+        })()}
       </div>
     </aside>
     </>

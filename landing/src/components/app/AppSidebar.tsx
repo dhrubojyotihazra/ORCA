@@ -14,6 +14,12 @@ import {
   Crosshair,
   Settings,
   Trash2,
+  MoreVertical,
+  Pin,
+  PinOff,
+  Edit3,
+  Check,
+  X,
 } from "lucide-react";
 import { useApp, COASTAL_PORTS } from "@/lib/app-context";
 
@@ -26,6 +32,8 @@ export function AppSidebar() {
     activeChatId,
     setActiveChatId,
     deleteChat,
+    pinChat,
+    renameChat,
     isSidebarCollapsed,
     toggleSidebar,
     userLocation,
@@ -45,6 +53,21 @@ export function AppSidebar() {
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
 
+  // 3-dot dropdown menu & inline rename states
+  const [menuOpenChatId, setMenuOpenChatId] = useState<string | null>(null);
+  const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
+  const [renamingText, setRenamingText] = useState("");
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setMenuOpenChatId(null);
+    };
+    if (menuOpenChatId) {
+      window.addEventListener("click", handleOutsideClick);
+    }
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, [menuOpenChatId]);
+
   useEffect(() => {
     setAvatarError(false);
   }, [user?.avatarUrl]);
@@ -52,6 +75,20 @@ export function AppSidebar() {
   const filteredChats = searchQuery.trim()
     ? chats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : chats;
+
+  // Prioritize pinned chats at the top of the sidebar
+  const sortedChats = [...filteredChats].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+
+  const handleConfirmRename = (chatId: string) => {
+    if (renamingText.trim()) {
+      renameChat(chatId, renamingText.trim());
+    }
+    setRenamingChatId(null);
+  };
 
   const handleNewChat = () => {
     router.push("/new");
@@ -186,8 +223,57 @@ export function AppSidebar() {
 
       {/* ── Chat History List (Scrollable) ── */}
       <div data-tour="sidebar-chats" className="flex-1 overflow-y-auto px-2 space-y-0.5 auth-form-scrollbar pr-1">
-        {filteredChats.map((chat) => {
+        {sortedChats.map((chat) => {
           const isActive = pathname === `/chat/${chat.id}` || activeChatId === chat.id;
+          const isMenuOpen = menuOpenChatId === chat.id;
+          const isRenaming = renamingChatId === chat.id;
+
+          if (isRenaming) {
+            return (
+              <div
+                key={chat.id}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs ${
+                  isLight
+                    ? "bg-white/90 border border-cyan-400 shadow-sm"
+                    : "bg-slate-900/90 border border-cyan-500/50 shadow-inner"
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="text"
+                  autoFocus
+                  value={renamingText}
+                  onChange={(e) => setRenamingText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleConfirmRename(chat.id);
+                    if (e.key === "Escape") setRenamingChatId(null);
+                  }}
+                  className={`flex-1 bg-transparent border-none outline-none text-xs font-medium min-w-0 ${
+                    isLight ? "text-slate-900" : "text-slate-100"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleConfirmRename(chat.id)}
+                  className="p-1 hover:text-emerald-400 text-slate-400 transition-colors cursor-pointer shrink-0"
+                  title="Save title (Enter)"
+                  aria-label="Save title"
+                >
+                  <Check className="size-3.5 text-emerald-400" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRenamingChatId(null)}
+                  className="p-1 hover:text-rose-400 text-slate-400 transition-colors cursor-pointer shrink-0"
+                  title="Cancel (Esc)"
+                  aria-label="Cancel rename"
+                >
+                  <X className="size-3.5 text-rose-400" />
+                </button>
+              </div>
+            );
+          }
+
           return (
             <div key={chat.id} className="group/item relative flex items-center">
               <Link
@@ -209,21 +295,107 @@ export function AppSidebar() {
                   }`}
                 />
                 <span className="truncate flex-1">{chat.title}</span>
+                {chat.isPinned && (
+                  <span title="Pinned to top" className="shrink-0 flex items-center">
+                    <Pin className="size-2.5 text-cyan-400 fill-cyan-400/40 rotate-45" />
+                  </span>
+                )}
               </Link>
-              {chat.id !== "orca-walkthrough-tutorial" && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    deleteChat(chat.id);
-                  }}
-                  className="absolute right-2 opacity-0 group-hover/item:opacity-100 transition-opacity p-1 text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-500/10 cursor-pointer"
-                  title="Delete conversation"
-                  aria-label="Delete conversation"
+
+              {/* 3-Dot Options Trigger */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMenuOpenChatId((prev) => (prev === chat.id ? null : chat.id));
+                }}
+                className={`absolute right-1.5 p-1 rounded-md text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all cursor-pointer ${
+                  isMenuOpen
+                    ? "opacity-100 text-cyan-400 bg-cyan-500/15"
+                    : "opacity-0 group-hover/item:opacity-100"
+                }`}
+                title="Conversation options"
+                aria-label="Conversation options"
+              >
+                <MoreVertical className="size-3.5" />
+              </button>
+
+              {/* Floating Context Menu */}
+              {isMenuOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className={`absolute right-1 top-8 z-50 w-44 rounded-xl py-1 px-1 shadow-2xl border backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100 ${
+                    isLight
+                      ? "bg-white/95 border-slate-200 text-slate-700 shadow-slate-300/50"
+                      : "bg-slate-900/95 border-slate-850 text-slate-200 shadow-black/80"
+                  }`}
                 >
-                  <Trash2 className="size-3" />
-                </button>
+                  {/* Pin / Unpin */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      pinChat(chat.id);
+                      setMenuOpenChatId(null);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                      isLight ? "hover:bg-slate-100 text-slate-700" : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    {chat.isPinned ? (
+                      <>
+                        <PinOff className="size-3.5 text-amber-400" />
+                        <span>Unpin conversation</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="size-3.5 text-cyan-400" />
+                        <span>Pin to top</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Rename */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setRenamingChatId(chat.id);
+                      setRenamingText(chat.title);
+                      setMenuOpenChatId(null);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                      isLight ? "hover:bg-slate-100 text-slate-700" : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    <Edit3 className="size-3.5 text-teal-400" />
+                    <span>Rename title</span>
+                  </button>
+
+                  {/* Delete Option */}
+                  {chat.id !== "orca-walkthrough-tutorial" ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteChat(chat.id);
+                        setMenuOpenChatId(null);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-rose-400 hover:bg-rose-500/15 hover:text-rose-300"
+                    >
+                      <Trash2 className="size-3.5 text-rose-500" />
+                      <span>Delete conversation</span>
+                    </button>
+                  ) : (
+                    <div className="px-2.5 py-1 text-[10px] text-slate-400 italic">
+                      Tutorial chat is permanent
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );

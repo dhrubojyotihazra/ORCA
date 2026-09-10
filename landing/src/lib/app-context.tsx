@@ -15,6 +15,7 @@ import {
   saveConversationToSupabase,
   saveMessageToSupabase,
   deleteConversationFromSupabase,
+  renameConversationInSupabase,
 } from "./supabase-chat";
 
 export interface CoastalLocation {
@@ -46,6 +47,8 @@ interface AppContextType {
   createNewChat: (initialPrompt?: string) => string;
   sendMessage: (chatId: string, text: string) => void;
   deleteChat: (chatId: string) => Promise<void>;
+  pinChat: (chatId: string) => void;
+  renameChat: (chatId: string, newTitle: string) => Promise<void>;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (c: boolean) => void;
   toggleSidebar: () => void;
@@ -540,11 +543,21 @@ function parseJwtPayload(token: string): any {
         localStorage.setItem("orca_tutorial_reset_v6", "true");
       } else {
         const savedChats = localStorage.getItem("orca_chats_sessions_v4");
+        const pinnedRaw = localStorage.getItem("orca_pinned_chats");
+        let pinnedIds: string[] = [];
+        try {
+          pinnedIds = pinnedRaw ? JSON.parse(pinnedRaw) : [];
+        } catch {}
+
         if (savedChats) {
           try {
             const parsed = JSON.parse(savedChats);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setChats(parsed);
+              const withPins = parsed.map((c: any) => ({
+                ...c,
+                isPinned: Boolean(c.isPinned || pinnedIds.includes(c.id)),
+              }));
+              setChats(withPins);
             } else {
               setChats(INITIAL_CHATS);
             }
@@ -939,6 +952,44 @@ function parseJwtPayload(token: string): any {
       });
   };
 
+  const pinChat = (chatId: string) => {
+    setChats((prev) => {
+      const updated = prev.map((c) => {
+        if (c.id === chatId) {
+          const nextPinned = !c.isPinned;
+          return { ...c, isPinned: nextPinned };
+        }
+        return c;
+      });
+      try {
+        const pinnedIds = updated.filter((c) => c.isPinned).map((c) => c.id);
+        localStorage.setItem("orca_pinned_chats", JSON.stringify(pinnedIds));
+        localStorage.setItem("orca_chats_sessions_v4", JSON.stringify(updated));
+      } catch {}
+      const target = updated.find((c) => c.id === chatId);
+      showToast(target?.isPinned ? "Conversation pinned to top" : "Conversation unpinned", "info");
+      return updated;
+    });
+  };
+
+  const renameChat = async (chatId: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+
+    setChats((prev) => {
+      const updated = prev.map((c) => (c.id === chatId ? { ...c, title: trimmed } : c));
+      try {
+        localStorage.setItem("orca_chats_sessions_v4", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (user.isAuthenticated && user.id && user.id !== "anonymous") {
+      await renameConversationInSupabase(chatId, trimmed);
+    }
+    showToast("Conversation renamed.", "success");
+  };
+
   const deleteChat = async (chatId: string) => {
     if (chatId === "orca-walkthrough-tutorial") {
       showToast("Tutorial walkthrough is read-only.", "info");
@@ -948,6 +999,8 @@ function parseJwtPayload(token: string): any {
       const filtered = prev.filter((c) => c.id !== chatId);
       try {
         localStorage.setItem("orca_chats_sessions_v4", JSON.stringify(filtered));
+        const pinnedIds = filtered.filter((c) => c.isPinned).map((c) => c.id);
+        localStorage.setItem("orca_pinned_chats", JSON.stringify(pinnedIds));
       } catch {}
       return filtered;
     });
@@ -973,6 +1026,8 @@ function parseJwtPayload(token: string): any {
         createNewChat,
         sendMessage,
         deleteChat,
+        pinChat,
+        renameChat,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
         toggleSidebar,

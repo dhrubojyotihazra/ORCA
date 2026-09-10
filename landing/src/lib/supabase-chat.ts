@@ -159,3 +159,35 @@ export async function deleteConversationFromSupabase(conversationId: string): Pr
     return false;
   }
 }
+
+/**
+ * Rename a conversation in Supabase
+ */
+export async function renameConversationInSupabase(
+  conversationId: string,
+  newTitle: string
+): Promise<boolean> {
+  if (!conversationId || conversationId === "orca-walkthrough-tutorial") {
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from("conversations")
+      .update({
+        title: newTitle.slice(0, 80),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", conversationId);
+
+    if (error) {
+      console.warn("Error renaming conversation in Supabase:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Supabase conversation rename failed:", err);
+    return false;
+  }
+}
+

@@ -40,6 +40,7 @@ export interface ChatSession {
   model: string;
   category?: string;
   statusDotColor?: string;
+  isPinned?: boolean;
   messages: ChatMessage[];
 }
 

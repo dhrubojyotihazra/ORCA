@@ -71,12 +71,11 @@ export function SettingsMenuModal() {
     setIsSettingsOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     showToast("Signing out of ORCA fleet session...", "info");
-    setTimeout(() => {
-      handleClose();
-      router.push("/login");
-    }, 600);
+    handleClose();
+    await logout();
+    router.push("/login");
   };
 
   const languages = [

@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Crosshair,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { useApp, COASTAL_PORTS } from "@/lib/app-context";
 
@@ -24,6 +25,7 @@ export function AppSidebar() {
     chats,
     activeChatId,
     setActiveChatId,
+    deleteChat,
     isSidebarCollapsed,
     toggleSidebar,
     userLocation,
@@ -187,27 +189,43 @@ export function AppSidebar() {
         {filteredChats.map((chat) => {
           const isActive = pathname === `/chat/${chat.id}` || activeChatId === chat.id;
           return (
-            <Link
-              key={chat.id}
-              href={`/chat/${chat.id}`}
-              onClick={() => setActiveChatId(chat.id)}
-              className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${
-                isActive
-                  ? isLight
-                    ? "bg-[#e2ebf5] text-slate-900 font-semibold shadow-[-2px_-2px_4px_rgba(255,255,255,0.8),2px_2px_5px_rgba(180,195,215,0.35)]"
-                    : "bg-white/[0.08] text-teal-200 font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border-l-2 border-teal-400"
-                  : isLight
-                  ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-              }`}
-            >
-              <span
-                className={`size-2 rounded-full shrink-0 ${
-                  chat.statusDotColor || "bg-cyan-400"
+            <div key={chat.id} className="group/item relative flex items-center">
+              <Link
+                href={`/chat/${chat.id}`}
+                onClick={() => setActiveChatId(chat.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all pr-8 ${
+                  isActive
+                    ? isLight
+                      ? "bg-[#e2ebf5] text-slate-900 font-semibold shadow-[-2px_-2px_4px_rgba(255,255,255,0.8),2px_2px_5px_rgba(180,195,215,0.35)]"
+                      : "bg-white/[0.08] text-teal-200 font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border-l-2 border-teal-400"
+                    : isLight
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200/40"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
                 }`}
-              />
-              <span className="truncate flex-1">{chat.title}</span>
-            </Link>
+              >
+                <span
+                  className={`size-2 rounded-full shrink-0 ${
+                    chat.statusDotColor || "bg-cyan-400"
+                  }`}
+                />
+                <span className="truncate flex-1">{chat.title}</span>
+              </Link>
+              {chat.id !== "orca-walkthrough-tutorial" && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                  }}
+                  className="absolute right-2 opacity-0 group-hover/item:opacity-100 transition-opacity p-1 text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-500/10 cursor-pointer"
+                  title="Delete conversation"
+                  aria-label="Delete conversation"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>

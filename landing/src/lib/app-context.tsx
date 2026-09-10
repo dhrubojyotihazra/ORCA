@@ -9,6 +9,13 @@ import {
 } from "./chat-store";
 import { useRouter } from "next/navigation";
 import { supabase } from "./supabase";
+import {
+  generateUUID,
+  loadUserConversations,
+  saveConversationToSupabase,
+  saveMessageToSupabase,
+  deleteConversationFromSupabase,
+} from "./supabase-chat";
 
 export interface CoastalLocation {
   id: string;
@@ -38,6 +45,7 @@ interface AppContextType {
   setActiveChatId: (id: string | null) => void;
   createNewChat: (initialPrompt?: string) => string;
   sendMessage: (chatId: string, text: string) => void;
+  deleteChat: (chatId: string) => Promise<void>;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (c: boolean) => void;
   toggleSidebar: () => void;
@@ -290,7 +298,27 @@ function parseJwtPayload(token: string): any {
         if (["fisher", "coast_guard", "port_operator", "scientist"].includes(role)) {
           setUserRole(role);
         }
+
+        // Load persisted conversations from Supabase for this authenticated user
+        loadUserConversations(u.id)
+          .then((dbChats) => {
+            if (dbChats && dbChats.length > 0) {
+              setChats([INITIAL_CHATS[0], ...dbChats.filter((c) => c.id !== INITIAL_CHATS[0].id)]);
+            }
+          })
+          .catch(() => {});
         return;
+      }
+
+      // 3. Fallback: If token was present in local storage, also load their Supabase chats
+      if (savedId && savedId !== "anonymous" && savedId.length > 10) {
+        loadUserConversations(savedId)
+          .then((dbChats) => {
+            if (dbChats && dbChats.length > 0) {
+              setChats([INITIAL_CHATS[0], ...dbChats.filter((c) => c.id !== INITIAL_CHATS[0].id)]);
+            }
+          })
+          .catch(() => {});
       }
 
       // Fetch fresh profile from backend if logged in
@@ -314,27 +342,45 @@ function parseJwtPayload(token: string): any {
     } catch {}
   };
 
-  const logout = () => {
+  const logout = async () => {
     try {
-      supabase.auth.signOut().catch(() => {});
-      localStorage.removeItem("orca_access_token");
-      localStorage.removeItem("orca_user_id");
-      localStorage.removeItem("orca_user_name");
-      localStorage.removeItem("orca_user_role");
-      localStorage.removeItem("orca_user_email");
-      localStorage.removeItem("orca_user_port");
-      localStorage.removeItem("orca_user_avatar");
-      if (typeof document !== "undefined") {
-        document.cookie = "orca_logged_in=; path=/; max-age=0;";
-        document.cookie = "orca_access_token=; path=/; max-age=0;";
+      await supabase.auth.signOut({ scope: "global" }).catch(() => {});
+      if (typeof window !== "undefined") {
+        // Deep purge of all Supabase auth storage tokens and user credentials
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (
+            key &&
+            (key.startsWith("sb-") ||
+              key.startsWith("orca_user_") ||
+              key === "orca_access_token" ||
+              key === "orca_chats_sessions_v4")
+          ) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+        // Purge session cookies across all possible paths
+        const cookiesToClear = ["orca_logged_in", "orca_access_token", "sb-access-token", "sb-refresh-token"];
+        cookiesToClear.forEach((name) => {
+          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+          document.cookie = `${name}=; path=/app; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+          document.cookie = `${name}=; path=/login; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;`;
+        });
       }
       fetch("/api/auth/logout", {
         method: "POST",
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       }).catch(() => {});
-    } catch {}
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     setAuthToken(null);
     setUser({ id: "anonymous", displayName: "Guest Officer", role: "fisher", isAuthenticated: false });
+    setChats(INITIAL_CHATS);
+    setActiveChatId(null);
     showToast("Signed out successfully.", "info");
   };
 
@@ -597,14 +643,14 @@ function parseJwtPayload(token: string): any {
   };
 
   const createNewChat = (initialPrompt?: string): string => {
-    const newId = String(Date.now());
+    const newId = generateUUID();
     const title = initialPrompt
       ? initialPrompt.length > 34
         ? initialPrompt.slice(0, 34) + "..."
         : initialPrompt
       : "New Marine Inquiry";
 
-    const assistantMsgId = `msg-${newId}-2`;
+    const assistantMsgId = `msg-${Date.now()}-2`;
     const newChat: ChatSession = {
       id: newId,
       title,
@@ -614,7 +660,7 @@ function parseJwtPayload(token: string): any {
       messages: initialPrompt
         ? [
             {
-              id: `msg-${newId}-1`,
+              id: `msg-${Date.now()}-1`,
               role: "user",
               content: initialPrompt,
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -639,6 +685,15 @@ function parseJwtPayload(token: string): any {
     });
     setActiveChatId(newId);
     router.push(`/chat/${newId}`);
+
+    // Persist conversation and initial prompt to Supabase
+    if (user.isAuthenticated && user.id && user.id !== "anonymous") {
+      saveConversationToSupabase(user.id, newId, title).then(() => {
+        if (initialPrompt) {
+          saveMessageToSupabase(newId, "user", initialPrompt).catch(() => {});
+        }
+      }).catch(() => {});
+    }
 
     if (initialPrompt) {
       fetch("/api/chat", {
@@ -682,9 +737,19 @@ function parseJwtPayload(token: string): any {
             } catch {}
             return next;
           });
+
+          // Persist assistant message to Supabase
+          if (user.isAuthenticated && user.id && user.id !== "anonymous") {
+            saveMessageToSupabase(newId, "assistant", data.content, {
+              modelUsed: data.modelUsed,
+              agentTrace: data.agentTrace,
+            }).catch(() => {});
+          }
         })
         .catch((err) => {
           console.warn("Live API fetch fallback:", err);
+          const fallbackContent = generateAgentResponse(initialPrompt, userLocation, vesselType);
+          const fallbackTrace = createFallbackAgentTrace(initialPrompt, userLocation, vesselType);
           setChats((prev) => {
             const next = prev.map((c) => {
               if (c.id !== newId) return c;
@@ -694,9 +759,9 @@ function parseJwtPayload(token: string): any {
                   m.id === assistantMsgId
                     ? {
                         ...m,
-                        content: generateAgentResponse(initialPrompt, userLocation, vesselType),
+                        content: fallbackContent,
                         modelUsed: "ORCA Multi-Agent (Deterministic Guard)",
-                        agentTrace: createFallbackAgentTrace(initialPrompt, userLocation, vesselType),
+                        agentTrace: fallbackTrace,
                       }
                     : m
                 ),
@@ -707,6 +772,14 @@ function parseJwtPayload(token: string): any {
             } catch {}
             return next;
           });
+
+          // Persist fallback assistant message to Supabase
+          if (user.isAuthenticated && user.id && user.id !== "anonymous") {
+            saveMessageToSupabase(newId, "assistant", fallbackContent, {
+              modelUsed: "ORCA Multi-Agent (Deterministic Guard)",
+              agentTrace: fallbackTrace,
+            }).catch(() => {});
+          }
         });
     }
 
@@ -770,6 +843,15 @@ function parseJwtPayload(token: string): any {
       }));
     history.push({ role: "user", content: text });
 
+    // Persist conversation and user message to Supabase
+    if (user.isAuthenticated && user.id && user.id !== "anonymous" && chatId !== "orca-walkthrough-tutorial") {
+      saveConversationToSupabase(user.id, chatId, currentChat?.title || text.slice(0, 34))
+        .then(() => {
+          saveMessageToSupabase(chatId, "user", text).catch(() => {});
+        })
+        .catch(() => {});
+    }
+
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -811,9 +893,19 @@ function parseJwtPayload(token: string): any {
           } catch {}
           return next;
         });
+
+        // Persist assistant message to Supabase
+        if (user.isAuthenticated && user.id && user.id !== "anonymous" && chatId !== "orca-walkthrough-tutorial") {
+          saveMessageToSupabase(chatId, "assistant", data.content, {
+            modelUsed: data.modelUsed,
+            agentTrace: data.agentTrace,
+          }).catch(() => {});
+        }
       })
       .catch((err) => {
         console.warn("Live API fetch error, fallback to domain synthesis:", err);
+        const fallbackContent = generateAgentResponse(text, userLocation, vesselType);
+        const fallbackTrace = createFallbackAgentTrace(text, userLocation, vesselType);
         setChats((prev) => {
           const next = prev.map((c) => {
             if (c.id !== chatId) return c;
@@ -823,9 +915,9 @@ function parseJwtPayload(token: string): any {
                 m.id === assistantMsgId
                   ? {
                       ...m,
-                      content: generateAgentResponse(text, userLocation, vesselType),
+                      content: fallbackContent,
                       modelUsed: "ORCA Multi-Agent (Deterministic Guard)",
-                      agentTrace: createFallbackAgentTrace(text, userLocation, vesselType),
+                      agentTrace: fallbackTrace,
                     }
                   : m
               ),
@@ -836,7 +928,37 @@ function parseJwtPayload(token: string): any {
           } catch {}
           return next;
         });
+
+        // Persist fallback assistant message to Supabase
+        if (user.isAuthenticated && user.id && user.id !== "anonymous" && chatId !== "orca-walkthrough-tutorial") {
+          saveMessageToSupabase(chatId, "assistant", fallbackContent, {
+            modelUsed: "ORCA Multi-Agent (Deterministic Guard)",
+            agentTrace: fallbackTrace,
+          }).catch(() => {});
+        }
       });
+  };
+
+  const deleteChat = async (chatId: string) => {
+    if (chatId === "orca-walkthrough-tutorial") {
+      showToast("Tutorial walkthrough is read-only.", "info");
+      return;
+    }
+    setChats((prev) => {
+      const filtered = prev.filter((c) => c.id !== chatId);
+      try {
+        localStorage.setItem("orca_chats_sessions_v4", JSON.stringify(filtered));
+      } catch {}
+      return filtered;
+    });
+    if (activeChatId === chatId) {
+      setActiveChatId(null);
+      router.push("/app");
+    }
+    if (user.isAuthenticated && user.id && user.id !== "anonymous") {
+      await deleteConversationFromSupabase(chatId);
+    }
+    showToast("Conversation deleted.", "info");
   };
 
   return (
@@ -850,6 +972,7 @@ function parseJwtPayload(token: string): any {
         setActiveChatId,
         createNewChat,
         sendMessage,
+        deleteChat,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
         toggleSidebar,

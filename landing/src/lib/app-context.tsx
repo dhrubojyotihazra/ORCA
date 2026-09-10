@@ -266,6 +266,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     showToast("Signed out successfully.", "info");
   };
 
+  // Immediate OAuth hash interceptor: if browser landed on #access_token=... on any page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token=")) {
+      try {
+        const params = new URLSearchParams(hash.replace(/^#/, ""));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        if (accessToken) {
+          localStorage.setItem("orca_access_token", accessToken);
+          document.cookie = `orca_logged_in=true; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `orca_access_token=${accessToken}; path=/; max-age=2592000; SameSite=Lax`;
+          if (refreshToken) {
+            supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          }
+          if (window.location.pathname !== "/app") {
+            window.location.replace("/app");
+          }
+        }
+      } catch (e) {
+        console.warn("OAuth hash extraction error:", e);
+      }
+    }
+  }, []);
+
   // Listen to live Supabase Auth state changes (OAuth redirects, token refresh, sign-in)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -304,8 +330,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setUserRole(role);
         }
 
-        // Clean up hash fragment or OAuth query code from browser address bar
+        // If user just logged in via OAuth redirect (e.g. on / or /login), forward directly to /app!
         if (typeof window !== "undefined") {
+          const isAuthOrRoot = window.location.pathname === "/" || window.location.pathname === "/login";
+          const hasOAuth = window.location.hash.includes("access_token") || window.location.search.includes("code=");
+          if (isAuthOrRoot && hasOAuth) {
+            window.location.replace("/app");
+            return;
+          }
           if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
             window.history.replaceState(null, "", window.location.pathname);
           }

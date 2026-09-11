@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: orca-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_API_KEY_VOICE
+        sync: false
+      - key: GROQ_API_KEY_REASONING
+        sync: false
+      - key: GROQ_API_KEY_BACKUP
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

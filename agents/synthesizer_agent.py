@@ -132,6 +132,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ উপকূলীয় বিজ্ঞপ্তি",
         "source": "উৎস",
         "observed": "পর্যবেক্ষিত",
+        "harbour": "হারবার / বন্দর",
+        "craft": "নৌযান",
+        "waves": "ঢেউ",
+        "wind": "বাতাস",
+        "squall": "ঝড়ের সম্ভাবনা",
+        "cyclone": "ঘূর্ণিঝড় সতর্কতা",
+        "desc_safe": "সমুদ্র শান্ত। ঢেউ ও বাতাস আপনার নৌযানের জন্য সম্পূর্ণ অনুকূল।",
+        "desc_caution": "মাঝারি সমুদ্রাবস্থা। লাইফ জ্যাকেট প্রস্তুত রাখুন এবং বাতাসের গতি সতর্কভাবে পর্যবেক্ষণ করুন।",
+        "desc_danger": "বিপজ্জনক সমুদ্রাবস্থা। আজ সমুদ্রে যাবেন না; বন্দরে অবস্থান করুন।",
+        "desc_notice": "এই অনুসন্ধানের জন্য কোনো আবহাওয়া বা বিপদের সংকেত নেই।",
     },
     "mr": {
         "title": "🌊 ओर्का सागरी सल्लागार अहवाल (ORCA Marine Advisory)",
@@ -145,6 +155,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ सागरी सूचना",
         "source": "स्रोत",
         "observed": "निरीक्षण वेळ",
+        "harbour": "बंदर / केंद्र",
+        "craft": "नौका",
+        "waves": "लाटा",
+        "wind": "वारा",
+        "squall": "वादळाची शक्यता",
+        "cyclone": "चक्रीवादळ इशारा",
+        "desc_safe": "समुद्र शांत आहे. लाटा आणि वारे आपल्या नौकेसाठी सुरक्षित आहेत.",
+        "desc_caution": "मध्यम लाटा आहेत. लाईफ जॅकेट सज्ज ठेवा आणि वाऱ्याच्या गतीवर लक्ष ठेवा.",
+        "desc_danger": "धोकादायक परिस्थिती आहे. आज समुद्रात जाऊ नका; नौका उलटण्याचा धोका आहे.",
+        "desc_notice": "या चौकशीसाठी हवामान किंवा धोक्याचा डेटा मागवला गेला नाही.",
     },
     "pa": {
         "title": "🌊 ਓਰਕਾ ਸਮੁੰਦਰੀ ਸਲਾਹਕਾਰ ਰਿਪੋਰਟ (ORCA Marine Advisory)",
@@ -158,6 +178,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ ਤੱਟਵਰਤੀ ਸੂਚਨਾ",
         "source": "ਸਰੋਤ",
         "observed": "ਨਿਰੀਖਣ",
+        "harbour": "ਬੰਦਰਗਾਹ / ਸਟੇਸ਼ਨ",
+        "craft": "ਕਿਸ਼ਤੀ",
+        "waves": "ਲਹਿਰਾਂ",
+        "wind": "ਹਵਾ",
+        "squall": "ਤੂਫ਼ਾਨ ਦੀ ਸੰਭਾਵਨਾ",
+        "cyclone": "ਚੱਕਰਵਾਤ ਚੇਤਾਵਨੀ",
+        "desc_safe": "ਸਮੁੰਦਰ ਸ਼ਾਂਤ ਹੈ। ਲਹਿਰਾਂ ਅਤੇ ਹਵਾਵਾਂ ਤੁਹਾਡੀ ਕਿਸ਼ਤੀ ਲਈ ਅਨੁਕੂਲ ਹਨ।",
+        "desc_caution": "ਦਰਮਿਆਨੀ ਸਮੁੰਦਰੀ ਸਥਿਤੀ। ਲਾਈਫ ਜੈਕਟ ਤਿਆਰ ਰੱਖੋ ਅਤੇ ਹਵਾ 'ਤੇ ਨਜ਼ਰ ਰੱਖੋ।",
+        "desc_danger": "ਖ਼ਤਰਨਾਕ ਸਥਿਤੀ। ਅੱਜ ਸਮੁੰਦਰ ਵਿੱਚ ਨਾ ਜਾਓ; ਕਿਸ਼ਤੀ ਪਲਟਣ ਦਾ ਖ਼ਤਰਾ ਹੈ।",
+        "desc_notice": "ਇਸ ਪੁੱਛਗਿੱਛ ਲਈ ਮੌਸਮ ਜਾਂ ਸੁਰੱਖਿਆ ਜਾਣਕਾਰੀ ਦੀ ਲੋੜ ਨਹੀਂ ਸੀ।",
     },
     "hi": {
         "title": "🌊 ओर्का समुद्री सलाहकार रिपोर्ट (ORCA Marine Advisory)",
@@ -171,6 +201,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ तटीय सूचना",
         "source": "स्रोत",
         "observed": "अवलोकन",
+        "harbour": "बंदरगाह / स्टेशन",
+        "craft": "नाव",
+        "waves": "लहरें",
+        "wind": "हवा",
+        "squall": "तूफान की संभावना",
+        "cyclone": "चक्रवात चेतावनी",
+        "desc_safe": "समुद्र शांत है। लहरें और हवा आपकी नाव के लिए अनुकूल हैं।",
+        "desc_caution": "मध्यम समुद्री स्थिति। लाइफ जैकेट तैयार रखें और हवा की गति पर नजर रखें।",
+        "desc_danger": "खतरनाक स्थिति। आज समुद्र में न जाएं; नाव पलटने का जोखिम है।",
+        "desc_notice": "इस पूछताछ के लिए मौसम या सुरक्षा डेटा का अनुरोध नहीं किया गया था।",
     },
     "ta": {
         "title": "🌊 ஓர்கா கடல்சார் ஆலோசனை அறிக்கை (ORCA Marine Advisory)",
@@ -184,6 +224,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ கடலோர அறிவிப்பு",
         "source": "ஆதாரம்",
         "observed": "கண்காணிக்கப்பட்டது",
+        "harbour": "துறைமுகம் / நிலையம்",
+        "craft": "படகு",
+        "waves": "அலைகள்",
+        "wind": "காற்று",
+        "squall": "புயல் வாய்ப்பு",
+        "cyclone": "புயல் எச்சரிக்கை",
+        "desc_safe": "கடல் அமைதியாக உள்ளது. அலைகள் மற்றும் காற்று உங்கள் படகுக்கு பாதுகாப்பானது.",
+        "desc_caution": "மிதமான கடல் நிலை. உயிர்காக்கும் உடைகளை தயாராக வைத்து காற்றின் வேகத்தை கவனிக்கவும்.",
+        "desc_danger": "ஆபத்தான நிலை. இன்று கடலுக்கு செல்ல வேண்டாம்; படகு கவிழும் அபாயம் உள்ளது.",
+        "desc_notice": "இந்த வினவலுக்கு வானிலை அல்லது பாதுகாப்பு தரவு கோரப்படவில்லை.",
     },
     "en": {
         "title": "🌊 ORCA Marine Advisory & Telemetry Synthesis",
@@ -197,6 +247,16 @@ REGIONAL_TEMPLATES = {
         "notice": "ℹ️ Operational Coastal Notice",
         "source": "Source",
         "observed": "Observed",
+        "harbour": "Harbour / Station",
+        "craft": "Craft",
+        "waves": "Waves",
+        "wind": "Wind",
+        "squall": "Storm / Squall Risk",
+        "cyclone": "Cyclone Stage",
+        "desc_safe": "Sea conditions are calm. Waves are gentle and winds are manageable.",
+        "desc_caution": "Moderate sea state. Keep life jackets ready and monitor winds closely.",
+        "desc_danger": "Dangerous sea conditions. High rollover risk; stay in port.",
+        "desc_notice": "Weather and safety data was not queried for this request.",
     }
 }
 
@@ -337,6 +397,10 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             from groq import Groq
             models = ["qwen/qwen3.8-27b", "groq/compound-mini", "openai/gpt-oss-120b"]
             sys_msg = f"{SYNTHESIZER_SYSTEM_PROMPT}\n{grounded_context}"
+            user_content = f"User question: {query}"
+            if lang != "en" and lang in LANGUAGE_MAP:
+                lang_name, native_name, script = LANGUAGE_MAP[lang]
+                user_content += f"\n\nCRITICAL MULTILINGUAL MANDATE: You MUST write the ENTIRE response in {lang_name} ({native_name}) using {script}. DO NOT write in English. Every heading, caution badge, and description MUST be written in {native_name}."
             for key in valid_keys:
                 if llm_response:
                     break
@@ -348,7 +412,7 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
                                 model=m,
                                 messages=[
                                     {"role": "system", "content": sys_msg},
-                                    {"role": "user", "content": f"User question: {query}"},
+                                    {"role": "user", "content": user_content},
                                 ],
                                 temperature=0.2,
                                 max_tokens=850,
@@ -422,21 +486,21 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
             # Plain language, short direct sentences, zero raw math formulas, direct action first
             if has_risk and has_weather:
                 if risk_cat == "Safe":
-                    verdict_banner = "🟢 **Safe to venture out to sea today**"
-                    verdict_desc = f"Sea conditions are calm around {port_name}. Waves are gentle and winds are manageable for your {vessel_display}."
+                    verdict_banner = template.get("safe", "🟢 **Safe to venture out to sea today**")
+                    verdict_desc = template.get("desc_safe", f"Sea conditions are calm around {port_name}.")
                 elif risk_cat == "Caution":
-                    verdict_banner = "🟡 **Caution: Consider delaying sea departure**"
-                    verdict_desc = f"Moderate sea state near {port_name}. Keep life jackets ready and monitor winds closely."
+                    verdict_banner = template.get("caution", "🟡 **Caution: Consider delaying sea departure**")
+                    verdict_desc = template.get("desc_caution", f"Moderate sea state near {port_name}.")
                 else:
-                    verdict_banner = "🔴 **Hazardous: DO NOT venture out to sea today**"
-                    verdict_desc = f"Dangerous sea conditions near {port_name}. High rollover risk for {vessel_display}."
+                    verdict_banner = template.get("danger", "🔴 **Hazardous: DO NOT venture out to sea today**")
+                    verdict_desc = template.get("desc_danger", f"Dangerous sea conditions near {port_name}.")
             else:
-                verdict_banner = "ℹ️ **Operational Coastal Notice**"
-                verdict_desc = f"Weather and safety data was not queried for this request."
+                verdict_banner = template.get("notice", "ℹ️ **Operational Coastal Notice**")
+                verdict_desc = template.get("desc_notice", "Weather and safety data was not queried for this request.")
 
             lines = [
-                f"### {template['title']} (Fisher Advisory)",
-                f"**Harbour / Station**: {port_name} ({sector}) | **Craft**: {vessel_display}",
+                f"### {template['title']}",
+                f"**{template.get('harbour', 'Harbour')}**: {port_name} ({sector}) | **{template.get('craft', 'Craft')}**: {vessel_display}",
                 "",
                 verdict_banner,
                 verdict_desc,
@@ -445,35 +509,34 @@ def synthesizer_node(state: AgentState) -> Dict[str, Any]:
 
             if has_weather:
                 lines.extend([
-                    "#### Current Sea Conditions",
-                    f"- **Waves**: About **{hs} metres** ({wave_source}) — {'calm to moderate' if hs < 1.5 else 'rough seas'}",
-                    f"- **Wind**: About **{wind} knots** ({weather.get('source', 'INCOIS')}) — {'light to moderate breeze' if wind < 16 else 'stiff breeze'}",
-                    f"- **Storm / Squall Risk**: **{squall}%** chance of squalls (Regional climatology average; not a live radar nowcast)",
-                    f"- **Cyclone Stage**: **{weather.get('cyclone_alert_level', 'Normal')}** (Seasonal baseline advisory)",
+                    f"#### {template.get('sea_waves', 'Current Sea Conditions')}",
+                    f"- **{template.get('waves', 'Waves')}**: {hs} m ({wave_source})",
+                    f"- **{template.get('wind', 'Wind')}**: {wind} knots ({weather.get('source', 'INCOIS')})",
+                    f"- **{template.get('squall', 'Storm Risk')}**: {squall}%",
+                    f"- **{template.get('cyclone', 'Cyclone Alert')}**: {weather.get('cyclone_alert_level', 'Normal')}",
                     "",
                 ])
 
             if has_ocean:
                 lines.extend([
-                    "#### Fishing Grounds & Catches",
-                    f"- **Target Fishing Zone**: Near coordinates **{pfz_pt.get('lat')}°N, {pfz_pt.get('lon')}°E** (Bathymetric shelf-break model; illustrative waypoints, not live satellite PFZ)",
-                    f"- **Water Temperature**: Around **{sst}°C** ({ocean.get('source', 'INCOIS ARGO')})",
-                    f"- **Best Catches Today**: High likelihood for **Hilsa / Pelagics** (HSI: {ocean.get('species_hsi', {}).get('Hilsa / Pelagics', 0.96)}), moderate for **Indian Mackerel** (HSI: {ocean.get('species_hsi', {}).get('Indian Mackerel', 0.49)})",
+                    f"#### {template.get('fishing', 'Fishing Grounds & Catches')}",
+                    f"- **PFZ**: {pfz_pt.get('lat')}°N, {pfz_pt.get('lon')}°E ({ocean.get('pfz_source', 'Bathymetric Shelf-Break Model')})",
+                    f"- **SST**: {sst}°C ({ocean.get('source', 'INCOIS ARGO')})",
                     "",
                 ])
 
             if has_geofence:
                 lines.extend([
-                    "#### Coastal Boundaries",
-                    f"- **Turtle Sanctuary**: {mpa_dist} NM away ({'⚠️ Stay clear of 12 NM buffer zone!' if mpa_alert else 'Safely clear of buffer zone'})",
-                    f"- **International Border (IMBL)**: {imbl_dist} NM away (Clear)",
+                    f"#### {template.get('boundaries', 'Coastal Boundaries')}",
+                    f"- **MPA Sanctuary**: {mpa_dist} NM ({'⚠️ Alert' if mpa_alert else 'Clear'})",
+                    f"- **IMBL Border**: {imbl_dist} NM (Clear)",
                     "",
                 ])
 
             if pub_bulletin_lines:
                 lines.extend(pub_bulletin_lines)
 
-            lines.append(footer)
+            lines.append(f"---\n**{template.get('source', 'Source')}:** {' & '.join(sources)} | **{template.get('observed', 'Observed')}:** {obs_stamp} | **Grounded Advisory Verified**")
 
         elif user_role == "coast_guard":
             # Tactical military / operational briefing with clear status codes

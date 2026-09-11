@@ -3,7 +3,8 @@ ORCA Synthesizer Agent.
 Combines findings from Weather Agent, Ocean Agent, and Risk Agent into a single,
 coherent, plain-language advisory tailored to fishermen.
 Supports multilingual output (English, Hindi, Bengali) based on detected language,
-and populates clear evidence citations for explainability.
+and populates structured evidence citations for explainability in the format:
+"[DATA SOURCE]: [VALUE] → [CONCLUSION]"
 """
 
 import sys
@@ -55,7 +56,8 @@ def synthesizer_node(state: AgentState) -> AgentState:
     1. Reads weather_findings, ocean_findings, and risk_findings from state.
     2. Detects or confirms state['language'] ('en', 'hi', 'bn').
     3. Merges findings into plain-language advisory (final_answer).
-    4. Generates data citation strings for explainability (evidence).
+    4. Generates structured data citation strings for explainability:
+       Format: "[DATA SOURCE]: [VALUE] → [CONCLUSION]"
     """
     query = state.get("query", "")
     
@@ -86,11 +88,11 @@ def synthesizer_node(state: AgentState) -> AgentState:
     zone_type = risk_findings.get("zone_type", "SAFE_OPEN_WATER")
     risk_level = risk_findings.get("risk_level", "LOW")
 
-    # Build Evidence citations list
+    # Build Structured Evidence citations list matching Week 4 format: "[DATA SOURCE]: [VALUE] → [CONCLUSION]"
     evidence: List[str] = [
-        f"Wave height of {wave_h}m and wind speed of {wind_s} knots from INCOIS confirmed {weather_status} weather status.",
-        f"SST of {sst_val}°C and Chlorophyll-a concentration of {chl_val} mg/m³ from MOSDAC indicated {zone_quality} fishing zone quality.",
-        f"Geofence check ({geofence_status} in {zone_type}) from GIS dataset determined overall {risk_level} risk level."
+        f"INCOIS wave height & wind speed: {wave_h}m, {wind_s} knots → {weather_status} sea state",
+        f"MOSDAC SST & Chlorophyll: {sst_val}°C, {chl_val} mg/m³ → {zone_quality} fishing zone quality",
+        f"GIS Geofence: {geofence_status} ({zone_type}) → {risk_level} boundary risk"
     ]
 
     # Generate multilingual plain-language final answer

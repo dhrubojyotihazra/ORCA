@@ -347,7 +347,7 @@ export function HeroSection() {
 
         {/* Right Column: Interactive App Demo Video Preview (Recorded with Recordly -> YouTube) */}
         <div id="demo" className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end scroll-mt-24 pointer-events-auto">
-          <AppDemoVideoPreview />
+          <AppDemoVideoPreview youtubeUrl="https://youtu.be/sYZFu3BxVJA?si=5zFauYf7aAtkfS3d" />
         </div>
 
       </div>

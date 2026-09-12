@@ -79,6 +79,15 @@ export default function FrameShowcasePage() {
           </div>
 
           <a
+            href="https://youtu.be/sYZFu3BxVJA?si=5zFauYf7aAtkfS3d"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 hover:bg-red-500/30 border border-red-400/40 text-red-300 text-xs font-mono transition-all shadow-lg"
+          >
+            <Play className="size-3.5 fill-red-300" /> Watch on YouTube
+          </a>
+
+          <a
             href="/orca_demo_framed.mp4"
             download="orca_demo_framed.mp4"
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-xs font-mono transition-all shadow-lg"

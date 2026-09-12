@@ -23,7 +23,7 @@ function YoutubeIcon(props: React.SVGProps<SVGSVGElement>) {
 export function AppDemoVideoPreview({
   videoSrc = '/demo-preview.mp4',
   posterSrc = '/images/demo-preview-poster.png',
-  youtubeUrl = 'https://www.youtube.com',
+  youtubeUrl = 'https://youtu.be/sYZFu3BxVJA?si=5zFauYf7aAtkfS3d',
   className = '',
 }: AppDemoVideoPreviewProps) {
   const [hasVideoError, setHasVideoError] = useState(false);
@@ -31,23 +31,25 @@ export function AppDemoVideoPreview({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (youtubeUrl) {
+    // If opened via normal left click, allow native anchor or window.open fallback
+    if (youtubeUrl && (!e.ctrlKey && !e.metaKey && !e.shiftKey)) {
+      e.preventDefault();
       window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
   return (
-    <motion.div
+    <motion.a
+      href={youtubeUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className={`group relative w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[500px] xl:max-w-[550px] select-none cursor-pointer transition-transform duration-500 ease-out hover:scale-[1.015] ${className}`}
+      className={`group relative block w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[500px] xl:max-w-[550px] select-none cursor-pointer transition-transform duration-500 ease-out hover:scale-[1.015] ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
-      role="button"
-      tabIndex={0}
       aria-label="Watch full ORCA app walkthrough on YouTube"
     >
       {/* ── Oceanic Cyan Ambient Glow Behind MacBook ── */}
@@ -125,6 +127,6 @@ export function AppDemoVideoPreview({
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.a>
   );
 }

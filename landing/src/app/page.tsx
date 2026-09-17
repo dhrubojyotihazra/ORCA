@@ -2,10 +2,14 @@ import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { BelowFoldSections } from "@/components/BelowFoldSections";
 import AnimatedGradient from "@/components/ui/animated-gradient";
+import { WaterFillPreloader } from "@/components/WaterFillPreloader";
 
 export default function Home() {
   return (
     <main className="relative min-h-screen bg-[#050B14] text-white">
+      {/* ── Pure Water Fill Logo Preloader (No bottom bar/text) ── */}
+      <WaterFillPreloader totalLoadTime={2.4} oncePerSession={false} />
+
       {/* ── Fixed Full-Page WebGL2 Animated Gradient Background ── */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <AnimatedGradient
